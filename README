@@ -1,0 +1,22 @@
+(uses https://github.com/FarFetchd/ccsimplebuild to compile)
+
+
+
+good params: 35 0.15 0.43 0.31
+
+
+
+
+
+Must have the portaudio shared lib installed, so that -lportaudio will work. To
+install, get the portaudio source, and then in there:
+
+$ ./configure --disable-static
+$ make
+$ make install
+
+
+
+
+-lxdo needs, i think, apt install libxdo-dev
+(but should doublecheck on a fresh system)
