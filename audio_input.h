@@ -1,6 +1,7 @@
 #ifndef CLICKITONGUE_AUDIO_INPUT_H_
 #define CLICKITONGUE_AUDIO_INPUT_H_
 
+#include <optional>
 #include <vector>
 #include "portaudio.h"
 
@@ -34,15 +35,17 @@ class AudioInput
 {
 public:
   // Call me for a nice straightforward recording of audio.
-  AudioInput(int seconds_to_record);
+  AudioInput(int seconds_to_record, std::optional<int> frames_per_cb = std::nullopt);
   // Call me if you want an audio input stream, and want to do your own stuff with it.
   AudioInput(int(*custom_record_cb)(const void*, void*, unsigned long,
                                     const PaStreamCallbackTimeInfo*,
-                                    PaStreamCallbackFlags, void*), void* user_opaque);
+                                    PaStreamCallbackFlags, void*), void* user_opaque,
+                                    std::optional<int> frames_per_cb = std::nullopt);
 
   void ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
                                   const PaStreamCallbackTimeInfo*,
-                                  PaStreamCallbackFlags, void*), void* opaque);
+                                  PaStreamCallbackFlags, void*), void* opaque,
+                                  std::optional<int> frames_per_cb);
 
   ~AudioInput();
 

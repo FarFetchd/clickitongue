@@ -41,7 +41,7 @@ void useMain(char** argv, Action action, BlockingQueue<Action>* action_queue)
                             /*ewma_thresh_high=*/atof(argv[4]),
                             /*ewma_thresh_low=*/atof(argv[3]),
                             action);
-  AudioInput audio_input(ewmaUpdateCallback, &ewma_clicker);
+  AudioInput audio_input(ewmaUpdateCallback, &ewma_clicker, /*frames_per_cb=*/512);
   while (audio_input.active())
     Pa_Sleep(500);
 }
