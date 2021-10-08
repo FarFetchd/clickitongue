@@ -42,6 +42,8 @@ int playCallback(const void* input_buf, void* output_buf,
 
 void playRecorded(std::vector<Sample>* samples)
 {
+  PaError err = Pa_Initialize();
+
   PlaybackCbStruct arg;
   arg.samples = samples;
   PaStreamParameters output_param;
@@ -73,4 +75,5 @@ void playRecorded(std::vector<Sample>* samples)
     printf("...playback done.\n");
     fflush(stdout);
   }
+  Pa_Terminate();
 }
