@@ -1,5 +1,7 @@
 #include "ewma_detector.h"
 
+#include "equalizer.h"
+
 EwmaDetector::EwmaDetector(BlockingQueue<Action>* action_queue, float alpha,
                            int refractory_ms, float ewma_thresh_high,
                            float ewma_thresh_low, std::vector<int>* cur_frame_dest)
@@ -29,6 +31,13 @@ EwmaDetector::EwmaDetector(BlockingQueue<Action>* action_queue, float alpha,
 
 void EwmaDetector::processAudio(const Sample* cur_sample, int num_frames)
 {
+  static int print_once_per_10ms_chunks = 0;
+  if (++print_once_per_10ms_chunks == 10)
+  {
+    printEqualizer(cur_sample, num_frames, kNumChannels);
+    print_once_per_10ms_chunks=0;
+  }
+
   for (int i=0; i<num_frames; i++,cur_frame_++)
   {
     ewma_ = ewma_1_alpha_ * ewma_ +
