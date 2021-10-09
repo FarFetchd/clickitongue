@@ -9,6 +9,7 @@
 #include "audio_input.h"
 #include "audio_output.h"
 #include "ewma_trainer.h"
+#include "iterative_ewma_trainer.h"
 
 enum class ProgramMode { Train, Test, Use };
 ProgramMode parseArgs(int argc, char** argv)
@@ -50,6 +51,11 @@ void useMain(char** argv, Action action, BlockingQueue<Action>* action_queue)
 
 int main(int argc, char** argv)
 {
+  if (argc > 1 && !strcmp(argv[1], "itertrain"))
+  {
+    iterativeTrainMain();
+    return 0;
+  }
   ProgramMode mode = parseArgs(argc, argv);
 
   BlockingQueue<Action> action_queue;

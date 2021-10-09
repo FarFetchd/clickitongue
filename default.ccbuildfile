@@ -1,3 +1,3 @@
 OutputBinaryFilename=clickitongue
 CompileCommandPrefix=g++ -std=c++17 -O2 -pthread -Wall -Wno-sign-compare -DCLICKITONGUE_LINUX
-LibrariesToLink=-lasound -lm -lportaudio -lxdo
+LibrariesToLink=-lasound -lm -lportaudio -lxdo -lfftw3
