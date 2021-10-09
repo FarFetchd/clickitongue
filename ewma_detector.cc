@@ -31,12 +31,12 @@ EwmaDetector::EwmaDetector(BlockingQueue<Action>* action_queue, float alpha,
 
 void EwmaDetector::processAudio(const Sample* cur_sample, int num_frames)
 {
-  static int print_once_per_10ms_chunks = 0;
-  if (++print_once_per_10ms_chunks == 10)
-  {
-    printEqualizer(cur_sample, num_frames, kNumChannels);
-    print_once_per_10ms_chunks=0;
-  }
+//   static int print_once_per_10ms_chunks = 0;
+//   if (++print_once_per_10ms_chunks == 10)
+//   {
+//     printEqualizer(cur_sample, num_frames, kNumChannels);
+//     print_once_per_10ms_chunks=0;
+//   }
 
   for (int i=0; i<num_frames; i++,cur_frame_++)
   {
@@ -44,9 +44,10 @@ void EwmaDetector::processAudio(const Sample* cur_sample, int num_frames)
             ewma_alpha_ * (*cur_sample >= 0 ? *cur_sample: -*cur_sample);
     cur_sample++; // left or mono
 
-    if (ewma_ > ewma_thresh_high_ && refractory_frames_left_ <= 0)
+    if (ewma_ > ewma_thresh_high_)
     {
-      kickoffAction(action_);
+      if (refractory_frames_left_ <= 0)
+        kickoffAction(action_);
       refractory_frames_left_ = refractory_period_frames_;
     }
     else if (ewma_ < ewma_thresh_low_ && refractory_frames_left_ > 0)
