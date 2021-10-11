@@ -6,6 +6,8 @@
 #include "audio_input.h"
 #include "ewma_detector.h"
 
+namespace {
+
 struct TrainParams
 {
 public:
@@ -66,6 +68,8 @@ void oneIteration(ParamViolationsMap* violations, int desired_events)
   }
   printf("Computing done.\n");
 }
+
+} // namespace
 
 void iterativeTrainMain()
 {
