@@ -26,8 +26,8 @@ void EWMATrainer::recordKeyHits(long* index_ptr)
 std::vector<int> EWMATrainer::detectEWMA(std::vector<Sample> const& s)
 {
   std::vector<int> ewma_event_indices;
-  EwmaDetector detector(action_queue_, ewma_alpha_, refractory_per_ms_,
-                        ewma_thresh_high_, ewma_thresh_low_, &ewma_event_indices);
+  EwmaDetector detector(action_queue_, refractory_per_ms_, ewma_thresh_low_,
+                        ewma_thresh_high_, ewma_alpha_, &ewma_event_indices);
   detector.processAudio(s.data(), s.size() / kNumChannels);
   return ewma_event_indices;
 }

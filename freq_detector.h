@@ -13,17 +13,16 @@ public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
   FreqDetector(BlockingQueue<Action>* action_queue,
-               float lowpass_percent,
-  float highpass_percent,
-  double low_on_thresh,
-  double low_off_thresh,
-  double high_on_thresh,
-  double high_off_thresh,
+               float lowpass_percent, float highpass_percent,
+               double low_on_thresh, double low_off_thresh,
+               double high_on_thresh, double high_off_thresh,
                std::vector<int>* cur_frame_dest);
 
   // Kicks off 'action' at each detected event.
-  FreqDetector(BlockingQueue<Action>* action_queue,
-               Action action);
+  FreqDetector(BlockingQueue<Action>* action_queue, Action action,
+               float lowpass_percent, float highpass_percent,
+               double low_on_thresh, double low_off_thresh,
+               double high_on_thresh, double high_off_thresh);
 
   void processAudio(const Sample* cur_sample, int num_frames) override;
 
@@ -50,6 +49,7 @@ private:
 
   // only needs to be kept up to date if you plan to use RecordCurFrame
   int cur_frame_ = 0;
+  bool track_cur_frame_ = false;
 };
 
 int freqDetectorCallback(const void* inputBuffer, void* outputBuffer,

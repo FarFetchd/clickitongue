@@ -5,30 +5,28 @@
 #include "equalizer.h"
 
 FreqDetector::FreqDetector(BlockingQueue<Action>* action_queue,
-                           float lowpass_percent,
-  float highpass_percent,
-  double low_on_thresh,
-  double low_off_thresh,
-  double high_on_thresh,
-  double high_off_thresh,
+                           float lowpass_percent, float highpass_percent,
+                           double low_on_thresh, double low_off_thresh,
+                           double high_on_thresh, double high_off_thresh,
                            std::vector<int>* cur_frame_dest)
-  : Detector(action_queue),
-  action_(Action::RecordCurFrame),
-
-  lowpass_percent_(lowpass_percent),
-  highpass_percent_(highpass_percent),
-  low_on_thresh_(low_on_thresh),
-  low_off_thresh_(low_off_thresh),
-  high_on_thresh_(high_on_thresh),
-  high_off_thresh_(high_off_thresh)
-
+  : Detector(action_queue), action_(Action::RecordCurFrame),
+    lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
+    low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
+    high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh)
 {
   setCurFrameDest(cur_frame_dest);
   setCurFrameSource(&cur_frame_);
+  track_cur_frame_ = true;
 }
 
-FreqDetector::FreqDetector(BlockingQueue<Action>* action_queue, Action action)
-  : Detector(action_queue), action_(action)
+FreqDetector::FreqDetector(BlockingQueue<Action>* action_queue, Action action,
+                           float lowpass_percent, float highpass_percent,
+                           double low_on_thresh, double low_off_thresh,
+                           double high_on_thresh, double high_off_thresh)
+  : Detector(action_queue), action_(action),
+    lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
+    low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
+    high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh)
 {
 //    assert(action_ != Action::RecordCurFrame);
 }
@@ -58,7 +56,8 @@ void FreqDetector::processAudio(const Sample* cur_sample, int num_frames)
     print_once_per_10ms_chunks=0;
   }
 
-  cur_frame_ += num_frames;
+  if (track_cur_frame_)
+    cur_frame_ += num_frames;
 
   int last_low_bucket = round(lowpass_percent_ * num_buckets);
   double avg_low = 0;

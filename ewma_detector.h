@@ -12,24 +12,23 @@ class EwmaDetector : public Detector
 public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
-  EwmaDetector(BlockingQueue<Action>* action_queue,
-               float alpha, int refractory_ms,
-               float ewma_thresh_high, float ewma_thresh_low,
+  EwmaDetector(BlockingQueue<Action>* action_queue, int refractory_ms,
+               float ewma_thresh_low, float ewma_thresh_high, float alpha,
                std::vector<int>* cur_frame_dest);
 
   // Kicks off 'action' at each detected event.
-  EwmaDetector(BlockingQueue<Action>* action_queue,
-               float alpha, int refractory_ms,
-               float ewma_thresh_high, float ewma_thresh_low, Action action);
+  EwmaDetector(BlockingQueue<Action>* action_queue, int refractory_ms,
+               float ewma_thresh_low, float ewma_thresh_high, float alpha,
+               Action action);
 
   void processAudio(const Sample* cur_sample, int num_frames) override;
 
 private:
+  const int refractory_period_frames_;
+  const float ewma_thresh_low_;
+  const float ewma_thresh_high_;
   const float ewma_alpha_;
   const float ewma_1_alpha_;
-  const int refractory_period_frames_;
-  const float ewma_thresh_high_;
-  const float ewma_thresh_low_;
   const Action action_;
 
   float ewma_ = 0;
@@ -37,6 +36,7 @@ private:
 
   // only needs to be kept up to date if you plan to use RecordCurFrame
   int cur_frame_ = 0;
+  bool track_cur_frame_ = false;
 };
 
 int ewmaUpdateCallback(const void* inputBuffer, void* outputBuffer,

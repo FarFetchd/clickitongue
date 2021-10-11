@@ -9,8 +9,7 @@
 // Allows, thread-safely, one or more producers to enqueue() items, while a
 // consumer consumes any available items with deque(). If the queue is empty,
 // deque() blocks until something is enqueued, then returns that new thing.
-// (I think it should also work for multiple consumers, but clickitongue's use
-// will only have one).
+// Also enforces a 1-per-50ms rate limit.
 
 template<class T>
 class BlockingQueue
@@ -18,11 +17,17 @@ class BlockingQueue
 public:
   void enqueue(T obj)
   {
+    bool enqueued = false;
     {
       const std::lock_guard<std::mutex> lock(mu_);
-      q_.push(obj);
+      if (rateLimitAllows())
+      {
+        q_.push(obj);
+        enqueued = true;
+      }
     }
-    pokes_.poke();
+    if (enqueued)
+      pokes_.poke();
   }
   // returns nullopt if the queue has shut down and the consumer should go away.
   std::optional<T> deque()
@@ -41,6 +46,20 @@ public:
   }
 
 private:
+  bool rateLimitAllows() // requires mu_
+  {
+    uint64_t cur_msse = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    if (cur_msse > last_action_msse_ + 10)
+    {
+      last_action_msse_ = cur_msse;
+      return true;
+    }
+    fprintf(stderr, "BlockingQueue refusing to enqueue due to rate limit!\n");
+    return false;
+  }
+
+  uint64_t last_action_msse_ = 0; // guarded by mu_
   std::queue<T> q_; // guarded by mu_
   std::mutex mu_;
 

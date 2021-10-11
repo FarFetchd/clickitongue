@@ -21,6 +21,7 @@ private:
   void clickRight();
   void scrollUp();
   void scrollDown();
+
   BlockingQueue<Action>* const action_queue_;
 };
 

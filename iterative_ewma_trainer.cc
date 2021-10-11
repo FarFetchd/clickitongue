@@ -42,8 +42,8 @@ using ParamViolationsMap = std::unordered_map<TrainParams, int, TrainParamsHash>
 int detectEvents(TrainParams params, std::vector<Sample> const& samples)
 {
   std::vector<int> event_frames;
-  EwmaDetector detector(nullptr, params.ewma_alpha, params.refractory_per_ms,
-                        params.ewma_thresh_high, params.ewma_thresh_low, &event_frames);
+  EwmaDetector detector(nullptr, params.refractory_per_ms, params.ewma_thresh_low,
+                        params.ewma_thresh_high, params.ewma_alpha, &event_frames);
   detector.processAudio(samples.data(), samples.size() / kNumChannels);
   return event_frames.size();
 }
@@ -71,7 +71,7 @@ void oneIteration(ParamViolationsMap* violations, int desired_events)
 
 } // namespace
 
-void iterativeTrainMain()
+void iterativeEwmaTrainMain()
 {
   ParamViolationsMap violations;
   for (int refractory_per_ms = 30; refractory_per_ms <= 80; refractory_per_ms += 10)

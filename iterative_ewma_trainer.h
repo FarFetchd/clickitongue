@@ -1,6 +1,6 @@
 #ifndef CLICKITONGUE_ITERATIVE_EWMA_TRAINIER_H_
 #define CLICKITONGUE_ITERATIVE_EWMA_TRAINIER_H_
 
-void iterativeTrainMain();
+void iterativeEwmaTrainMain();
 
 #endif // CLICKITONGUE_ITERATIVE_EWMA_TRAINIER_H_

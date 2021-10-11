@@ -2,13 +2,16 @@
 
 #ifdef CLICKITONGUE_LINUX
 extern "C" {
-#include "xdo.h"
+#include <xdo.h>
 }
 #include "action_dispatcher_linux.h"
 #endif // CLICKITONGUE_LINUX
 #ifdef CLICKITONGUE_WINDOWS
 #include "action_dispatcher_windows.h"
-#endif
+#endif // CLICKITONGUE_WINDOWS
+#ifdef CLICKITONGUE_OSX
+#include "action_dispatcher_osx.h"
+#endif // CLICKITONGUE_OSX
 
 ActionDispatcher::ActionDispatcher(BlockingQueue<Action>* action_queue)
   : action_queue_(action_queue) {}
@@ -55,7 +58,5 @@ void ActionDispatcher::shutdown()
 
 void actionDispatch(ActionDispatcher* me)
 {
-  printf("actionDispatch started\n");
   while (me->dispatchNextAction()) {}
-  printf("actionDispatch done\n");
 }
