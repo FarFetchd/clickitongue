@@ -14,7 +14,6 @@ public:
   EWMATrainer(BlockingQueue<Action>* action_queue);
 
   void recordKeyHits(long* index_ptr);
-  void guideRhythmic(long* index_ptr);
 
   // writes sample frame index of each EWMA event into returned vector
   std::vector<int> detectEWMA(std::vector<Sample> const& s);

@@ -22,31 +22,6 @@ void EWMATrainer::recordKeyHits(long* index_ptr)
   resetTermios();
   printf("recordKeyHits done listening for getch()\n");
 }
-void EWMATrainer::guideRhythmic(long* index_ptr)
-{
-  // HACK: always seems to start out with a spike. so, ignore first 2s.
-  printf("get ready...");
-  fflush(stdout);
-  Pa_Sleep(1000);
-  while (!recording_done_)
-  {
-    printf("\r    3    ");
-    fflush(stdout);
-    Pa_Sleep(500);
-    printf("\r    2    ");
-    fflush(stdout);
-    Pa_Sleep(500);
-    printf("\r    1    ");
-    fflush(stdout);
-    Pa_Sleep(500);
-    printf("\r  now!   ");
-    fflush(stdout);
-    if (!recording_done_)
-      key_hit_indices_.push_back((*index_ptr) * kNumChannels);
-    Pa_Sleep(500);
-  }
-  printf("\rrecording done.\n");
-}
 
 std::vector<int> EWMATrainer::detectEWMA(std::vector<Sample> const& s)
 {
@@ -127,18 +102,12 @@ void doRecordKeyHits(EWMATrainer* me, long* index_ptr)
 {
   me->recordKeyHits(index_ptr);
 }
-void doGuideRhythmic(EWMATrainer* me, long* index_ptr)
-{
-  me->guideRhythmic(index_ptr);
-}
 
 void trainMain(int seconds_to_train, BlockingQueue<Action>* action_queue)
 {
   AudioInput audio_input(seconds_to_train);
   EWMATrainer ewma_trainer(action_queue);
-  //std::thread coord_thread(doRecordKeyHits, &ewma_trainer,
-  //                          audio_input.frame_index_ptr());
-  std::thread coord_thread(doGuideRhythmic, &ewma_trainer,
+  std::thread coord_thread(doRecordKeyHits, &ewma_trainer,
                            audio_input.frame_index_ptr());
   printf("Now recording for training!\n");
   while (audio_input.active())
