@@ -11,6 +11,14 @@ void ActionDispatcher::clickLeft()
 {
   xdo_click_window(getXdoContext(), CURRENTWINDOW, 1);
 }
+void ActionDispatcher::leftDown()
+{
+  xdo_mouse_down(getXdoContext(), CURRENTWINDOW, 1);
+}
+void ActionDispatcher::leftUp()
+{
+  xdo_mouse_up(getXdoContext(), CURRENTWINDOW, 1);
+}
 void ActionDispatcher::clickRight()
 {
   xdo_click_window(getXdoContext(), CURRENTWINDOW, 3);

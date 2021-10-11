@@ -21,10 +21,17 @@ bool ActionDispatcher::dispatchNextAction()
   switch (action.value())
   {
   case Action::SayClick:
-    printf("click!\n");
+    static int click_print_num = 0;
+    printf("click %d!\n", ++click_print_num);
     break;
   case Action::ClickLeft:
     clickLeft();
+    break;
+  case Action::LeftDown:
+    leftDown();
+    break;
+  case Action::LeftUp:
+    leftUp();
     break;
   case Action::ClickRight:
     clickRight();
