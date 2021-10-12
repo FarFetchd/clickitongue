@@ -52,7 +52,7 @@ private:
   bool track_cur_frame_ = false;
 };
 
-int freqDetectorCallback(const void* inputBuffer, void* outputBuffer,
+int blowDetectorCallback(const void* inputBuffer, void* outputBuffer,
                          unsigned long framesPerBuffer,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags, void* userData);

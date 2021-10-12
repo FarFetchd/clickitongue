@@ -98,7 +98,7 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
   delete[] transformed;
 }
 
-int freqDetectorCallback(const void* inputBuffer, void* outputBuffer,
+int blowDetectorCallback(const void* inputBuffer, void* outputBuffer,
                          unsigned long framesPerBuffer,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags, void* userData)
