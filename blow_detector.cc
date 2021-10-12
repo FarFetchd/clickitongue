@@ -33,8 +33,11 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue, Action action,
 
 void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
 {
-  if (!(num_frames == 256 || num_frames == 128 || num_frames == 512 || num_frames == 1024))
-    return;
+  if (!(num_frames == 256 || num_frames == 128 || num_frames == 512))
+  {
+    printf("illegal num_frames: %d\n", num_frames);
+    exit(1);
+  }
 
   double* orig_real = new double[num_frames];
   for (int i=0; i<num_frames; i++)

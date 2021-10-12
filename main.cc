@@ -8,24 +8,12 @@
 #include "cmdline_options.h"
 #include "constants.h"
 #include "iterative_blow_trainer.h"
+#include "tongue_detector.h"
 
 void crash(const char* s)
 {
   fprintf(stderr, "%s\n", s);
   exit(1);
-}
-
-void useBlowMain(Action action, BlockingQueue<Action>* action_queue,
-                 float lowpass_percent, float highpass_percent,
-                 double low_on_thresh, double low_off_thresh,
-                 double high_on_thresh, double high_off_thresh,
-                 int fourier_blocksize_frames)
-{
-  BlowDetector clicker(action_queue, action, lowpass_percent, highpass_percent,
-                       low_on_thresh, low_off_thresh, high_on_thresh, high_off_thresh);
-  AudioInput audio_input(blowDetectorCallback, &clicker, fourier_blocksize_frames);
-  while (audio_input.active())
-    Pa_Sleep(500);
 }
 
 // TODO on linux, make use of PaAlsa_EnableRealtimeScheduling
@@ -40,14 +28,13 @@ int main(int argc, char** argv)
   {
     crash("Must specify --mode=train, test, or use.");
   }
-  if (!opts.detector.has_value() || (opts.detector.value() != "blow"))
+  if (!opts.detector.has_value() || (opts.detector.value() != "blow" &&
+                                     opts.detector.value() != "tongue"))
   {
-    crash("Must specify --detector=blow.");
+    crash("Must specify --detector=blow or tongue.");
   }
   std::string mode = opts.mode.value();
   std::string detector = opts.detector.value();
-
-  bool use_blow_detector = detector == "blow";
 
   BlockingQueue<Action> action_queue;
   ActionDispatcher action_dispatcher(&action_queue);
@@ -56,7 +43,7 @@ int main(int argc, char** argv)
   if (mode == "use" || mode == "test")
   {
     Action action = mode == "use" ? Action::ClickLeft : Action::SayClick;
-    if (use_blow_detector)
+    if (detector == "blow")
     {
       if (!opts.lowpass_percent.has_value())
         crash("--detector=blow requires a value for --lowpass_percent.");
@@ -73,15 +60,42 @@ int main(int argc, char** argv)
       if (!opts.fourier_blocksize_frames.has_value())
         crash("--detector=blow requires a value for --fourier_blocksize_frames.");
 
-      useBlowMain(action, &action_queue, opts.lowpass_percent.value(),
-                  opts.highpass_percent.value(), opts.low_on_thresh.value(),
-                  opts.low_off_thresh.value(), opts.high_on_thresh.value(),
-                  opts.high_off_thresh.value(), opts.fourier_blocksize_frames.value());
+      BlowDetector clicker(&action_queue, action, opts.lowpass_percent.value(),
+                           opts.highpass_percent.value(), opts.low_on_thresh.value(),
+                           opts.low_off_thresh.value(), opts.high_on_thresh.value(),
+                           opts.high_off_thresh.value());
+      AudioInput audio_input(blowDetectorCallback, &clicker,
+                             opts.fourier_blocksize_frames.value());
+      while (audio_input.active())
+        Pa_Sleep(500);
+    }
+    else if (detector == "tongue")
+    {
+      if (!opts.tongue_low_hz.has_value())
+        crash("--detector=tongue requires a value for --tongue_low_hz.");
+      if (!opts.tongue_high_hz.has_value())
+        crash("--detector=tongue requires a value for --tongue_high_hz.");
+      if (!opts.tongue_hzenergy_high.has_value())
+        crash("--detector=tongue requires a value for --tongue_hzenergy_high.");
+      if (!opts.tongue_hzenergy_low.has_value())
+        crash("--detector=tongue requires a value for --tongue_hzenergy_low.");
+      if (!opts.refrac_blocks.has_value())
+        crash("--detector=tongue requires a value for --refrac_blocks.");
+
+      TongueDetector clicker(
+          &action_queue, action,
+          opts.tongue_low_hz.value(),  opts.tongue_high_hz.value(),
+          opts.tongue_hzenergy_high.value(), opts.tongue_hzenergy_low.value(),
+          opts.refrac_blocks.value());
+      AudioInput audio_input(tongueDetectorCallback, &clicker,
+                             opts.fourier_blocksize_frames.value());
+      while (audio_input.active())
+        Pa_Sleep(500);
     }
   }
   else if (mode == "train")
   {
-    if (use_blow_detector)
+    if (detector == "blow")
       iterativeBlowTrainMain();
   }
 

@@ -27,7 +27,6 @@ public:
   void processAudio(const Sample* cur_sample, int num_frames) override;
 
 private:
-  const float some_param_ = 1;
   const Action action_;
 
   // the percentile bucket (rounded) of the Fourier output that is the highest

@@ -2,11 +2,6 @@
 
 
 
-good params: 35 0.15 0.43 0.31
-also good: 70 0.1 0.45 0.1 (but probably not as good)
-
-
-
 
 Must have the portaudio shared lib installed, so that -lportaudio will work. To
 install, get the portaudio source, and then in there:
@@ -27,4 +22,12 @@ $ make install
 sudo apt install libfftw3-dev
 
 
-TODO: disable exceptions
+
+
+for fancy blowing:
+have dedicated click, and LMB down. click is "a block passes threshold T1 in one window and does NOT pass T2 in the next." LMB down is T1 followed by T2. dedicated click should have a refrac block or two. at the same time, listen for something else ('hot' breathing? tongue clicking? both?) to do right clicks.
+
+
+
+working pretty well for laptop builtin mic:
+./clickitongue --mode=use --detector=tongue --tongue_low_hz=1700 --tongue_high_hz=2700 --tongue_hzenergy_high=20 --tongue_hzenergy_low=8 --refrac_blocks=25 --fourier_blocksize_frames = 128
