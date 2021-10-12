@@ -1,10 +1,10 @@
-#include "iterative_freq_trainer.h"
+#include "iterative_blow_trainer.h"
 
 #include <unordered_map>
 #include <vector>
 
 #include "audio_input.h"
-#include "freq_detector.h"
+#include "blow_detector.h"
 
 namespace {
 
@@ -53,7 +53,7 @@ using ParamViolationsMap = std::unordered_map<TrainParams, int, TrainParamsHash>
 int detectEvents(TrainParams params, std::vector<Sample> const& samples)
 {
   std::vector<int> event_frames;
-  FreqDetector detector(nullptr, params.lowpass_percent, params.highpass_percent,
+  BlowDetector detector(nullptr, params.lowpass_percent, params.highpass_percent,
                         params.low_on_thresh, params.low_off_thresh,
                         params.high_on_thresh, params.high_off_thresh,
                         &event_frames);
@@ -89,7 +89,7 @@ void oneIteration(ParamViolationsMap* violations, int desired_events)
 
 } // namespace
 
-void iterativeFreqTrainMain()
+void iterativeBlowTrainMain()
 {
   ParamViolationsMap violations;
 

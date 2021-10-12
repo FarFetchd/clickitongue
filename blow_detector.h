@@ -1,5 +1,5 @@
-#ifndef CLICKITONGUE_FREQ_DETECTOR_H_
-#define CLICKITONGUE_FREQ_DETECTOR_H_
+#ifndef CLICKITONGUE_BLOW_DETECTOR_H_
+#define CLICKITONGUE_BLOW_DETECTOR_H_
 
 #include "portaudio.h"
 
@@ -7,19 +7,19 @@
 #include "constants.h"
 #include "detector.h"
 
-class FreqDetector : public Detector
+class BlowDetector : public Detector
 {
 public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
-  FreqDetector(BlockingQueue<Action>* action_queue,
+  BlowDetector(BlockingQueue<Action>* action_queue,
                float lowpass_percent, float highpass_percent,
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
                std::vector<int>* cur_frame_dest);
 
   // Kicks off 'action' at each detected event.
-  FreqDetector(BlockingQueue<Action>* action_queue, Action action,
+  BlowDetector(BlockingQueue<Action>* action_queue, Action action,
                float lowpass_percent, float highpass_percent,
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh);
@@ -57,4 +57,4 @@ int freqDetectorCallback(const void* inputBuffer, void* outputBuffer,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags, void* userData);
 
-#endif // CLICKITONGUE_FREQ_DETECTOR_H_
+#endif // CLICKITONGUE_BLOW_DETECTOR_H_

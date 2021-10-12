@@ -4,12 +4,12 @@
 #include "action_dispatcher.h"
 #include "audio_input.h"
 #include "audio_output.h"
+#include "blow_detector.h"
 #include "cmdline_options.h"
 #include "constants.h"
 #include "ewma_trainer.h"
-#include "freq_detector.h"
 #include "iterative_ewma_trainer.h"
-#include "iterative_freq_trainer.h"
+#include "iterative_blow_trainer.h"
 
 void crash(const char* s)
 {
@@ -34,7 +34,7 @@ void useFreqMain(Action action, BlockingQueue<Action>* action_queue,
                  double high_on_thresh, double high_off_thresh,
                  int fourier_blocksize_frames)
 {
-  FreqDetector clicker(action_queue, action, lowpass_percent, highpass_percent,
+  BlowDetector clicker(action_queue, action, lowpass_percent, highpass_percent,
                        low_on_thresh, low_off_thresh, high_on_thresh, high_off_thresh);
   AudioInput audio_input(freqDetectorCallback, &clicker, fourier_blocksize_frames);
   while (audio_input.active())
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
   else if (mode == "itertrain")
   {
     if (use_freq_detector)
-      iterativeFreqTrainMain();
+      iterativeBlowTrainMain();
     else
       iterativeEwmaTrainMain();
   }

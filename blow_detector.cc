@@ -1,10 +1,10 @@
-#include "freq_detector.h"
+#include "blow_detector.h"
 
 #include <fftw3.h>
 
 #include "equalizer.h"
 
-FreqDetector::FreqDetector(BlockingQueue<Action>* action_queue,
+BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            float lowpass_percent, float highpass_percent,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh,
@@ -19,7 +19,7 @@ FreqDetector::FreqDetector(BlockingQueue<Action>* action_queue,
   track_cur_frame_ = true;
 }
 
-FreqDetector::FreqDetector(BlockingQueue<Action>* action_queue, Action action,
+BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue, Action action,
                            float lowpass_percent, float highpass_percent,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh)
@@ -31,7 +31,7 @@ FreqDetector::FreqDetector(BlockingQueue<Action>* action_queue, Action action,
 //    assert(action_ != Action::RecordCurFrame);
 }
 
-void FreqDetector::processAudio(const Sample* cur_sample, int num_frames)
+void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
 {
   if (!(num_frames == 256 || num_frames == 128 || num_frames == 512 || num_frames == 1024))
     return;
@@ -103,7 +103,7 @@ int freqDetectorCallback(const void* inputBuffer, void* outputBuffer,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags, void* userData)
 {
-  FreqDetector* detector = (FreqDetector*)userData;
+  BlowDetector* detector = (BlowDetector*)userData;
   const Sample* rptr = (const Sample*)inputBuffer;
   if (inputBuffer != NULL)
     detector->processAudio(rptr, framesPerBuffer);
