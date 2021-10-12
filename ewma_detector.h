@@ -24,6 +24,8 @@ public:
   void processAudio(const Sample* cur_sample, int num_frames) override;
 
 private:
+  // for the record,  --refractory_ms=50 --ewma_thresh_low=0.25
+  //   --ewma_thresh_high=0.55 --ewma_alpha=0.13 are pretty good for tongue clicks
   const int refractory_period_frames_;
   const float ewma_thresh_low_;
   const float ewma_thresh_high_;
