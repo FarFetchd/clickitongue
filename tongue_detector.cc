@@ -52,25 +52,37 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
   fftw_execute(fftw_forward);
   fftw_destroy_plan(fftw_forward);
 
-//   static int print_once_per_10ms_chunks = 0;
-//   if (++print_once_per_10ms_chunks == 4)
-//   {
-//     printEqualizerAlreadyFreq(transformed, num_frames);
-//     print_once_per_10ms_chunks=0;
-//   }
-
   if (track_cur_frame_)
     cur_frame_ += num_frames;
 
-  double energy = 0;
   int bucket_ind = 0;
   while ((bucket_ind/(float)num_buckets)*44100.0f < tongue_low_hz_)
     bucket_ind++;
+  int last_less_than_low = bucket_ind - 1;
   while ((bucket_ind/(float)num_buckets)*44100.0f < tongue_high_hz_)
-  {
-    energy += fabs(transformed[bucket_ind].real());
     bucket_ind++;
-  }
+  int last_less_than_high = bucket_ind - 1;
+
+  double energy = 0;
+  double bucket_width = 44100.0 / (double)num_buckets;
+  for (int i = last_less_than_low + 1; i < last_less_than_high; i++)
+    energy += bucket_width * fabs(transformed[bucket_ind].real());
+
+  double low_bucket_width =
+      bucket_width - (tongue_low_hz_ - (last_less_than_low /
+                                        (float)num_buckets)*44100.0f);
+  energy += low_bucket_width * fabs(transformed[last_less_than_low].real());
+  double high_bucket_width = tongue_high_hz_ - (last_less_than_high/(float)num_buckets)*44100.0f;
+  energy += high_bucket_width * fabs(transformed[last_less_than_high].real());
+
+//   static int print_once_per_10ms_chunks = 0;
+//   if (++print_once_per_10ms_chunks == 4)
+//   {
+//     printf("%g\n", energy > 500 ? energy : 0);
+//     printEqualizerAlreadyFreq(transformed, num_frames);
+//     printMaxBucket(cur_sample, num_frames);
+//     print_once_per_10ms_chunks=0;
+//   }
 
   if (refrac_blocks_left_ > 0)
   {

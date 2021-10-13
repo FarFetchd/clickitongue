@@ -33,6 +33,13 @@ int main(int argc, char** argv)
   {
     crash("Must specify --detector=blow or tongue.");
   }
+  double fourier_blocksize = opts.fourier_blocksize_frames.value_or(-1);
+  if (fourier_blocksize != 128 && fourier_blocksize != 256 &&
+      fourier_blocksize != 512 && fourier_blocksize != 1024)
+  {
+    crash("Must specify --fourier_blocksize_frames=128 or 256 or 512 or 1024.");
+  }
+
   std::string mode = opts.mode.value();
   std::string detector = opts.detector.value();
 
@@ -57,8 +64,6 @@ int main(int argc, char** argv)
         crash("--detector=blow requires a value for --high_on_thresh.");
       if (!opts.high_off_thresh.has_value())
         crash("--detector=blow requires a value for --high_off_thresh.");
-      if (!opts.fourier_blocksize_frames.has_value())
-        crash("--detector=blow requires a value for --fourier_blocksize_frames.");
 
       BlowDetector clicker(&action_queue, action, opts.lowpass_percent.value(),
                            opts.highpass_percent.value(), opts.low_on_thresh.value(),
