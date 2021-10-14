@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "audio_input.h"
+#include "audio_recording.h"
 #include "getch.h"
 #include "tongue_detector.h"
 
@@ -86,7 +87,7 @@ void iterativeTongueTrainMain()
   for(double tongue_hzenergy_low = 100; tongue_hzenergy_low <= 2100; tongue_hzenergy_low += 1000)
   for(double tongue_hzenergy_high = tongue_hzenergy_low; tongue_hzenergy_high <= 4100; tongue_hzenergy_high += 1000)
   {
-    int refrac_blocks = 6;
+    int refrac_blocks = 12;
     int blocksize = 256;
 
     TrainParams tp(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
@@ -94,31 +95,72 @@ void iterativeTongueTrainMain()
     violations[tp] = 0;
   }
 
-  std::vector<std::unique_ptr<AudioInput>> examples;
-  examples.push_back(recordExample(0));
-  examples.push_back(recordExample(1));
-  examples.push_back(recordExample(2));
-  examples.push_back(recordExample(3));
-  examples.push_back(recordExample(0));
-  examples.push_back(recordExample(1));
-  examples.push_back(recordExample(2));
-  examples.push_back(recordExample(3));
+  RecordedAudio clicks0a("clicks_0a.pcm");
+  RecordedAudio clicks0b("clicks_0b.pcm");
+  RecordedAudio clicks1a("clicks_1a.pcm");
+  RecordedAudio clicks1b("clicks_1b.pcm");
+  RecordedAudio clicks2a("clicks_2a.pcm");
+  RecordedAudio clicks2b("clicks_2b.pcm");
+  RecordedAudio clicks3a("clicks_3a.pcm");
+  RecordedAudio clicks3b("clicks_3b.pcm");
+
+  RecordedAudio noise1("falls_of_fall.pcm");
+  RecordedAudio noise2("brandenburg.pcm");
+
+std::vector<std::pair<RecordedAudio, int>> examples;
+  examples.emplace_back(clicks0a, 0);
+  examples.emplace_back(clicks0b, 0);
+  examples.emplace_back(clicks1a, 1);
+  examples.emplace_back(clicks1b, 1);
+  examples.emplace_back(clicks2a, 2);
+  examples.emplace_back(clicks2b, 2);
+  examples.emplace_back(clicks3a, 3);
+  examples.emplace_back(clicks3b, 3);
+
+  examples.emplace_back(clicks0a, 0); examples.back().first += noise1;
+  examples.emplace_back(clicks0b, 0); examples.back().first += noise1;
+  examples.emplace_back(clicks1a, 1); examples.back().first += noise1;
+  examples.emplace_back(clicks1b, 1); examples.back().first += noise1;
+  examples.emplace_back(clicks2a, 2); examples.back().first += noise1;
+  examples.emplace_back(clicks2b, 2); examples.back().first += noise1;
+  examples.emplace_back(clicks3a, 3); examples.back().first += noise1;
+  examples.emplace_back(clicks3b, 3); examples.back().first += noise1;
+//
+//   examples.emplace_back(clicks0a, 0); examples.back().first += noise2;
+//   examples.emplace_back(clicks0b, 0); examples.back().first += noise2;
+//   examples.emplace_back(clicks1a, 1); examples.back().first += noise2;
+//   examples.emplace_back(clicks1b, 1); examples.back().first += noise2;
+//   examples.emplace_back(clicks2a, 2); examples.back().first += noise2;
+//   examples.emplace_back(clicks2b, 2); examples.back().first += noise2;
+//   examples.emplace_back(clicks3a, 3); examples.back().first += noise2;
+//   examples.emplace_back(clicks3b, 3); examples.back().first += noise2;
+
+//   std::vector<std::unique_ptr<AudioInput>> examples;
+//   examples.push_back(recordExample(0));
+//   examples.push_back(recordExample(1));
+//   examples.push_back(recordExample(2));
+//   examples.push_back(recordExample(3));
+//   examples.push_back(recordExample(0));
+//   examples.push_back(recordExample(1));
+//   examples.push_back(recordExample(2));
+//   examples.push_back(recordExample(3));
 
   printf("Now computing...\n");
   for (int i = 0; i < examples.size(); i++)
   {
     for (auto it = violations.begin(); it != violations.end(); ++it)
     {
-      int num_events = detectEvents(it->first, examples[i]->recordedSamples());
-      for (; num_events < i % 4; num_events++)
+      int num_events = detectEvents(it->first, examples[i].first.samples());
+      if (num_events != examples[i].second)
         it->second++;
-      for (; num_events > i % 4; num_events--)
-        it->second++;
+//       for (; num_events < examples[i].second; num_events++)
+//         it->second++;
+//       for (; num_events > examples[i].second; num_events--)
+//         it->second++;
     }
     printf("done with recording %d\n", i+1);
   }
 
-  // TODO add standard noise (people talking, music, ...)
   // TODO pick best (or best couple) and do a finer grid search around them
   // TODO update the other trainer to be like this one (or reuse somehow?)
 
@@ -131,8 +173,8 @@ void iterativeTongueTrainMain()
       best.push_back(it->first);
   for (auto x : best)
   {
-    printf("tongue_low_hz %g, tongue_high_hz %g, tongue_hzenergy_high %g, "
-           "tongue_hzenergy_low %g, refrac_blocks %d, blocksize %d\n",
+    printf("--tongue_low_hz=%g --tongue_high_hz=%g --tongue_hzenergy_high=%g "
+           "--tongue_hzenergy_low=%g --refrac_blocks=%d --blocksize=%d\n",
            x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
            x.tongue_hzenergy_low, x.refrac_blocks, x.blocksize);
   }
