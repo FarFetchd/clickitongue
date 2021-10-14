@@ -8,6 +8,7 @@
 #include "cmdline_options.h"
 #include "constants.h"
 #include "iterative_blow_trainer.h"
+#include "iterative_tongue_trainer.h"
 #include "tongue_detector.h"
 
 void crash(const char* s)
@@ -102,6 +103,8 @@ int main(int argc, char** argv)
   {
     if (detector == "blow")
       iterativeBlowTrainMain();
+    else if (detector == "tongue")
+      iterativeTongueTrainMain();
   }
 
   action_dispatcher.shutdown();
