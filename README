@@ -30,4 +30,4 @@ have dedicated click, and LMB down. click is "a block passes threshold T1 in one
 
 
 working pretty well for laptop builtin mic:
-./clickitongue --mode=use --detector=tongue --tongue_low_hz=1700 --tongue_high_hz=2400 --tongue_hzenergy_high=2000 --tongue_hzenergy_low=600 --refrac_blocks=8 --fourier_blocksize_frames=256
+./clickitongue --mode=use --detector=tongue --tongue_low_hz=750 --tongue_high_hz=950 --tongue_hzenergy_high=1500 --tongue_hzenergy_low=500 --refrac_blocks=8 --fourier_blocksize_frames=256

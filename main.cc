@@ -68,7 +68,7 @@ int main(int argc, char** argv)
       BlowDetector clicker(&action_queue, action, opts.lowpass_percent.value(),
                            opts.highpass_percent.value(), opts.low_on_thresh.value(),
                            opts.low_off_thresh.value(), opts.high_on_thresh.value(),
-                           opts.high_off_thresh.value());
+                           opts.high_off_thresh.value(), opts.fourier_blocksize_frames.value());
       AudioInput audio_input(blowDetectorCallback, &clicker,
                              opts.fourier_blocksize_frames.value());
       while (audio_input.active())
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
           &action_queue, action,
           opts.tongue_low_hz.value(),  opts.tongue_high_hz.value(),
           opts.tongue_hzenergy_high.value(), opts.tongue_hzenergy_low.value(),
-          opts.refrac_blocks.value());
+          opts.refrac_blocks.value(), opts.fourier_blocksize_frames.value());
       AudioInput audio_input(tongueDetectorCallback, &clicker,
                              opts.fourier_blocksize_frames.value());
       while (audio_input.active())

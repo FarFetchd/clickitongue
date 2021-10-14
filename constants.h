@@ -6,11 +6,15 @@
 // of "samples" together with that buffer's length called num_frames, then that
 // buffer holds kNumChannels*num_frames floats (i.e. samples).
 //
-// Unfortunately, the standard term "sample rate" (usually 44100Hz) is a
-// misnomer; it should really be called frame rate, because there are 44100
-// *frames* per second recorded, or 88200 samples.
-// So we'll call it "frames per second".
-constexpr int kFramesPerSec = 44100; // aka "sample rate"
+// Unfortunately, the standard terms "sample" / "sample rate" (usually 44100Hz
+// for audio) in signal processing are not concerned with multiple channels.
+// A "sample" in that context is a "frame" in the audio context. We'll stick
+// with the audio terms, and call sample rate "frames per second" (we are
+// recording 88200 samples per second).
+constexpr int kFramesPerSec = 44100; // aka "sample rate".
+
+// The end frequency of the n/2 + 1 Fourier transform output frequency bins.
+constexpr double kNyquist = 22050.0f;
 constexpr int kNumChannels = 2;
 constexpr float kSilentSample = 0.0f;
 

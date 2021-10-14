@@ -1,18 +1,20 @@
 #include "tongue_detector.h"
 
-#include <fftw3.h>
+#include <cmath>
 
-#include "equalizer.h"
+#include "easy_fourier.h"
 
 TongueDetector::TongueDetector(BlockingQueue<Action>* action_queue,
                                double tongue_low_hz, double tongue_high_hz,
                                double tongue_hzenergy_high,
                                double tongue_hzenergy_low, int refrac_blocks,
+                               int blocksize,
                                std::vector<int>* cur_frame_dest)
   : Detector(action_queue), action_(Action::RecordCurFrame),
     tongue_low_hz_(tongue_low_hz), tongue_high_hz_(tongue_high_hz),
     tongue_hzenergy_high_(tongue_hzenergy_high),
-    tongue_hzenergy_low_(tongue_hzenergy_low), refrac_blocks_(refrac_blocks)
+    tongue_hzenergy_low_(tongue_hzenergy_low), refrac_blocks_(refrac_blocks),
+    blocksize_(blocksize), fourier_(blocksize_)
 {
   setCurFrameDest(cur_frame_dest);
   setCurFrameSource(&cur_frame_);
@@ -21,66 +23,57 @@ TongueDetector::TongueDetector(BlockingQueue<Action>* action_queue,
 
 TongueDetector::TongueDetector(BlockingQueue<Action>* action_queue, Action action,
                                double tongue_low_hz, double tongue_high_hz,
-                               double tongue_hzenergy_high,
-                               double tongue_hzenergy_low, int refrac_blocks)
+                               double tongue_hzenergy_high, double tongue_hzenergy_low,
+                               int refrac_blocks, int blocksize)
   : Detector(action_queue), action_(action),
     tongue_low_hz_(tongue_low_hz), tongue_high_hz_(tongue_high_hz),
     tongue_hzenergy_high_(tongue_hzenergy_high),
-    tongue_hzenergy_low_(tongue_hzenergy_low), refrac_blocks_(refrac_blocks)
+    tongue_hzenergy_low_(tongue_hzenergy_low), refrac_blocks_(refrac_blocks),
+    blocksize_(blocksize), fourier_(blocksize_)
 {
+// TODO  assert tongue_low_hz_ not out of range, same for high
 //    assert(action_ != Action::RecordCurFrame);
 }
 
 void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
 {
-  if (!(num_frames == 256 || num_frames == 128 || num_frames == 512))
+  if (num_frames != blocksize_)
   {
-    printf("illegal num_frames: %d\n", num_frames);
+    printf("illegal num_frames: expected %d, got %d\n", blocksize_, num_frames);
     exit(1);
   }
-
-  double* orig_real = new double[num_frames];
-  for (int i=0; i<num_frames; i++)
-    orig_real[i] = cur_sample[i * kNumChannels];
-  int num_buckets = num_frames / 2 + 1;
-  ComplexDouble* transformed = new ComplexDouble[num_buckets];
-
-  fftw_plan fftw_forward =
-    fftw_plan_dft_r2c_1d(num_frames, orig_real,
-                         reinterpret_cast<fftw_complex*>(transformed),
-                         FFTW_ESTIMATE); // TODO wisdom
-  fftw_execute(fftw_forward);
-  fftw_destroy_plan(fftw_forward);
-
   if (track_cur_frame_)
     cur_frame_ += num_frames;
 
-  int bucket_ind = 0;
-  while ((bucket_ind/(float)num_buckets)*44100.0f < tongue_low_hz_)
-    bucket_ind++;
-  int last_less_than_low = bucket_ind - 1;
-  while ((bucket_ind/(float)num_buckets)*44100.0f < tongue_high_hz_)
-    bucket_ind++;
-  int last_less_than_high = bucket_ind - 1;
+  double orig_real[blocksize_];
+  for (int i=0; i<num_frames; i++)
+    orig_real[i] = cur_sample[i * kNumChannels];
+  fftw_complex transformed[blocksize_ / 2 + 1];
+  fourier_.doFFT(orig_real, transformed);
+
+  int bin_ind = 1;
+  while (tongue_low_hz_ > fourier_.freqOfBin(bin_ind) + fourier_.halfWidth())
+    bin_ind++;
+  int low_bin_ind = bin_ind;
+  while (tongue_high_hz_ < fourier_.freqOfBin(bin_ind) - fourier_.halfWidth())
+    bin_ind++;
+  int high_bin_ind = bin_ind;
 
   double energy = 0;
-  double bucket_width = 44100.0 / (double)num_buckets;
-  for (int i = last_less_than_low + 1; i < last_less_than_high; i++)
-    energy += bucket_width * fabs(transformed[bucket_ind].real());
+  for (int i = low_bin_ind + 1; i < high_bin_ind; i++)
+    energy += fourier_.binWidth() * fabs(transformed[i][0]);
+  energy += (fourier_.freqOfBin(low_bin_ind) + fourier_.halfWidth() - tongue_low_hz_)
+            * fabs(transformed[low_bin_ind][0]);
+  energy += (tongue_high_hz_ - (fourier_.freqOfBin(high_bin_ind) - fourier_.halfWidth()))
+            * fabs(transformed[high_bin_ind][0]);
 
-  double low_bucket_width =
-      bucket_width - (tongue_low_hz_ - (last_less_than_low /
-                                        (float)num_buckets)*44100.0f);
-  energy += low_bucket_width * fabs(transformed[last_less_than_low].real());
-  double high_bucket_width = tongue_high_hz_ - (last_less_than_high/(float)num_buckets)*44100.0f;
-  energy += high_bucket_width * fabs(transformed[last_less_than_high].real());
-
-//   static int print_once_per_10ms_chunks = 0;
-//   if (++print_once_per_10ms_chunks == 4)
+//  static int print_once_per_10ms_chunks = 0;
+//  if (++print_once_per_10ms_chunks == 4)
 //   {
-//     printf("%g\n", energy > 500 ? energy : 0);
-//     printEqualizerAlreadyFreq(transformed, num_frames);
-//     printMaxBucket(cur_sample, num_frames);
+//     if (energy > 200)
+//       printf("%g\n", energy > 500 ? energy : 0);
+//    printEqualizerAlreadyFreq(transformed, num_frames);
+//    fourier_.printMaxBucket(cur_sample);
 //     print_once_per_10ms_chunks=0;
 //   }
 
@@ -97,9 +90,6 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
       refrac_blocks_left_ = refrac_blocks_;
     }
   }
-
-  delete[] orig_real;
-  delete[] transformed;
 }
 
 int tongueDetectorCallback(const void* inputBuffer, void* outputBuffer,

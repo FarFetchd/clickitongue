@@ -56,7 +56,7 @@ int detectEvents(TrainParams params, std::vector<Sample> const& samples)
   BlowDetector detector(nullptr, params.lowpass_percent, params.highpass_percent,
                         params.low_on_thresh, params.low_off_thresh,
                         params.high_on_thresh, params.high_off_thresh,
-                        &event_frames);
+                        params.blocksize, &event_frames);
   for (int sample_ind = 0;
        sample_ind + params.blocksize * kNumChannels < samples.size();
        sample_ind += params.blocksize * kNumChannels)
