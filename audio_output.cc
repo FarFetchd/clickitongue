@@ -7,7 +7,7 @@
 
 struct PlaybackCbStruct
 {
-  std::vector<Sample>* samples;
+  const std::vector<Sample>* samples;
   int playback_sample_index = 0;
 };
 
@@ -40,9 +40,9 @@ int playCallback(const void* input_buf, void* output_buf,
   return frames_left > frames_wanted ? paContinue : paComplete;
 }
 
-void playRecorded(std::vector<Sample>* samples)
+void playRecorded(const std::vector<Sample>* samples)
 {
-  PaError err = Pa_Initialize();
+  Pa_Initialize();
 
   PlaybackCbStruct arg;
   arg.samples = samples;

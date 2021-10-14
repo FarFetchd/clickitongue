@@ -5,6 +5,6 @@
 
 #include "constants.h"
 
-void playRecorded(std::vector<Sample>* samples);
+void playRecorded(const std::vector<Sample>* samples);
 
 #endif // CLICKITONGUE_AUDIO_OUTPUT_H_

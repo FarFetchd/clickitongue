@@ -24,7 +24,10 @@ struct ClickitongueCmdlineOpts
   std::optional<double> tongue_hzenergy_high;
   std::optional<double> tongue_hzenergy_low;
   std::optional<int> refrac_blocks = 1;
+
+  // record, play
+  std::optional<std::string> filename;
 };
-STRUCTOPT(ClickitongueCmdlineOpts, mode, detector, fourier_blocksize_frames, duration_seconds, lowpass_percent, highpass_percent, low_on_thresh, low_off_thresh, high_on_thresh, high_off_thresh, tongue_low_hz, tongue_high_hz, tongue_hzenergy_high, tongue_hzenergy_low, refrac_blocks);
+STRUCTOPT(ClickitongueCmdlineOpts, mode, detector, fourier_blocksize_frames, duration_seconds, lowpass_percent, highpass_percent, low_on_thresh, low_off_thresh, high_on_thresh, high_off_thresh, tongue_low_hz, tongue_high_hz, tongue_hzenergy_high, tongue_hzenergy_low, refrac_blocks, filename);
 
 #endif // CLICKITONGUE_CMDLINE_OPTIONS_H_
