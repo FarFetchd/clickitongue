@@ -49,6 +49,8 @@ public:
 
   ~AudioInput();
 
+  void closeStream();
+
   bool active() const;
 
   // Access the recorded audio. Will be empty if you used the non-default ctor.

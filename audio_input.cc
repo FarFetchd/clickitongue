@@ -99,13 +99,25 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
 
 AudioInput::~AudioInput()
 {
-  Pa_CloseStream(stream_);
+  closeStream();
   Pa_Terminate();
+}
+
+void AudioInput::closeStream()
+{
+  if (stream_)
+  {
+    Pa_CloseStream(stream_);
+    stream_ = nullptr;
+  }
 }
 
 bool AudioInput::active() const
 {
-  return Pa_IsStreamActive(stream_) == 1;
+  if (stream_)
+    return Pa_IsStreamActive(stream_) == 1;
+  else
+    return false;
 }
 
 std::vector<Sample> const& AudioInput::recordedSamples()
