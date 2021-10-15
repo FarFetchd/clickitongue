@@ -130,7 +130,10 @@ int main(int argc, char** argv)
   else if (opts.mode.value() == "train")
     train(opts);
   else if (opts.mode.value() == "record")
-    recordToFile(opts.filename.value(), opts.duration_seconds.value());
+  {
+    RecordedAudio audio(opts.duration_seconds.value());
+    audio.recordToFile(opts.filename.value());
+  }
   else if (opts.mode.value() == "play")
   {
     RecordedAudio audio(opts.filename.value());
