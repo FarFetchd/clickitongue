@@ -43,7 +43,7 @@ std::vector<float> const& RecordedAudio::samples() const { return samples_; }
 RecordedAudio& RecordedAudio::operator+=(RecordedAudio const& rhs)
 {
   for (int i = 0; i < samples_.size() && i < rhs.samples().size(); i++)
-    samples_[i] = rhs.samples()[i];
+    samples_[i] += rhs.samples()[i];
   return *this;
 }
 
