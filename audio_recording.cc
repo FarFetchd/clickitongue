@@ -47,6 +47,12 @@ RecordedAudio& RecordedAudio::operator+=(RecordedAudio const& rhs)
   return *this;
 }
 
+void RecordedAudio::scale(double factor)
+{
+  for (float& s : samples_)
+    s *= factor;
+}
+
 void RecordedAudio::recordToFile(std::string fname) const
 {
   FILE* writer = fopen(fname.c_str(), "wb");

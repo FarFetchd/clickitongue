@@ -23,6 +23,9 @@ public:
 
   // Overlays rhs onto our own data. We ignore its end if it's longer than we are.
   RecordedAudio& operator+=(RecordedAudio const& rhs);
+  // Scale up or down by this factor. TODO There is probably some decibel thing
+  // that is the more correct way to do this.
+  void scale(double factor);
 
 private:
   std::vector<float> samples_;

@@ -1,7 +1,8 @@
 #include "iterative_tongue_trainer.h"
 
 #include <algorithm>
-#include <unordered_map>
+#include <random>
+#include <set>
 #include <vector>
 
 #include "audio_recording.h"
@@ -10,12 +11,14 @@
 
 namespace {
 
-struct TrainParams
+class TrainParams
 {
 public:
-  TrainParams(double tl, double th, double teh, double tel, int rb, int bs)
+  TrainParams(double tl, double th, double teh, double tel, int rb, int bs,
+    std::vector<std::vector<std::pair<RecordedAudio, int>>> const& example_sets)
     : tongue_low_hz(tl), tongue_high_hz(th), tongue_hzenergy_high(teh),
-      tongue_hzenergy_low(tel), refrac_blocks(rb), blocksize(bs) {}
+      tongue_hzenergy_low(tel), refrac_blocks(rb), blocksize(bs),
+      score(computeScore(example_sets)) {}
 
   bool operator==(TrainParams const& other) const
   {
@@ -26,218 +29,346 @@ public:
            refrac_blocks == other.refrac_blocks &&
            blocksize == other.blocksize;
   }
+  bool roughlyEquals(TrainParams const& other) const
+  {
+    return fabs(tongue_low_hz - other.tongue_low_hz) < 2.0 &&
+           fabs(tongue_high_hz - other.tongue_high_hz) < 4.0 &&
+           fabs(tongue_hzenergy_high - other.tongue_hzenergy_high) < 10.0 &&
+           fabs(tongue_hzenergy_low - other.tongue_hzenergy_low) < 1.0 &&
+           refrac_blocks == other.refrac_blocks &&
+           blocksize == other.blocksize;
+  }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
   {
-    return std::tie(l.tongue_low_hz, l.tongue_high_hz, l.tongue_hzenergy_high,
-                    l.tongue_hzenergy_low, l.refrac_blocks, l.blocksize)
-               <
-           std::tie(r.tongue_low_hz, r.tongue_high_hz, r.tongue_hzenergy_high,
-                    r.tongue_hzenergy_low, r.refrac_blocks, r.blocksize);
+    int l_sum = std::accumulate(l.score.begin(), l.score.end(), 0);
+    int r_sum = std::accumulate(r.score.begin(), r.score.end(), 0);
+    if (l_sum < r_sum)
+      return true;
+    else if (l_sum > r_sum)
+      return false;
+    for (int i=0; i<l.score.size(); i++)
+    {
+      if (l.score[i] < r.score[i])
+        return true;
+    }
+    return false;
   }
+
+  int detectEvents(std::vector<Sample> const& samples)
+  {
+    std::vector<int> event_frames;
+    TongueDetector detector(nullptr, tongue_low_hz, tongue_high_hz,
+                            tongue_hzenergy_high, tongue_hzenergy_low,
+                            refrac_blocks, blocksize, &event_frames);
+    for (int sample_ind = 0;
+        sample_ind + blocksize * kNumChannels < samples.size();
+        sample_ind += blocksize * kNumChannels)
+    {
+      detector.processAudio(samples.data() + sample_ind, blocksize);
+    }
+    return event_frames.size();
+  }
+
+  // for each example-set, detectEvents on each example, and sum up that sets'
+  // total violations. the score is a vector of those violations, one count per example-set.
+  std::vector<int> computeScore(std::vector<std::vector<std::pair<RecordedAudio, int>>> const& example_sets)
+  {
+    std::vector<int> score;
+    for (auto const& examples : example_sets)
+    {
+      int violations = 0;
+      for (auto const& example_and_expected : examples)
+      {
+        int events = detectEvents(example_and_expected.first.samples());
+        violations += abs(events - example_and_expected.second);
+      }
+      score.push_back(violations);
+    }
+    return score;
+  }
+  // (score)
+  std::string toString()
+  {
+    std::string ret = "{";
+    for (int x : score)
+      ret += std::to_string(x) + ",";
+    return ret + "}";
+  }
+  void printParams()
+  {
+    printf("--tongue_low_hz=%g --tongue_high_hz=%g --tongue_hzenergy_high=%g "
+           "--tongue_hzenergy_low=%g --refrac_blocks=%d --blocksize=%d\n",
+           tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
+           tongue_hzenergy_low, refrac_blocks, blocksize);
+  }
+
+
   double tongue_low_hz;
   double tongue_high_hz;
   double tongue_hzenergy_high;
   double tongue_hzenergy_low;
   int refrac_blocks;
   int blocksize;
+  std::vector<int> score;
 };
 
-struct TrainParamsHash
+class RandomStuff
 {
-  size_t operator()(TrainParams const& tp) const
-  {
-    return std::hash<double>()(tp.tongue_low_hz + 11) ^
-           std::hash<double>()(tp.tongue_high_hz + 22) ^
-           std::hash<double>()(tp.tongue_hzenergy_high + 33) ^
-           std::hash<double>()(tp.tongue_hzenergy_low + 44) ^
-           std::hash<int>()(tp.refrac_blocks + 55) ^
-           std::hash<int>()(tp.blocksize + 66);
-  }
+public:
+  RandomStuff(double low, double high, std::random_device* rd)
+    : mt_((*rd)()), dist_(low, high) {}
+  double random() { return dist_(mt_); }
+private:
+  std::mt19937 mt_;
+  std::uniform_real_distribution<double> dist_;
 };
-using ParamViolationsMap = std::unordered_map<TrainParams, int, TrainParamsHash>;
-
-int detectEvents(TrainParams params, std::vector<Sample> const& samples)
+std::random_device* getRandomDev()
 {
-  std::vector<int> event_frames;
-  TongueDetector detector(nullptr, params.tongue_low_hz, params.tongue_high_hz,
-                          params.tongue_hzenergy_high, params.tongue_hzenergy_low,
-                          params.refrac_blocks, params.blocksize, &event_frames);
-  for (int sample_ind = 0;
-       sample_ind + params.blocksize * kNumChannels < samples.size();
-       sample_ind += params.blocksize * kNumChannels)
-  {
-    detector.processAudio(samples.data() + sample_ind, params.blocksize);
-  }
-  return event_frames.size();
+  std::random_device* dev = new std::random_device;
+  return dev;
 }
 
-ParamViolationsMap getEmptyViolations()
+const double kMinLowHz = 500;
+const double kMaxLowHz = 1500;
+const double kMinHighHz = 700;
+const double kMaxHighHz = 2500;
+const double kMinLowEnergy = 100;
+const double kMaxLowEnergy = 2100;
+const double kMinHighEnergy = 500;
+const double kMaxHighEnergy = 8000;
+double randomLowHz()
 {
-  ParamViolationsMap violations;
-  for(double tongue_low_hz = 500; tongue_low_hz <= 1500; tongue_low_hz += 500)
-  for(double tongue_high_hz = tongue_low_hz + 500; tongue_high_hz < 2500; tongue_high_hz += 500)
-  for(double tongue_hzenergy_low = 100; tongue_hzenergy_low <= 2100; tongue_hzenergy_low += 1000)
-  for(double tongue_hzenergy_high = tongue_hzenergy_low; tongue_hzenergy_high <= 4100; tongue_hzenergy_high += 1000)
+  static RandomStuff* r = new RandomStuff(kMinHighHz, kMaxLowHz, getRandomDev());
+  return r->random();
+}
+double randomHighHz(double low)
+{
+  static RandomStuff* r = new RandomStuff(kMinHighHz, kMaxHighHz, getRandomDev());
+  double ret = low;
+  while (ret - 100 < low)
+    ret = r->random();
+  return ret;
+}
+double randomLowEnergy()
+{
+  static RandomStuff* r = new RandomStuff(kMinLowEnergy, kMaxLowEnergy, getRandomDev());
+  return r->random();
+}
+double randomHighEnergy(double low)
+{
+  static RandomStuff* r = new RandomStuff(kMinHighEnergy, kMaxHighEnergy, getRandomDev());
+  double ret = low;
+  while (ret - 100 < low)
+    ret = r->random();
+  return ret;
+}
+
+class ExamplesSets
+{
+public:
+  void addExampleSet(std::vector<std::pair<RecordedAudio, int>> ex)
   {
+    examples_sets_.push_back(ex);
+  }
+  TrainParams randomParams()
+  {
+    double tongue_low_hz = randomLowHz();
+    double tongue_high_hz = randomHighHz(tongue_low_hz);
+    double tongue_hzenergy_low = randomLowEnergy();
+    double tongue_hzenergy_high = randomHighEnergy(tongue_hzenergy_low);
     int refrac_blocks = 12;
     int blocksize = 256;
-
-    TrainParams tp(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-                   tongue_hzenergy_low, refrac_blocks, blocksize);
-    violations[tp] = 0;
+    return TrainParams(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
+                       tongue_hzenergy_low, refrac_blocks, blocksize, examples_sets_);
   }
-  return violations;
-}
 
-std::vector<TrainParams> computeViolations(std::vector<std::pair<RecordedAudio, int>> const& examples)
-{
-  ParamViolationsMap violations = getEmptyViolations();
-  printf("Now computing...\n");
-  for (int i = 0; i < examples.size(); i++)
+  TrainParams betweenCandidates(TrainParams a, TrainParams b)
   {
-    for (auto it = violations.begin(); it != violations.end(); ++it)
-    {
-      int num_events = detectEvents(it->first, examples[i].first.samples());
-      for (; num_events < examples[i].second; num_events++)
-        it->second++;
-      for (; num_events > examples[i].second; num_events--)
-        it->second++;
-    }
-    printf("done with recording %d\n", i+1);
+    double tongue_low_hz = (a.tongue_low_hz + b.tongue_low_hz) / 2.0;
+    double tongue_high_hz = (a.tongue_high_hz + b.tongue_high_hz) / 2.0;
+    double tongue_hzenergy_high = (a.tongue_hzenergy_high + b.tongue_hzenergy_high) / 2.0;
+    double tongue_hzenergy_low = (a.tongue_hzenergy_low + b.tongue_hzenergy_low) / 2.0;
+    int refrac_blocks = a.refrac_blocks;
+    int blocksize = b.blocksize;
+    return TrainParams(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
+                       tongue_hzenergy_low, refrac_blocks, blocksize, examples_sets_);
   }
-
-  int min_violations = 999999999;
-  for (auto it = violations.begin(); it != violations.end(); ++it)
-    min_violations = std::min(min_violations, it->second);
-  std::vector<TrainParams> best;
-  for (auto it = violations.begin(); it != violations.end(); ++it)
-    if (it->second == min_violations)
-      best.push_back(it->first);
-  printf("best of this batch have %d violations\n", min_violations);
-  return best;
-}
-
-void printBest(std::vector<TrainParams> best)
-{
-  for (auto x : best)
+  TrainParams betweenCandidates(TrainParams a, TrainParams b, TrainParams c)
   {
-    printf("--tongue_low_hz=%g --tongue_high_hz=%g --tongue_hzenergy_high=%g "
-           "--tongue_hzenergy_low=%g --refrac_blocks=%d --blocksize=%d\n",
-           x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-           x.tongue_hzenergy_low, x.refrac_blocks, x.blocksize);
+    double tongue_low_hz = (a.tongue_low_hz + b.tongue_low_hz + c.tongue_low_hz) / 3.0;
+    double tongue_high_hz = (a.tongue_high_hz + b.tongue_high_hz + c.tongue_high_hz) / 3.0;
+    double tongue_hzenergy_high = (a.tongue_hzenergy_high + b.tongue_hzenergy_high + c.tongue_hzenergy_high) / 3.0;
+    double tongue_hzenergy_low = (a.tongue_hzenergy_low + b.tongue_hzenergy_low + c.tongue_hzenergy_low) / 3.0;
+    int refrac_blocks = a.refrac_blocks;
+    int blocksize = b.blocksize;
+    return TrainParams(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
+                       tongue_hzenergy_low, refrac_blocks, blocksize, examples_sets_);
   }
+  TrainParams beyondCandidates(TrainParams from, TrainParams beyond)
+  {
+    double lowfreq_diff = beyond.tongue_low_hz - from.tongue_low_hz;
+    double highfreq_diff = beyond.tongue_high_hz - from.tongue_high_hz;
+    double highen_diff = beyond.tongue_hzenergy_high - from.tongue_hzenergy_high;
+    double lowen_diff = beyond.tongue_hzenergy_low - from.tongue_hzenergy_low;
+
+    double tongue_low_hz = beyond.tongue_low_hz + lowfreq_diff/2.0;
+    double tongue_high_hz = beyond.tongue_high_hz + highfreq_diff/2.0;
+    double tongue_hzenergy_high = beyond.tongue_hzenergy_high + highen_diff/2.0;
+    double tongue_hzenergy_low = beyond.tongue_hzenergy_low + lowen_diff/2.0;
+
+    tongue_low_hz = std::min(tongue_low_hz, kMaxLowHz);
+    tongue_low_hz = std::max(tongue_low_hz, kMinLowHz);
+    tongue_high_hz = std::min(tongue_high_hz, kMaxHighHz);
+    tongue_high_hz = std::max(tongue_high_hz, kMinHighHz);
+    tongue_hzenergy_high = std::min(tongue_hzenergy_high, kMaxHighEnergy);
+    tongue_hzenergy_high = std::max(tongue_hzenergy_high, kMinHighEnergy);
+    tongue_hzenergy_low = std::min(tongue_hzenergy_low, kMaxLowEnergy);
+    tongue_hzenergy_low = std::max(tongue_hzenergy_low, kMinLowEnergy);
+
+    int refrac_blocks = beyond.refrac_blocks;
+    int blocksize = beyond.blocksize;
+
+    return TrainParams(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
+                       tongue_hzenergy_low, refrac_blocks, blocksize, examples_sets_);
+  }
+private:
+  // A vector of example-sets. Each example-set is a vector of samples of audio,
+  // paired with how many events are expected to be in that audio.
+  std::vector<std::vector<std::pair<RecordedAudio, int>>> examples_sets_;
+};
+
+RecordedAudio recordExample(int desired_events)
+{
+  const int kSecondsToRecord = 4;
+  if (desired_events == 0)
+  {
+    printf("About to record! Will record for %d seconds. During that time, please "
+           "don't do ANY tongue clicks; this is just to record your typical "
+           "background sounds. Press any key when you are ready to start.\n",
+           kSecondsToRecord);
+  }
+  else
+  {
+    printf("About to record! Will record for %d seconds. During that time, please "
+           "do %d tongue clicks. Press any key when you are ready to start.\n",
+           kSecondsToRecord, desired_events);
+  }
+  make_getchar_like_getch(); getchar(); resetTermios();
+  printf("Now recording..."); fflush(stdout);
+  RecordedAudio recorder(kSecondsToRecord);
+  printf("recording done.\n");
+  return recorder;
 }
 
-// RecordedAudio recordExample(int desired_events)
-// {
-//   static int it_num = 0;
-//   printf("Now recording training iteration %d! Please do %d clicks.\n",
-//          ++it_num, desired_events);
-//   RecordedAudio recorder(5);
-//   printf("Recording done. Press any key to continue.\n");
-//   make_getchar_like_getch(); getchar(); resetTermios();
-//   return recorder;
-// }
-
+constexpr bool DOING_DEVELOPMENT_TESTING = false;
 } // namespace
 
 void iterativeTongueTrainMain()
 {
-  // for easy development of the code
-  RecordedAudio clicks0a("clicks_0a.pcm");
-  RecordedAudio clicks0b("clicks_0b.pcm");
-  RecordedAudio clicks1a("clicks_1a.pcm");
-  RecordedAudio clicks1b("clicks_1b.pcm");
-  RecordedAudio clicks2a("clicks_2a.pcm");
-  RecordedAudio clicks2b("clicks_2b.pcm");
-  RecordedAudio clicks3a("clicks_3a.pcm");
-  RecordedAudio clicks3b("clicks_3b.pcm");
-  // for actual use
-//   RecordedAudio clicks0a = recordExample(0);
-//   RecordedAudio clicks1a = recordExample(1);
-//   RecordedAudio clicks2a = recordExample(2);
-//   RecordedAudio clicks3a = recordExample(3);
-//   RecordedAudio clicks0b = recordExample(0);
-//   RecordedAudio clicks1b = recordExample(1);
-//   RecordedAudio clicks2b = recordExample(2);
-//   RecordedAudio clicks3b = recordExample(3);
+  std::vector<RecordedAudio> audio_examples;
+  if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
+  {
+    audio_examples.emplace_back("clicks_0a.pcm");
+    audio_examples.emplace_back("clicks_1a.pcm");
+    audio_examples.emplace_back("clicks_2a.pcm");
+    audio_examples.emplace_back("clicks_3a.pcm");
+  }
+  else // for actual use
+  {
+    audio_examples.push_back(recordExample(0));
+    audio_examples.push_back(recordExample(1));
+    audio_examples.push_back(recordExample(2));
+    audio_examples.push_back(recordExample(3));
+  }
+  std::vector<std::string> noise_names = {"falls_of_fall.pcm", "brandenburg.pcm"};
+  std::vector<RecordedAudio> noises;
+  for (auto name : noise_names)
+    noises.emplace_back(name);
 
-  RecordedAudio noise1("falls_of_fall.pcm");
-  RecordedAudio noise2("brandenburg.pcm");
-
-  std::vector<TrainParams> best_clean;
+  ExamplesSets examples_sets;
+  // (first, add examples without any noise)
   {
     std::vector<std::pair<RecordedAudio, int>> examples;
-    // TODO / NOTE: not clear if the two examples per target number of clicks
-    //              is actually worth doubling the computation time...
-    examples.emplace_back(clicks0a, 0);
-    examples.emplace_back(clicks0b, 0);
-    examples.emplace_back(clicks1a, 1);
-    examples.emplace_back(clicks1b, 1);
-    examples.emplace_back(clicks2a, 2);
-    examples.emplace_back(clicks2b, 2);
-    examples.emplace_back(clicks3a, 3);
-    examples.emplace_back(clicks3b, 3);
-    best_clean = computeViolations(examples);
+    examples.emplace_back(audio_examples[0], 0);
+    examples.emplace_back(audio_examples[1], 1);
+    examples.emplace_back(audio_examples[2], 2);
+    examples.emplace_back(audio_examples[3], 3);
+    examples_sets.addExampleSet(examples);
   }
-  std::vector<TrainParams> best_noise1;
+  for (auto const& noise : noises) // now a set of our examples for each noise
   {
     std::vector<std::pair<RecordedAudio, int>> examples;
-    examples.emplace_back(clicks0a, 0); examples.back().first += noise1;
-    examples.emplace_back(clicks0b, 0); examples.back().first += noise1;
-    examples.emplace_back(clicks1a, 1); examples.back().first += noise1;
-    examples.emplace_back(clicks1b, 1); examples.back().first += noise1;
-    examples.emplace_back(clicks2a, 2); examples.back().first += noise1;
-    examples.emplace_back(clicks2b, 2); examples.back().first += noise1;
-    examples.emplace_back(clicks3a, 3); examples.back().first += noise1;
-    examples.emplace_back(clicks3b, 3); examples.back().first += noise1;
-    best_noise1 = computeViolations(examples);
+    examples.emplace_back(audio_examples[0], 0); examples.back().first.scale(0.7); examples.back().first += noise;
+    examples.emplace_back(audio_examples[1], 1); examples.back().first.scale(0.7); examples.back().first += noise;
+    examples.emplace_back(audio_examples[2], 2); examples.back().first.scale(0.7); examples.back().first += noise;
+    examples.emplace_back(audio_examples[3], 3); examples.back().first.scale(0.7); examples.back().first += noise;
+    examples_sets.addExampleSet(examples);
   }
-  std::vector<TrainParams> best_noise2;
+  // finally, a quiet version, for a challenge/tie breaker
   {
     std::vector<std::pair<RecordedAudio, int>> examples;
-    examples.emplace_back(clicks0a, 0); examples.back().first += noise2;
-    examples.emplace_back(clicks0b, 0); examples.back().first += noise2;
-    examples.emplace_back(clicks1a, 1); examples.back().first += noise2;
-    examples.emplace_back(clicks1b, 1); examples.back().first += noise2;
-    examples.emplace_back(clicks2a, 2); examples.back().first += noise2;
-    examples.emplace_back(clicks2b, 2); examples.back().first += noise2;
-    examples.emplace_back(clicks3a, 3); examples.back().first += noise2;
-    examples.emplace_back(clicks3b, 3); examples.back().first += noise2;
-    best_noise2 = computeViolations(examples);
+    examples.emplace_back(audio_examples[0], 0); examples.back().first.scale(0.3);
+    examples.emplace_back(audio_examples[1], 1); examples.back().first.scale(0.3);
+    examples.emplace_back(audio_examples[2], 2); examples.back().first.scale(0.3);
+    examples.emplace_back(audio_examples[3], 3); examples.back().first.scale(0.3);
+    examples_sets.addExampleSet(examples);
   }
-  std::sort(best_clean.begin(), best_clean.end());
-  std::sort(best_noise1.begin(), best_noise1.end());
-  std::sort(best_noise2.begin(), best_noise2.end());
-  std::vector<TrainParams> best_01, best_02, best_12, best_012;
-  std::set_intersection(best_clean.begin(), best_clean.end(),
-                        best_noise1.begin(), best_noise1.end(),
-                        std::back_inserter(best_01));
-  std::set_intersection(best_clean.begin(), best_clean.end(),
-                        best_noise2.begin(), best_noise2.end(),
-                        std::back_inserter(best_02));
-  std::set_intersection(best_noise1.begin(), best_noise1.end(),
-                        best_noise2.begin(), best_noise2.end(),
-                        std::back_inserter(best_12));
-  std::set_intersection(best_01.begin(), best_01.end(),
-                        best_12.begin(), best_12.end(),
-                        std::back_inserter(best_012));
 
-  if (!best_012.empty())
-    printBest(best_012);
-  else if (best_01.empty() && best_02.empty())
+  printf("beginning optimization computations...\n");
+  // The optimization algorithm: first, seed with 10 random points.
+  std::set<TrainParams> candidates;
+  for (int i=0; i<10; i++)
+    candidates.insert(examples_sets.randomParams());
+  TrainParams previous_best = *candidates.begin();
+  int same_streak = 0;
+  while (true)
   {
-    printf("falling back to best of clean only. you'll have to keep your "
-           "environment as noise-free as when you recorded these examples!\n");
-    printBest(best_clean);
+    // Keep the best three, discard the rest.
+    auto it = candidates.begin();
+    TrainParams best = *it;
+    TrainParams second = *(++it);
+    TrainParams third = *(++it);
+    candidates.clear();
+
+    printf("current best: ");
+    best.printParams();
+    printf("scores: best: %s, 2nd: %s, 3rd: %s\n",
+           best.toString().c_str(), second.toString().c_str(), third.toString().c_str());
+    if (best.roughlyEquals(previous_best))
+      same_streak++;
+    else
+      same_streak = 0;
+    previous_best = best;
+    if (best.roughlyEquals(second) || same_streak > 4)
+      break; // we've probably converged
+
+    // The next iteration will consider:
+    // our best three,
+    candidates.insert(best);
+    candidates.insert(second);
+    candidates.insert(third);
+    // the point in the middle of the three,
+    candidates.insert(examples_sets.betweenCandidates(best, second, third));
+    // the points in between each pair,
+    candidates.insert(examples_sets.betweenCandidates(best, second));
+    candidates.insert(examples_sets.betweenCandidates(best, third));
+    candidates.insert(examples_sets.betweenCandidates(third, second));
+    // the point "beyond" each pair in each direction (i.e. if you found C to be
+    // between B and D, then add A and E that give you A---B---C---D---E).
+    candidates.insert(examples_sets.beyondCandidates(best, second));
+    candidates.insert(examples_sets.beyondCandidates(second, best));
+    candidates.insert(examples_sets.beyondCandidates(best, third));
+    candidates.insert(examples_sets.beyondCandidates(third, best));
+    candidates.insert(examples_sets.beyondCandidates(third, second));
+    candidates.insert(examples_sets.beyondCandidates(second, third));
+    // Finally, add points in a random direction from each of the three.
+    TrainParams random_point = examples_sets.randomParams();
+    candidates.insert(random_point);
+    candidates.insert(examples_sets.betweenCandidates(best, random_point));
+    candidates.insert(examples_sets.betweenCandidates(second, random_point));
+    candidates.insert(examples_sets.betweenCandidates(third, random_point));
   }
-  else
-  {
-    printf("falling back. best of clean + noise1:\n");
-    printBest(best_01);
-    printf("falling back. best of clean + noise2:\n");
-    printBest(best_02);
-  }
+  printf("converged; done.\n");
 }
 
 // TODO update the other trainer to be like this one (or reuse somehow?)

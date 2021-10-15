@@ -121,6 +121,9 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 
 int main(int argc, char** argv)
 {
+  Pa_Initialize(); // get its annoying spam out of the way immediately
+  printf("\n\n******IGNORE THE ABOVE!!! clickitongue is now running.******\n\n");
+
   ClickitongueCmdlineOpts opts =
       structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
   validateCmdlineOpts(opts);
@@ -140,5 +143,6 @@ int main(int argc, char** argv)
     audio.play();
   }
 
+  Pa_Terminate(); // corresponds to the Pa_Initialize() at the start
   return 0;
 }
