@@ -112,21 +112,23 @@ public:
   std::vector<int> score;
 };
 
-class RandomStuff
-{
-public:
-  RandomStuff(double low, double high, std::random_device* rd)
-    : mt_((*rd)()), dist_(low, high) {}
-  double random() { return dist_(mt_); }
-private:
-  std::mt19937 mt_;
-  std::uniform_real_distribution<double> dist_;
-};
 std::random_device* getRandomDev()
 {
   std::random_device* dev = new std::random_device;
   return dev;
 }
+class RandomStuff
+{
+public:
+  RandomStuff(double low, double high)
+    : mt_((*getRandomDev())()), dist_(low, high) {}
+
+  double random() { return dist_(mt_); }
+
+private:
+  std::mt19937 mt_;
+  std::uniform_real_distribution<double> dist_;
+};
 
 const double kMinLowHz = 300;
 const double kMaxLowHz = 2500;
@@ -138,12 +140,12 @@ const double kMinHighEnergy = 300;
 const double kMaxHighEnergy = 16000;
 double randomLowHz()
 {
-  static RandomStuff* r = new RandomStuff(kMinHighHz, kMaxLowHz, getRandomDev());
+  static RandomStuff* r = new RandomStuff(kMinHighHz, kMaxLowHz);
   return r->random();
 }
 double randomHighHz(double low)
 {
-  static RandomStuff* r = new RandomStuff(kMinHighHz, kMaxHighHz, getRandomDev());
+  static RandomStuff* r = new RandomStuff(kMinHighHz, kMaxHighHz);
   double ret = low;
   while (ret - 100 < low)
     ret = r->random();
@@ -151,12 +153,12 @@ double randomHighHz(double low)
 }
 double randomLowEnergy()
 {
-  static RandomStuff* r = new RandomStuff(kMinLowEnergy, kMaxLowEnergy, getRandomDev());
+  static RandomStuff* r = new RandomStuff(kMinLowEnergy, kMaxLowEnergy);
   return r->random();
 }
 double randomHighEnergy(double low)
 {
-  static RandomStuff* r = new RandomStuff(kMinHighEnergy, kMaxHighEnergy, getRandomDev());
+  static RandomStuff* r = new RandomStuff(kMinHighEnergy, kMaxHighEnergy);
   double ret = low;
   while (ret - 100 < low)
     ret = r->random();
@@ -181,7 +183,6 @@ public:
     return TrainParams(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
                        tongue_hzenergy_low, refrac_blocks, blocksize, examples_sets_);
   }
-
   TrainParams betweenCandidates(TrainParams a, TrainParams b)
   {
     double tongue_low_hz = (a.tongue_low_hz + b.tongue_low_hz) / 2.0;
@@ -342,8 +343,8 @@ void iterativeTongueTrainMain()
     candidates.insert(examples_sets.betweenCandidates(best, third));  // D
     candidates.insert(examples_sets.beyondCandidates(second, best));  // A
     candidates.insert(examples_sets.beyondCandidates(third, best));   // C
-    // Finally, pick a random line passing through best, and keep a point on
-    // whichever side of best looks better.
+    // Finally, pick a random line passing through best, and add a point on
+    // whichever side looks better.
     TrainParams random_point = examples_sets.randomParams();
     candidates.insert(random_point);
     if (random_point < best)
@@ -353,5 +354,3 @@ void iterativeTongueTrainMain()
   }
   printf("converged; done.\n");
 }
-
-// TODO update the other trainer to be like this one (or reuse somehow?)

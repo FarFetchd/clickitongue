@@ -14,14 +14,14 @@ public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
   BlowDetector(BlockingQueue<Action>* action_queue,
-               float lowpass_percent, float highpass_percent,
+               double lowpass_percent, double highpass_percent,
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
                int blocksize, std::vector<int>* cur_frame_dest);
 
   // Kicks off 'action' at each detected event.
   BlowDetector(BlockingQueue<Action>* action_queue, Action action,
-               float lowpass_percent, float highpass_percent,
+               double lowpass_percent, double highpass_percent,
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
                int blocksize);
@@ -33,9 +33,9 @@ private:
 
   // the percentile bucket (rounded) of the Fourier output that is the highest
   // we should consider in the lowpass half.
-  const float lowpass_percent_ = 0.035;
+  const double lowpass_percent_ = 0.035;
   // ditto, lowest for the highpass half.
-  const float highpass_percent_ = 0.5;
+  const double highpass_percent_ = 0.5;
 
   // The average value threshold needed to be crossed by the lowpass half in
   // order to move to "mouse down" state.

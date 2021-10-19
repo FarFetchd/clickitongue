@@ -5,7 +5,7 @@
 #include "easy_fourier.h"
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
-                           float lowpass_percent, float highpass_percent,
+                           double lowpass_percent, double highpass_percent,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh,
                            int blocksize, std::vector<int>* cur_frame_dest)
@@ -21,7 +21,7 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
 }
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue, Action action,
-                           float lowpass_percent, float highpass_percent,
+                           double lowpass_percent, double highpass_percent,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh,
                            int blocksize)
@@ -52,16 +52,16 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
 
   fourier_.doFFT(orig_real, transformed);
 
-  static int print_once_per_10ms_chunks = 0;
-  if (++print_once_per_10ms_chunks == 20)
-  {
-    fourier_.printEqualizerAlreadyFreq(transformed);
-    print_once_per_10ms_chunks=0;
-  }
+//   static int print_once_per_10ms_chunks = 0;
+//   if (++print_once_per_10ms_chunks == 20)
+//   {
+//     fourier_.printEqualizerAlreadyFreq(transformed);
+//     print_once_per_10ms_chunks=0;
+//   }
 
   int last_low_bucket = round(lowpass_percent_ * num_buckets);
   double avg_low = 0;
-  for (int i = 0; i <= last_low_bucket; i++)
+  for (int i = 1; i <= last_low_bucket; i++)
     avg_low += fabs(transformed[i][0]);
   avg_low /= (double)(last_low_bucket + 1);
 
@@ -78,7 +78,7 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
   avg_high /= (double)(num_buckets - first_high_bucket);
 
   // TODO make this a configurable param
-  bool many_high_spikes = (float)high_above_1 / (float)(num_buckets - first_high_bucket) > 0.5;
+  bool many_high_spikes = (double)high_above_1 / (double)(num_buckets - first_high_bucket) > 0.5;
 
   if (avg_low > low_on_thresh_ && avg_high > high_on_thresh_ && many_high_spikes && !mouse_down_)
   {
