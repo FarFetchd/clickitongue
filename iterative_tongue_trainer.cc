@@ -128,14 +128,14 @@ std::random_device* getRandomDev()
   return dev;
 }
 
-const double kMinLowHz = 500;
-const double kMaxLowHz = 1500;
+const double kMinLowHz = 300;
+const double kMaxLowHz = 2500;
 const double kMinHighHz = 700;
-const double kMaxHighHz = 2500;
+const double kMaxHighHz = 5500;
 const double kMinLowEnergy = 100;
-const double kMaxLowEnergy = 2100;
-const double kMinHighEnergy = 500;
-const double kMaxHighEnergy = 8000;
+const double kMaxLowEnergy = 4100;
+const double kMinHighEnergy = 300;
+const double kMaxHighEnergy = 16000;
 double randomLowHz()
 {
   static RandomStuff* r = new RandomStuff(kMinHighHz, kMaxLowHz, getRandomDev());
@@ -188,17 +188,6 @@ public:
     double tongue_high_hz = (a.tongue_high_hz + b.tongue_high_hz) / 2.0;
     double tongue_hzenergy_high = (a.tongue_hzenergy_high + b.tongue_hzenergy_high) / 2.0;
     double tongue_hzenergy_low = (a.tongue_hzenergy_low + b.tongue_hzenergy_low) / 2.0;
-    int refrac_blocks = a.refrac_blocks;
-    int blocksize = b.blocksize;
-    return TrainParams(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-                       tongue_hzenergy_low, refrac_blocks, blocksize, examples_sets_);
-  }
-  TrainParams betweenCandidates(TrainParams a, TrainParams b, TrainParams c)
-  {
-    double tongue_low_hz = (a.tongue_low_hz + b.tongue_low_hz + c.tongue_low_hz) / 3.0;
-    double tongue_high_hz = (a.tongue_high_hz + b.tongue_high_hz + c.tongue_high_hz) / 3.0;
-    double tongue_hzenergy_high = (a.tongue_hzenergy_high + b.tongue_hzenergy_high + c.tongue_hzenergy_high) / 3.0;
-    double tongue_hzenergy_low = (a.tongue_hzenergy_low + b.tongue_hzenergy_low + c.tongue_hzenergy_low) / 3.0;
     int refrac_blocks = a.refrac_blocks;
     int blocksize = b.blocksize;
     return TrainParams(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
@@ -260,7 +249,7 @@ RecordedAudio recordExample(int desired_events)
   return recorder;
 }
 
-constexpr bool DOING_DEVELOPMENT_TESTING = false;
+constexpr bool DOING_DEVELOPMENT_TESTING = true;
 } // namespace
 
 void iterativeTongueTrainMain()
@@ -342,31 +331,25 @@ void iterativeTongueTrainMain()
     if (best.roughlyEquals(second) || same_streak > 4)
       break; // we've probably converged
 
-    // The next iteration will consider:
-    // our best three,
+    // The next iteration will consider, first of all, our current best three.
     candidates.insert(best);
     candidates.insert(second);
     candidates.insert(third);
-    // the point in the middle of the three,
-    candidates.insert(examples_sets.betweenCandidates(best, second, third));
-    // the points in between each pair,
-    candidates.insert(examples_sets.betweenCandidates(best, second));
-    candidates.insert(examples_sets.betweenCandidates(best, third));
-    candidates.insert(examples_sets.betweenCandidates(third, second));
-    // the point "beyond" each pair in each direction (i.e. if you found C to be
-    // between B and D, then add A and E that give you A---B---C---D---E).
-    candidates.insert(examples_sets.beyondCandidates(best, second));
-    candidates.insert(examples_sets.beyondCandidates(second, best));
-    candidates.insert(examples_sets.beyondCandidates(best, third));
-    candidates.insert(examples_sets.beyondCandidates(third, best));
-    candidates.insert(examples_sets.beyondCandidates(third, second));
-    candidates.insert(examples_sets.beyondCandidates(second, third));
-    // Finally, add points in a random direction from each of the three.
+    // Call our three best '1,2,3'. We will also consider these A,B,C,D:
+    // A--1--B--2
+    // C--1--D--3
+    candidates.insert(examples_sets.betweenCandidates(best, second)); // B
+    candidates.insert(examples_sets.betweenCandidates(best, third));  // D
+    candidates.insert(examples_sets.beyondCandidates(second, best));  // A
+    candidates.insert(examples_sets.beyondCandidates(third, best));   // C
+    // Finally, pick a random line passing through best, and keep a point on
+    // whichever side of best looks better.
     TrainParams random_point = examples_sets.randomParams();
     candidates.insert(random_point);
-    candidates.insert(examples_sets.betweenCandidates(best, random_point));
-    candidates.insert(examples_sets.betweenCandidates(second, random_point));
-    candidates.insert(examples_sets.betweenCandidates(third, random_point));
+    if (random_point < best)
+      candidates.insert(examples_sets.betweenCandidates(best, random_point));
+    else
+      candidates.insert(examples_sets.beyondCandidates(random_point, best));
   }
   printf("converged; done.\n");
 }
