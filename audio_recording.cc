@@ -58,9 +58,7 @@ void RecordedAudio::recordToFile(std::string fname) const
   FILE* writer = fopen(fname.c_str(), "wb");
   fwrite(samples_.data(), sizeof(Sample), samples_.size(), writer);
   fclose(writer);
-  float seconds = (samples_.size() / (sizeof(Sample) * kNumChannels))
-                                       /
-                              (float)kFramesPerSec;
+  float seconds = (samples_.size() / kNumChannels) / (float)kFramesPerSec;
   printf("Wrote %g seconds of float format %d channel %d Hz audio to %s.\n",
          seconds, kNumChannels, kFramesPerSec, fname.c_str());
 }
