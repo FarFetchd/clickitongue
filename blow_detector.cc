@@ -80,13 +80,18 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
   // TODO make this a configurable param
   bool many_high_spikes = (double)high_above_1 / (double)(num_buckets - first_high_bucket) > 0.5;
 
-  if (avg_low > low_on_thresh_ && avg_high > high_on_thresh_ && many_high_spikes && !mouse_down_)
+  // require all clicks to last at least two blocks (at 256 frames per block,
+  // 1 block is 5.8ms, and my physical mouse clicks appear to be 50-80ms long).
+  if (mouse_down_ && !mouse_down_at_least_one_block_)
+    mouse_down_at_least_one_block_ = true;
+  else if (avg_low > low_on_thresh_ && avg_high > high_on_thresh_ && many_high_spikes && !mouse_down_)
   {
     if (action_ == Action::RecordCurFrame)
       kickoffAction(Action::RecordCurFrame);
     else
       kickoffAction(Action::LeftDown);
     mouse_down_ = true;
+    mouse_down_at_least_one_block_ = false;
   }
   else if (avg_low < low_off_thresh_ && avg_high < high_off_thresh_ && mouse_down_)
   {

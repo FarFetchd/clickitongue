@@ -47,6 +47,7 @@ private:
 
   // our understanding of the current state of the mouse button
   bool mouse_down_ = false;
+  bool mouse_down_at_least_one_block_ = false;
 
   // Number of frames we expect to get per callback, to feed to Fourier.
   // Should be a power of 2.
