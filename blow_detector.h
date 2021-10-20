@@ -17,6 +17,7 @@ public:
                double lowpass_percent, double highpass_percent,
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
+               double high_spike_frac, double high_spike_level,
                int blocksize, std::vector<int>* cur_frame_dest);
 
   // Kicks off 'action' at each detected event.
@@ -24,6 +25,7 @@ public:
                double lowpass_percent, double highpass_percent,
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
+               double high_spike_frac, double high_spike_level,
                int blocksize);
 
   void processAudio(const Sample* cur_sample, int num_frames) override;
@@ -44,6 +46,9 @@ private:
   const double low_off_thresh_ = 3;
   const double high_on_thresh_ = 0.75;
   const double high_off_thresh_ = 0.1;
+  // Require this fraction of highpass'd bins to be above this level.
+  const double high_spike_frac_ = 0.5;
+  const double high_spike_level_ = 1.0;
 
   // our understanding of the current state of the mouse button
   bool mouse_down_ = false;

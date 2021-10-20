@@ -8,11 +8,13 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double lowpass_percent, double highpass_percent,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh,
+                           double high_spike_frac, double high_spike_level,
                            int blocksize, std::vector<int>* cur_frame_dest)
   : Detector(action_queue), action_(Action::RecordCurFrame),
     lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
     low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
     high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh),
+    high_spike_frac_(high_spike_frac), high_spike_level_(high_spike_level),
     blocksize_(blocksize), fourier_(blocksize_)
 {
   setCurFrameDest(cur_frame_dest);
@@ -24,11 +26,13 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue, Action action,
                            double lowpass_percent, double highpass_percent,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh,
+                           double high_spike_frac, double high_spike_level,
                            int blocksize)
   : Detector(action_queue), action_(action),
     lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
     low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
     high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh),
+    high_spike_frac_(high_spike_frac), high_spike_level_(high_spike_level),
     blocksize_(blocksize), fourier_(blocksize_)
 {
 //    assert(action_ != Action::RecordCurFrame);
@@ -67,18 +71,18 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
 
   int first_high_bucket = round(highpass_percent_ * num_buckets);
   double avg_high = 0;
-  int high_above_1 = 0;
+  int spike_count = 0;
   for (int i = first_high_bucket; i < num_buckets; i++)
   {
     double val = fabs(transformed[i][0]);
     avg_high += val;
-    if (val > 1.0)
-      high_above_1++;
+    if (val > high_spike_level_)
+      spike_count++;
   }
   avg_high /= (double)(num_buckets - first_high_bucket);
 
-  // TODO make this a configurable param
-  bool many_high_spikes = (double)high_above_1 / (double)(num_buckets - first_high_bucket) > 0.5;
+  bool many_high_spikes = (double)spike_count /
+             (double)(num_buckets - first_high_bucket) > high_spike_frac_;
 
   // require all clicks to last at least two blocks (at 256 frames per block,
   // 1 block is 5.8ms, and my physical mouse clicks appear to be 50-80ms long).

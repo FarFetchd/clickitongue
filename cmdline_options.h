@@ -17,6 +17,8 @@ struct ClickitongueCmdlineOpts
   std::optional<double> low_off_thresh;
   std::optional<double> high_on_thresh;
   std::optional<double> high_off_thresh;
+  std::optional<double> high_spike_frac;
+  std::optional<double> high_spike_level;
 
   // tongue
   std::optional<double> tongue_low_hz;
@@ -28,6 +30,10 @@ struct ClickitongueCmdlineOpts
   // record, play
   std::optional<std::string> filename;
 };
-STRUCTOPT(ClickitongueCmdlineOpts, mode, detector, fourier_blocksize_frames, duration_seconds, lowpass_percent, highpass_percent, low_on_thresh, low_off_thresh, high_on_thresh, high_off_thresh, tongue_low_hz, tongue_high_hz, tongue_hzenergy_high, tongue_hzenergy_low, refrac_blocks, filename);
+STRUCTOPT(ClickitongueCmdlineOpts, mode, detector, fourier_blocksize_frames,
+          duration_seconds, lowpass_percent, highpass_percent,
+          low_on_thresh, low_off_thresh, high_on_thresh, high_off_thresh,
+          high_spike_frac, high_spike_level, tongue_low_hz, tongue_high_hz,
+          tongue_hzenergy_high, tongue_hzenergy_low, refrac_blocks, filename);
 
 #endif // CLICKITONGUE_CMDLINE_OPTIONS_H_

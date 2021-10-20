@@ -39,11 +39,18 @@ void useOrTest(ClickitongueCmdlineOpts opts)
       crash("--detector=blow requires a value for --high_on_thresh.");
     if (!opts.high_off_thresh.has_value())
       crash("--detector=blow requires a value for --high_off_thresh.");
+    if (!opts.high_spike_frac.has_value())
+      crash("--detector=blow requires a value for --high_spike_frac.");
+    if (!opts.high_spike_level.has_value())
+      crash("--detector=blow requires a value for --high_spike_level.");
 
-    BlowDetector clicker(&action_queue, action, opts.lowpass_percent.value(),
-                         opts.highpass_percent.value(), opts.low_on_thresh.value(),
-                         opts.low_off_thresh.value(), opts.high_on_thresh.value(),
-                         opts.high_off_thresh.value(), opts.fourier_blocksize_frames.value());
+    BlowDetector clicker(
+        &action_queue, action, opts.lowpass_percent.value(),
+        opts.highpass_percent.value(), opts.low_on_thresh.value(),
+        opts.low_off_thresh.value(), opts.high_on_thresh.value(),
+        opts.high_off_thresh.value(), opts.high_spike_frac.value(),
+        opts.high_spike_level.value(), opts.fourier_blocksize_frames.value());
+
     AudioInput audio_input(blowDetectorCallback, &clicker,
                            opts.fourier_blocksize_frames.value());
     while (audio_input.active())

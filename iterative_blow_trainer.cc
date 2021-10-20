@@ -14,11 +14,13 @@ namespace {
 class TrainParams
 {
 public:
-  TrainParams(double lpp, double hpp, double lont, double lofft, double hont, double hofft, int bs,
+  TrainParams(double lpp, double hpp, double lont, double lofft,
+              double hont, double hofft, double hsf, double hsl, int bs,
               std::vector<std::vector<std::pair<RecordedAudio, int>>> const& example_sets)
   : lowpass_percent(lpp), highpass_percent(hpp), low_on_thresh(lont),
     low_off_thresh(lofft), high_on_thresh(hont), high_off_thresh(hofft),
-    blocksize(bs), score(computeScore(example_sets)) {}
+    high_spike_frac(hsf), high_spike_level(hsl), blocksize(bs),
+    score(computeScore(example_sets)) {}
 
   bool operator==(TrainParams const& other) const
   {
@@ -28,6 +30,8 @@ public:
            low_off_thresh == other.low_off_thresh &&
            high_on_thresh == other.high_on_thresh &&
            high_off_thresh == other.high_off_thresh &&
+           high_spike_frac == other.high_spike_frac &&
+           high_spike_level == other.high_spike_level &&
            blocksize == other.blocksize;
   }
   bool roughlyEquals(TrainParams const& other) const
@@ -38,6 +42,9 @@ public:
            fabs(low_off_thresh - other.low_off_thresh) < 0.5 &&
            fabs(high_on_thresh - other.high_on_thresh) < 0.1 &&
            fabs(high_off_thresh - other.high_off_thresh) < 0.1 &&
+
+           fabs(high_spike_frac - other.high_spike_frac) < 0.01 &&
+           fabs(high_spike_level - other.high_spike_level) < 0.1 &&
            blocksize == other.blocksize;
   }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
@@ -61,7 +68,8 @@ public:
     std::vector<int> event_frames;
     BlowDetector detector(nullptr, lowpass_percent, highpass_percent,
                           low_on_thresh, low_off_thresh, high_on_thresh,
-                          high_off_thresh, blocksize, &event_frames);
+                          high_off_thresh, high_spike_frac, high_spike_level,
+                          blocksize, &event_frames);
     for (int sample_ind = 0;
          sample_ind + blocksize * kNumChannels < samples.size();
          sample_ind += blocksize * kNumChannels)
@@ -110,6 +118,8 @@ public:
   double low_off_thresh;
   double high_on_thresh;
   double high_off_thresh;
+  double high_spike_frac;
+  double high_spike_level;
   int blocksize;
   std::vector<int> score;
 };
@@ -144,6 +154,10 @@ const double kMinHighOffThresh = 0.05;
 const double kMaxHighOffThresh = 1;
 const double kMinHighOnThresh = 0.2;
 const double kMaxHighOnThresh = 2;
+const double kMinHighSpikeFrac = 0.1;
+const double kMaxHighSpikeFrac = 0.9;
+const double kMinHighSpikeLevel = 0.3;
+const double kMaxHighSpikeLevel = 4;
 
 double randomLowPassPercent()
 {
@@ -184,6 +198,16 @@ double randomHighOnThresh(double low)
     ret = r->random();
   return ret;
 }
+double randomHighSpikeFrac()
+{
+  static RandomStuff* r = new RandomStuff(kMinHighSpikeFrac, kMaxHighSpikeFrac);
+  return r->random();
+}
+double randomHighSpikeLevel()
+{
+  static RandomStuff* r = new RandomStuff(kMinHighSpikeLevel, kMaxHighSpikeLevel);
+  return r->random();
+}
 
 class ExamplesSets
 {
@@ -200,10 +224,13 @@ public:
     double low_on_thresh = randomLowOnThresh(low_off_thresh);
     double high_off_thresh = randomHighOffThresh();
     double high_on_thresh = randomHighOnThresh(high_off_thresh);
+    double high_spike_frac = randomHighSpikeFrac();
+    double high_spike_level = randomHighSpikeLevel();
     int blocksize = 256;
 
     return TrainParams(lowpass_percent, highpass_percent, low_on_thresh,
                        low_off_thresh, high_on_thresh, high_off_thresh,
+                       high_spike_frac, high_spike_level,
                        blocksize, examples_sets_);
   }
   TrainParams betweenCandidates(TrainParams a, TrainParams b)
@@ -214,10 +241,13 @@ public:
     double low_on_thresh = (a.low_on_thresh + b.low_on_thresh) / 2.0;
     double high_off_thresh = (a.high_off_thresh + b.high_off_thresh) / 2.0;
     double high_on_thresh = (a.high_on_thresh + b.high_on_thresh) / 2.0;
+    double high_spike_frac = (a.high_spike_frac + b.high_spike_frac) / 2.0;
+    double high_spike_level = (a.high_spike_level + b.high_spike_level) / 2.0;
     int blocksize = b.blocksize;
 
     return TrainParams(lowpass_percent, highpass_percent, low_on_thresh,
                        low_off_thresh, high_on_thresh, high_off_thresh,
+                       high_spike_frac, high_spike_level,
                        blocksize, examples_sets_);
   }
   TrainParams beyondCandidates(TrainParams from, TrainParams beyond)
@@ -228,6 +258,8 @@ public:
     double low_on_thresh_diff = beyond.low_on_thresh - from.low_on_thresh;
     double high_off_thresh_diff = beyond.high_off_thresh - from.high_off_thresh;
     double high_on_thresh_diff = beyond.high_on_thresh - from.high_on_thresh;
+    double high_spike_frac_diff = beyond.high_spike_frac - from.high_spike_frac;
+    double high_spike_level_diff = beyond.high_spike_level - from.high_spike_level;
 
     double lowpass_percent = beyond.lowpass_percent + lowpass_percent_diff/2.0;
     double highpass_percent = beyond.highpass_percent + highpass_percent_diff/2.0;
@@ -235,6 +267,9 @@ public:
     double low_on_thresh = beyond.low_on_thresh + low_on_thresh_diff/2.0;
     double high_off_thresh = beyond.high_off_thresh + high_off_thresh_diff/2.0;
     double high_on_thresh = beyond.high_on_thresh + high_on_thresh_diff/2.0;
+
+    double high_spike_frac = beyond.high_spike_frac + high_spike_frac_diff/2.0;
+    double high_spike_level = beyond.high_spike_level + high_spike_level_diff/2.0;
 
     lowpass_percent = std::min(lowpass_percent, kMaxLowPassPercent);
     lowpass_percent = std::max(lowpass_percent, kMinLowPassPercent);
@@ -248,9 +283,14 @@ public:
     high_off_thresh = std::max(high_off_thresh, kMinHighOffThresh);
     high_on_thresh = std::min(high_on_thresh, kMaxHighOnThresh);
     high_on_thresh = std::max(high_on_thresh, kMinHighOnThresh);
+    high_spike_frac = std::min(high_spike_frac, kMaxHighSpikeFrac);
+    high_spike_frac = std::max(high_spike_frac, kMinHighSpikeFrac);
+    high_spike_level = std::min(high_spike_level, kMaxHighSpikeLevel);
+    high_spike_level = std::max(high_spike_level, kMinHighSpikeLevel);
 
     return TrainParams(lowpass_percent, highpass_percent, low_on_thresh,
                        low_off_thresh, high_on_thresh, high_off_thresh,
+                       high_spike_frac, high_spike_level,
                        beyond.blocksize, examples_sets_);
   }
 private:
@@ -282,7 +322,7 @@ RecordedAudio recordExample(int desired_events)
   return recorder;
 }
 
-constexpr bool DOING_DEVELOPMENT_TESTING = true;
+constexpr bool DOING_DEVELOPMENT_TESTING = false;
 } // namespace
 
 void iterativeBlowTrainMain()
