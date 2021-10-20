@@ -250,7 +250,7 @@ RecordedAudio recordExample(int desired_events)
   return recorder;
 }
 
-constexpr bool DOING_DEVELOPMENT_TESTING = true;
+constexpr bool DOING_DEVELOPMENT_TESTING = false;
 } // namespace
 
 void iterativeTongueTrainMain()
@@ -270,10 +270,12 @@ void iterativeTongueTrainMain()
     audio_examples.push_back(recordExample(2));
     audio_examples.push_back(recordExample(3));
   }
+
   std::vector<std::string> noise_names = {"falls_of_fall.pcm", "brandenburg.pcm"};
   std::vector<RecordedAudio> noises;
-  for (auto name : noise_names)
-    noises.emplace_back(name);
+  if (DOING_DEVELOPMENT_TESTING)
+    for (auto name : noise_names)
+      noises.emplace_back(name);
 
   ExamplesSets examples_sets;
   // (first, add examples without any noise)

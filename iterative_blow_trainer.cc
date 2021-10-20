@@ -344,8 +344,9 @@ void iterativeBlowTrainMain()
   }
   std::vector<std::string> noise_names = {"falls_of_fall.pcm", "brandenburg.pcm"};
   std::vector<RecordedAudio> noises;
-  for (auto name : noise_names)
-    noises.emplace_back(name);
+  if (DOING_DEVELOPMENT_TESTING)
+    for (auto name : noise_names)
+      noises.emplace_back(name);
 
   ExamplesSets examples_sets;
   // (first, add examples without any noise)

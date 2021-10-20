@@ -1,0 +1,27 @@
+* for fancy blowing, have dedicated click, and LMB down. click is "a block passes threshold T1 in one window and does NOT pass T2 in the next." LMB down is T1 followed by T2. dedicated click should have a refrac block or two. at the same time, listen for something else ('hot' breathing? tongue clicking? both?) to do right clicks.
+* if we want tongue clicks to be right click alongside a puff/blow left click, then we'll need to add logic to tongue click
+to expect a LACK of energy outside the expected range.
+* get blow trainer to handle both on and off events for long blows.
+* multithread trainer optimizer
+* eventually handle wayland rather than X on linux.
+* support windows (does mingw cross compiling work even for linking in portaudio? that would be nice!)
+* support osx
+* polished flow of first time setup --> configured regular usage
+
+
+
+# SIM NOTES
+
+working pretty well for laptop builtin mic:
+./clickitongue --mode=use --detector=tongue --tongue_low_hz=750 --tongue_high_hz=950 --tongue_hzenergy_high=1500 --tongue_hzenergy_low=500 --refrac_blocks=8 --fourier_blocksize_frames=256
+
+best of this batch have 0 violations
+--tongue_low_hz=1000 --tongue_high_hz=1500 --tongue_hzenergy_high=4100 --tongue_hzenergy_low=1100 --refrac_blocks=12 --blocksize=256
+--tongue_low_hz=1000 --tongue_high_hz=1500 --tongue_hzenergy_high=4100 --tongue_hzenergy_low=2100 --refrac_blocks=12 --blocksize=256
+
+from the nifty new random optimization:
+./clickitongue --mode=test --detector=tongue --tongue_low_hz=957.202 --tongue_high_hz=2168.13 --tongue_hzenergy_high=6980.68 --tongue_hzenergy_low=1193.79 --refrac_blocks=12 --blocksize=256
+wow!
+./clickitongue --mode=test --detector=tongue --tongue_low_hz=998.848 --tongue_high_hz=1786.5 --tongue_hzenergy_high=4985.03 --tongue_hzenergy_low=1232.3 --refrac_blocks=12 --blocksize=256
+
+

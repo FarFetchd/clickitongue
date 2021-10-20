@@ -1,3 +1,10 @@
+Clickitongue lets you replace physical mouse clicking with mouse sounds picked
+up by your computer's microphone, to give sore wrists a rest.
+
+Clickitongue is still very much in early development, but is already basically
+usable. It currently runs on (non-Wayland) Linux only. Support for Wayland,
+Windows, and OSX is planned.
+
 # COMPILATION / NEEDED LIBRARIES
 
 To build clickitongue, you'll need to be able to link the following shared
@@ -17,27 +24,26 @@ $ make install
 
 Once all that is taken care of, run `./build.sh` to compile clickitongue.
 
-# TODOs
+# USAGE
 
-* make this into an actual readme, move the TODOs elsewhere
-* for fancy blowing, have dedicated click, and LMB down. click is "a block passes threshold T1 in one window and does NOT pass T2 in the next." LMB down is T1 followed by T2. dedicated click should have a refrac block or two. at the same time, listen for something else ('hot' breathing? tongue clicking? both?) to do right clicks.
-* if we want tongue clicks to be right click alongside a puff/blow left click, then we'll need to add logic to tongue click
-to expect a LACK of energy outside the expected range.
-* get blow trainer to handle both on and off events for long blows. migrate it to the nifty new logic tongue uses. (not sure which is easier to do first.... probably migrate first).
+First, decide whether you'll be using tongue clicks, or blowing. If you have a
+microphone that you can position like half an inch in front of your mouth,
+blowing will be better (remove any fuzzy/spongy windscreens for best results).
+If not, tongue clicks should work. Don't worry about mic quality - even the
+built-in mic of an X1 Carbon ThinkPad works for tongue clicks, and absolutely
+any mic that can be described as "functional" should work for blowing.
 
+Train Clickitongue on some samples of your personal setup: run either
+`./clickitongue --mode=train --detector=tongue` or
+`./clickitongue --mode=train --detector=blow` and follow the instructions. For
+blow training, short bursts as if you were going to say "pu" are best.
+Once trained, those same bursts will work for clicks, andyou can also do a
+prolonged blow to hold the mouse button down. (Tongue clicks do not have a
+hold-down mode).
 
-# SIM NOTES
-
-
-working pretty well for laptop builtin mic:
-./clickitongue --mode=use --detector=tongue --tongue_low_hz=750 --tongue_high_hz=950 --tongue_hzenergy_high=1500 --tongue_hzenergy_low=500 --refrac_blocks=8 --fourier_blocksize_frames=256
-
-best of this batch have 0 violations
---tongue_low_hz=1000 --tongue_high_hz=1500 --tongue_hzenergy_high=4100 --tongue_hzenergy_low=1100 --refrac_blocks=12 --blocksize=256
---tongue_low_hz=1000 --tongue_high_hz=1500 --tongue_hzenergy_high=4100 --tongue_hzenergy_low=2100 --refrac_blocks=12 --blocksize=256
-
-from the nifty new random optimization:
-./clickitongue --mode=test --detector=tongue --tongue_low_hz=957.202 --tongue_high_hz=2168.13 --tongue_hzenergy_high=6980.68 --tongue_hzenergy_low=1193.79 --refrac_blocks=12 --blocksize=256
-wow!
-./clickitongue --mode=test --detector=tongue --tongue_low_hz=998.848 --tongue_high_hz=1786.5 --tongue_hzenergy_high=4985.03 --tongue_hzenergy_low=1232.3 --refrac_blocks=12 --blocksize=256
-
+The training will go through an optimization algorithm, printing out command
+line parameter configurations at each step. Once the optimization has converged,
+copy the last batch of command line parameters it printed, and use them in
+`./clickitongue --mode=use --detector=tongue REPLACE_ME_WITH_THE_PARAMS` or
+`./clickitongue --mode=use --detector=blow REPLACE_ME_WITH_THE_PARAMS`. This
+command will run forever, doing mouse clicks when it detects the right sound.
