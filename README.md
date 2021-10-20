@@ -1,4 +1,4 @@
-Clickitongue lets you replace physical mouse clicking with mouse sounds picked
+Clickitongue carries out mouse clicks when triggered by mouth sounds picked
 up by your computer's microphone, to give sore wrists a rest.
 
 Clickitongue is still very much in early development, but is already basically
@@ -30,14 +30,14 @@ First, decide whether you'll be using tongue clicks, or blowing. If you have a
 microphone that you can position like half an inch in front of your mouth,
 blowing will be better (remove any fuzzy/spongy windscreens for best results).
 If not, tongue clicks should work. Don't worry about mic quality - even the
-built-in mic of an X1 Carbon ThinkPad works for tongue clicks, and absolutely
-any mic that can be described as "functional" should work for blowing.
+built-in mic of an X1 Carbon ThinkPad works for tongue clicks, and any mic
+positioned near your mouth should work for blowing.
 
 Train Clickitongue on some samples of your personal setup: run either
 `./clickitongue --mode=train --detector=tongue` or
 `./clickitongue --mode=train --detector=blow` and follow the instructions. For
 blow training, short bursts as if you were going to say "pu" are best.
-Once trained, those same bursts will work for clicks, andyou can also do a
+Once trained, those same bursts will work for clicks. You can also do a
 prolonged blow to hold the mouse button down. (Tongue clicks do not have a
 hold-down mode).
 

@@ -395,8 +395,8 @@ void iterativeBlowTrainMain()
 
     printf("current best: ");
     best.printParams();
-    printf("scores: best: %s, 2nd: %s, 3rd: %s\n",
-           best.toString().c_str(), second.toString().c_str(), third.toString().c_str());
+    printf("scores: best: %s, 2nd: %s, 3rd: %s\n", best.toString().c_str(),
+           second.toString().c_str(), third.toString().c_str());
     if (best.roughlyEquals(previous_best))
       same_streak++;
     else
