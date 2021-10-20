@@ -16,9 +16,9 @@ int playCallback(const void* input_buf, void* output_buf,
                  const PaStreamCallbackTimeInfo* time_info,
                  PaStreamCallbackFlags status_flags, void* user_data)
 {
-  PlaybackCbStruct* arg = (PlaybackCbStruct*)user_data;
+  PlaybackCbStruct* arg = static_cast<PlaybackCbStruct*>(user_data);
   std::vector<Sample> const& samples = *(arg->samples);
-  Sample* cur_out = (Sample*)output_buf;
+  Sample* cur_out = static_cast<Sample*>(output_buf);
 
   long samples_left = samples.size() - arg->playback_sample_index;
   long frames_left = samples_left / kNumChannels;

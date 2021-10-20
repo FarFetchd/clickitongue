@@ -97,8 +97,8 @@ int tongueDetectorCallback(const void* inputBuffer, void* outputBuffer,
                            const PaStreamCallbackTimeInfo* timeInfo,
                            PaStreamCallbackFlags statusFlags, void* userData)
 {
-  TongueDetector* detector = (TongueDetector*)userData;
-  const Sample* rptr = (const Sample*)inputBuffer;
+  TongueDetector* detector = static_cast<TongueDetector*>(userData);
+  const Sample* rptr = static_cast<const Sample*>(inputBuffer);
   if (inputBuffer != NULL)
     detector->processAudio(rptr, framesPerBuffer);
   return paContinue;

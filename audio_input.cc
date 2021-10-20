@@ -17,8 +17,8 @@ int recordCallback(const void* input_buf, void* output_buf,
                    const PaStreamCallbackTimeInfo* time_info,
                    PaStreamCallbackFlags status_flags, void* user_data)
 {
-  RecordingState* data_ptr = (RecordingState*)user_data;
-  const Sample* cur_in = (const Sample*)input_buf;
+  RecordingState* data_ptr = static_cast<RecordingState*>(user_data);
+  const Sample* cur_in = static_cast<const Sample*>(input_buf);
   std::vector<Sample>* recorded_samples = &data_ptr->samples;
   int done_or_continue = paContinue;
 

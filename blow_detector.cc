@@ -110,8 +110,8 @@ int blowDetectorCallback(const void* inputBuffer, void* outputBuffer,
                          const PaStreamCallbackTimeInfo* timeInfo,
                          PaStreamCallbackFlags statusFlags, void* userData)
 {
-  BlowDetector* detector = (BlowDetector*)userData;
-  const Sample* rptr = (const Sample*)inputBuffer;
+  BlowDetector* detector = static_cast<BlowDetector*>(userData);
+  const Sample* rptr = static_cast<const Sample*>(inputBuffer);
   if (inputBuffer != NULL)
     detector->processAudio(rptr, framesPerBuffer);
   return paContinue;
