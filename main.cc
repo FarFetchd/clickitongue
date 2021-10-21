@@ -7,6 +7,7 @@
 #include "blow_detector.h"
 #include "cmdline_options.h"
 #include "constants.h"
+#include "easy_fourier.h"
 #include "iterative_blow_trainer.h"
 #include "iterative_tongue_trainer.h"
 #include "tongue_detector.h"
@@ -49,10 +50,9 @@ void useOrTest(ClickitongueCmdlineOpts opts)
         opts.highpass_percent.value(), opts.low_on_thresh.value(),
         opts.low_off_thresh.value(), opts.high_on_thresh.value(),
         opts.high_off_thresh.value(), opts.high_spike_frac.value(),
-        opts.high_spike_level.value(), opts.fourier_blocksize_frames.value());
+        opts.high_spike_level.value());
 
-    AudioInput audio_input(blowDetectorCallback, &clicker,
-                           opts.fourier_blocksize_frames.value());
+    AudioInput audio_input(blowDetectorCallback, &clicker);
     while (audio_input.active())
       Pa_Sleep(500);
   }
@@ -73,9 +73,8 @@ void useOrTest(ClickitongueCmdlineOpts opts)
         &action_queue, action,
         opts.tongue_low_hz.value(),  opts.tongue_high_hz.value(),
         opts.tongue_hzenergy_high.value(), opts.tongue_hzenergy_low.value(),
-        opts.refrac_blocks.value(), opts.fourier_blocksize_frames.value());
-    AudioInput audio_input(tongueDetectorCallback, &clicker,
-                            opts.fourier_blocksize_frames.value());
+        opts.refrac_blocks.value());
+    AudioInput audio_input(tongueDetectorCallback, &clicker);
     while (audio_input.active())
       Pa_Sleep(500);
   }
@@ -115,13 +114,6 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
   else if (mode == "record" || mode == "play")
     if (!opts.filename.has_value())
       crash("Must specify a --filename=");
-
-  double fourier_blocksize = opts.fourier_blocksize_frames.value_or(-1);
-  if (fourier_blocksize != 128 && fourier_blocksize != 256 &&
-      fourier_blocksize != 512 && fourier_blocksize != 1024)
-  {
-    crash("Must specify --fourier_blocksize_frames=128 or 256 or 512 or 1024.");
-  }
 }
 
 // TODO on linux, make use of PaAlsa_EnableRealtimeScheduling
@@ -134,6 +126,7 @@ int main(int argc, char** argv)
   ClickitongueCmdlineOpts opts =
       structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
   validateCmdlineOpts(opts);
+  g_fourier = new EasyFourier(kFourierBlocksize);
 
   if (opts.mode.value() == "use" || opts.mode.value() == "test")
     useOrTest(opts);

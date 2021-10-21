@@ -18,15 +18,14 @@ public:
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
                double high_spike_frac, double high_spike_level,
-               int blocksize, std::vector<int>* cur_frame_dest);
+               std::vector<int>* cur_frame_dest);
 
   // Kicks off 'action' at each detected event.
   BlowDetector(BlockingQueue<Action>* action_queue, Action action,
                double lowpass_percent, double highpass_percent,
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
-               double high_spike_frac, double high_spike_level,
-               int blocksize);
+               double high_spike_frac, double high_spike_level);
 
   void processAudio(const Sample* cur_sample, int num_frames) override;
 
@@ -53,11 +52,6 @@ private:
   // our understanding of the current state of the mouse button
   bool mouse_down_ = false;
   bool mouse_down_at_least_one_block_ = false;
-
-  // Number of frames we expect to get per callback, to feed to Fourier.
-  // Should be a power of 2.
-  const int blocksize_;
-  const EasyFourier fourier_;
 
   // only needs to be kept up to date if you plan to use RecordCurFrame
   int cur_frame_ = 0;

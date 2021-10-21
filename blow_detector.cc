@@ -1,5 +1,6 @@
 #include "blow_detector.h"
 
+#include <cassert>
 #include <cmath>
 
 #include "easy_fourier.h"
@@ -9,13 +10,12 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh,
                            double high_spike_frac, double high_spike_level,
-                           int blocksize, std::vector<int>* cur_frame_dest)
+                           std::vector<int>* cur_frame_dest)
   : Detector(action_queue), action_(Action::RecordCurFrame),
     lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
     low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
     high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh),
-    high_spike_frac_(high_spike_frac), high_spike_level_(high_spike_level),
-    blocksize_(blocksize), fourier_(blocksize_)
+    high_spike_frac_(high_spike_frac), high_spike_level_(high_spike_level)
 {
   setCurFrameDest(cur_frame_dest);
   setCurFrameSource(&cur_frame_);
@@ -26,47 +26,43 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue, Action action,
                            double lowpass_percent, double highpass_percent,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh,
-                           double high_spike_frac, double high_spike_level,
-                           int blocksize)
+                           double high_spike_frac, double high_spike_level)
   : Detector(action_queue), action_(action),
     lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
     low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
     high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh),
-    high_spike_frac_(high_spike_frac), high_spike_level_(high_spike_level),
-    blocksize_(blocksize), fourier_(blocksize_)
+    high_spike_frac_(high_spike_frac), high_spike_level_(high_spike_level)
 {
-//    assert(action_ != Action::RecordCurFrame);
+  assert(action_ != Action::RecordCurFrame);
 }
 
 void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
 {
-  if (num_frames != blocksize_)
+  if (num_frames != kFourierBlocksize)
   {
-    printf("illegal num_frames: expected %d, got %d\n", blocksize_, num_frames);
+    printf("illegal num_frames: expected %d, got %d\n", kFourierBlocksize, num_frames);
     exit(1);
   }
   if (track_cur_frame_)
-    cur_frame_ += blocksize_;
+    cur_frame_ += kFourierBlocksize;
 
-  double orig_real[blocksize_];
-  for (int i=0; i<blocksize_; i++)
-    orig_real[i] = cur_sample[i * kNumChannels];
-  const int num_buckets = blocksize_ / 2 + 1;
-  fftw_complex transformed[num_buckets];
-
-  fourier_.doFFT(orig_real, transformed);
+  FourierLease lease = g_fourier->borrowWorker();
+  for (int i=0; i<kFourierBlocksize; i++)
+    lease.in[i] = cur_sample[i * kNumChannels];
+  lease.runFFT();
 
 //   static int print_once_per_10ms_chunks = 0;
 //   if (++print_once_per_10ms_chunks == 20)
 //   {
-//     fourier_.printEqualizerAlreadyFreq(transformed);
+//     g_fourier.printEqualizerAlreadyFreq(lease.out);
 //     print_once_per_10ms_chunks=0;
 //   }
 
+  const int num_buckets = kFourierBlocksize / 2 + 1;
   int last_low_bucket = round(lowpass_percent_ * num_buckets);
   double avg_low = 0;
   for (int i = 1; i <= last_low_bucket; i++)
-    avg_low += fabs(transformed[i][0]);
+    avg_low += fabs(lease.out[i][0]);
   avg_low /= (double)(last_low_bucket + 1);
 
   int first_high_bucket = round(highpass_percent_ * num_buckets);
@@ -74,7 +70,7 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
   int spike_count = 0;
   for (int i = first_high_bucket; i < num_buckets; i++)
   {
-    double val = fabs(transformed[i][0]);
+    double val = fabs(lease.out[i][0]);
     avg_high += val;
     if (val > high_spike_level_)
       spike_count++;

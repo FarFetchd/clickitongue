@@ -16,13 +16,13 @@ public:
   TongueDetector(BlockingQueue<Action>* action_queue,
                  double tongue_low_hz, double tongue_high_hz,
                  double tongue_hzenergy_high, double tongue_hzenergy_low,
-                 int refrac_blocks, int blocksize, std::vector<int>* cur_frame_dest);
+                 int refrac_blocks, std::vector<int>* cur_frame_dest);
 
   // Kicks off 'action' at each detected event.
   TongueDetector(BlockingQueue<Action>* action_queue, Action action,
                  double tongue_low_hz, double tongue_high_hz,
                  double tongue_hzenergy_high, double tongue_hzenergy_low,
-                 int refrac_blocks, int blocksize);
+                 int refrac_blocks);
 
   void processAudio(const Sample* cur_sample, int num_frames) override;
 
@@ -38,10 +38,6 @@ private:
   // How long (in units of blocksize_; 2 means 2*blocksize_) we must observe low
   // energy after an event before being willing to declare a second event.
   const int refrac_blocks_;
-  // Number of frames we expect to get per callback, to feed to Fourier.
-  // Should be a power of 2.
-  const int blocksize_;
-  const EasyFourier fourier_;
 
   int refrac_blocks_left_ = 0;
 

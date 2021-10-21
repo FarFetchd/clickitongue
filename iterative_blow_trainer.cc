@@ -15,11 +15,11 @@ class TrainParams
 {
 public:
   TrainParams(double lpp, double hpp, double lont, double lofft,
-              double hont, double hofft, double hsf, double hsl, int bs,
+              double hont, double hofft, double hsf, double hsl,
               std::vector<std::vector<std::pair<RecordedAudio, int>>> const& example_sets)
   : lowpass_percent(lpp), highpass_percent(hpp), low_on_thresh(lont),
     low_off_thresh(lofft), high_on_thresh(hont), high_off_thresh(hofft),
-    high_spike_frac(hsf), high_spike_level(hsl), blocksize(bs),
+    high_spike_frac(hsf), high_spike_level(hsl),
     score(computeScore(example_sets)) {}
 
   bool operator==(TrainParams const& other) const
@@ -31,8 +31,7 @@ public:
            high_on_thresh == other.high_on_thresh &&
            high_off_thresh == other.high_off_thresh &&
            high_spike_frac == other.high_spike_frac &&
-           high_spike_level == other.high_spike_level &&
-           blocksize == other.blocksize;
+           high_spike_level == other.high_spike_level;
   }
   bool roughlyEquals(TrainParams const& other) const
   {
@@ -44,8 +43,7 @@ public:
            fabs(high_off_thresh - other.high_off_thresh) < 0.1 &&
 
            fabs(high_spike_frac - other.high_spike_frac) < 0.01 &&
-           fabs(high_spike_level - other.high_spike_level) < 0.1 &&
-           blocksize == other.blocksize;
+           fabs(high_spike_level - other.high_spike_level) < 0.1;
   }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
   {
@@ -69,12 +67,12 @@ public:
     BlowDetector detector(nullptr, lowpass_percent, highpass_percent,
                           low_on_thresh, low_off_thresh, high_on_thresh,
                           high_off_thresh, high_spike_frac, high_spike_level,
-                          blocksize, &event_frames);
+                          &event_frames);
     for (int sample_ind = 0;
-         sample_ind + blocksize * kNumChannels < samples.size();
-         sample_ind += blocksize * kNumChannels)
+         sample_ind + kFourierBlocksize * kNumChannels < samples.size();
+         sample_ind += kFourierBlocksize * kNumChannels)
     {
-      detector.processAudio(samples.data() + sample_ind, blocksize);
+      detector.processAudio(samples.data() + sample_ind, kFourierBlocksize);
     }
     return event_frames.size();
   }
@@ -107,9 +105,9 @@ public:
   void printParams()
   {
     printf("--lowpass_percent=%g --highpass_percent=%g --low_on_thresh=%g "
-           "--low_off_thresh=%g --high_on_thresh=%g --high_off_thresh=%g --blocksize=%d\n",
+           "--low_off_thresh=%g --high_on_thresh=%g --high_off_thresh=%g\n",
            lowpass_percent, highpass_percent, low_on_thresh,
-           low_off_thresh, high_on_thresh, high_off_thresh, blocksize);
+           low_off_thresh, high_on_thresh, high_off_thresh);
   }
 
   double lowpass_percent;
@@ -120,7 +118,6 @@ public:
   double high_off_thresh;
   double high_spike_frac;
   double high_spike_level;
-  int blocksize;
   std::vector<int> score;
 };
 
@@ -226,12 +223,11 @@ public:
     double high_on_thresh = randomHighOnThresh(high_off_thresh);
     double high_spike_frac = randomHighSpikeFrac();
     double high_spike_level = randomHighSpikeLevel();
-    int blocksize = 256;
 
     return TrainParams(lowpass_percent, highpass_percent, low_on_thresh,
                        low_off_thresh, high_on_thresh, high_off_thresh,
                        high_spike_frac, high_spike_level,
-                       blocksize, examples_sets_);
+                       examples_sets_);
   }
   TrainParams betweenCandidates(TrainParams a, TrainParams b)
   {
@@ -243,12 +239,11 @@ public:
     double high_on_thresh = (a.high_on_thresh + b.high_on_thresh) / 2.0;
     double high_spike_frac = (a.high_spike_frac + b.high_spike_frac) / 2.0;
     double high_spike_level = (a.high_spike_level + b.high_spike_level) / 2.0;
-    int blocksize = b.blocksize;
 
     return TrainParams(lowpass_percent, highpass_percent, low_on_thresh,
                        low_off_thresh, high_on_thresh, high_off_thresh,
                        high_spike_frac, high_spike_level,
-                       blocksize, examples_sets_);
+                       examples_sets_);
   }
   TrainParams beyondCandidates(TrainParams from, TrainParams beyond)
   {
@@ -291,7 +286,7 @@ public:
     return TrainParams(lowpass_percent, highpass_percent, low_on_thresh,
                        low_off_thresh, high_on_thresh, high_off_thresh,
                        high_spike_frac, high_spike_level,
-                       beyond.blocksize, examples_sets_);
+                       examples_sets_);
   }
 private:
   // A vector of example-sets. Each example-set is a vector of samples of audio,
@@ -395,8 +390,11 @@ void iterativeBlowTrainMain()
 
     printf("current best: ");
     best.printParams();
-    printf("scores: best: %s, 2nd: %s, 3rd: %s\n", best.toString().c_str(),
-           second.toString().c_str(), third.toString().c_str());
+    if (DOING_DEVELOPMENT_TESTING)
+    {
+      printf("scores: best: %s, 2nd: %s, 3rd: %s\n", best.toString().c_str(),
+            second.toString().c_str(), third.toString().c_str());
+    }
     if (best.roughlyEquals(previous_best))
       same_streak++;
     else

@@ -18,6 +18,8 @@ constexpr double kNyquist = 22050.0f;
 constexpr int kNumChannels = 2;
 constexpr float kSilentSample = 0.0f;
 
+constexpr int kFourierBlocksize = 256; // must be 128, 256, 512, or 1024
+
 using Sample = float;
 
 #endif // CLICKITONGUE_CONSTANTS_H_
