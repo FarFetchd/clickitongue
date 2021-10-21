@@ -28,14 +28,6 @@ public:
            tongue_hzenergy_low == other.tongue_hzenergy_low &&
            refrac_blocks == other.refrac_blocks;
   }
-  bool roughlyEquals(TrainParams const& other) const
-  {
-    return fabs(tongue_low_hz - other.tongue_low_hz) < 2.0 &&
-           fabs(tongue_high_hz - other.tongue_high_hz) < 4.0 &&
-           fabs(tongue_hzenergy_high - other.tongue_hzenergy_high) < 10.0 &&
-           fabs(tongue_hzenergy_low - other.tongue_hzenergy_low) < 1.0 &&
-           refrac_blocks == other.refrac_blocks;
-  }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
   {
     assert(!l.score.empty());
@@ -47,11 +39,11 @@ public:
       return true;
     else if (l_sum > r_sum)
       return false;
+
     for (int i=0; i<l.score.size(); i++)
-    {
       if (l.score[i] < r.score[i])
         return true;
-    }
+
     return false;
   }
 
@@ -62,8 +54,8 @@ public:
                             tongue_hzenergy_high, tongue_hzenergy_low,
                             refrac_blocks, &event_frames);
     for (int sample_ind = 0;
-        sample_ind + kFourierBlocksize * kNumChannels < samples.size();
-        sample_ind += kFourierBlocksize * kNumChannels)
+         sample_ind + kFourierBlocksize * kNumChannels < samples.size();
+         sample_ind += kFourierBlocksize * kNumChannels)
     {
       detector.processAudio(samples.data() + sample_ind, kFourierBlocksize);
     }
@@ -234,7 +226,7 @@ public:
     ret.emplace_back((kMaxLowHz-kMinLowHz)/2.0, (kMaxHighHz-kMinHighHz)/2.0,
                      (kMaxHighEnergy-kMinHighEnergy)/2.0,
                      (kMaxLowEnergy-kMinLowEnergy)/2.0, refrac_blocks, examples_sets_);
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 15; i++)
       ret.push_back(randomParams());
     return ret;
   }
@@ -382,23 +374,22 @@ void iterativeTongueTrainMain()
   TrainParamsFactory factory(examples_sets);
 
   printf("beginning optimization computations...\n");
-  // The optimization algorithm: first, seed with 10 random points.
   std::vector<TrainParamsCocoon> starting_cocoons = factory.startingSet();
   std::set<TrainParams> candidates;
   for (auto& cocoon : starting_cocoons)
     candidates.insert(cocoon.awaitHatch());
 
+  // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
   int shrinks = 0;
   while (true)
   {
     auto it = candidates.begin();
     TrainParams best = *it;
-    TrainParams second = *(++it);
 
     // begin parallel computations
-    std::vector<TrainParamsCocoon> step_cocoons1 = factory.patternAround(best);
+    std::vector<TrainParamsCocoon> step_cocoons = factory.patternAround(best);
     // gather results of parallel computations
-    for (auto& cocoon : step_cocoons1)
+    for (auto& cocoon : step_cocoons)
       candidates.insert(cocoon.awaitHatch());
 
     auto new_it = candidates.begin();
