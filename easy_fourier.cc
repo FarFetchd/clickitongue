@@ -9,9 +9,9 @@ EasyFourier* g_fourier = nullptr;
 
 double* makeBinFreqs(int blocksize, double bin_width)
 {
-  double* bin_freq = new double[blocksize];
+  double* bin_freq = new double[blocksize/2 + 1];
   bin_freq[0] = 0;
-  for (int i = 0; i < blocksize / 2 + 1; i++)
+  for (int i = 1; i < blocksize / 2 + 1; i++)
     bin_freq[i] = bin_freq[i-1] + bin_width;
   return bin_freq;
 }
