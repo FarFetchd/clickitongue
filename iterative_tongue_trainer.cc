@@ -1,9 +1,7 @@
 #include "iterative_tongue_trainer.h"
 
 #include <cassert>
-#include <algorithm>
 #include <random>
-#include <set>
 #include <thread>
 #include <vector>
 
@@ -13,7 +11,9 @@
 
 namespace {
 
-struct TrainParams
+constexpr bool DOING_DEVELOPMENT_TESTING = true;
+
+class TrainParams
 {
 public:
   TrainParams(double tl, double th, double teh, double tel, int rb)
@@ -185,8 +185,34 @@ private:
 class TrainParamsFactory
 {
 public:
-  TrainParamsFactory(std::vector<std::vector<std::pair<RecordedAudio, int>>> const& examples_sets)
-  : examples_sets_(examples_sets) {}
+  TrainParamsFactory(std::vector<std::pair<RecordedAudio, int>> const& raw_examples,
+                     std::vector<std::string> const& noise_fnames)
+  {
+    std::vector<RecordedAudio> noises;
+    if (DOING_DEVELOPMENT_TESTING)
+      for (auto name : noise_fnames)
+        noises.emplace_back(name);
+
+    // (first, add the base examples, without any noise)
+    examples_sets_.push_back(raw_examples);
+    for (auto const& noise : noises) // now a set of our examples for each noise
+    {
+      std::vector<std::pair<RecordedAudio, int>> examples = raw_examples;
+      for (auto& x : examples)
+      {
+        x.first.scale(0.7);
+        x.first += noise;
+      }
+      examples_sets_.push_back(examples);
+    }
+    // finally, a quiet version, for a challenge/tie breaker
+    {
+      std::vector<std::pair<RecordedAudio, int>> examples = raw_examples;
+      for (auto& x : examples)
+        x.first.scale(0.3);
+      examples_sets_.push_back(examples);
+    }
+  }
 
   TrainParamsCocoon randomParams()
   {
@@ -287,7 +313,7 @@ public:
 private:
   // A vector of example-sets. Each example-set is a vector of samples of audio,
   // paired with how many events are expected to be in that audio.
-  std::vector<std::vector<std::pair<RecordedAudio, int>>> const& examples_sets_;
+  std::vector<std::vector<std::pair<RecordedAudio, int>>> examples_sets_;
   // Each variable's offset will be (kVarMax-kVarMin)/pattern_divisor_
   double pattern_divisor_ = 4.0;
 };
@@ -315,102 +341,30 @@ RecordedAudio recordExample(int desired_events)
   return recorder;
 }
 
-constexpr bool DOING_DEVELOPMENT_TESTING = false;
+// the following is actual code, not just a header:
+#include "train_common.h"
+
 } // namespace
 
 void iterativeTongueTrainMain()
 {
-  std::vector<RecordedAudio> audio_examples;
+  std::vector<std::pair<RecordedAudio, int>> audio_examples;
   if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
   {
-    audio_examples.emplace_back("clicks_0a.pcm");
-    audio_examples.emplace_back("clicks_1a.pcm");
-    audio_examples.emplace_back("clicks_2a.pcm");
-    audio_examples.emplace_back("clicks_3a.pcm");
+    audio_examples.emplace_back(RecordedAudio("clicks_0.pcm"), 0);
+    audio_examples.emplace_back(RecordedAudio("clicks_1.pcm"), 1);
+    audio_examples.emplace_back(RecordedAudio("clicks_2.pcm"), 2);
+    audio_examples.emplace_back(RecordedAudio("clicks_3.pcm"), 3);
   }
   else // for actual use
   {
-    audio_examples.push_back(recordExample(0));
-    audio_examples.push_back(recordExample(1));
-    audio_examples.push_back(recordExample(2));
-    audio_examples.push_back(recordExample(3));
+    audio_examples.emplace_back(recordExample(0), 0);
+    audio_examples.emplace_back(recordExample(1), 1);
+    audio_examples.emplace_back(recordExample(2), 2);
+    audio_examples.emplace_back(recordExample(3), 3);
   }
+  std::vector<std::string> noise_fnames = {"falls_of_fall.pcm", "brandenburg.pcm"};
+  TrainParamsFactory factory(audio_examples, noise_fnames);
 
-  std::vector<std::string> noise_names = {"falls_of_fall.pcm", "brandenburg.pcm"};
-  std::vector<RecordedAudio> noises;
-  if (DOING_DEVELOPMENT_TESTING)
-    for (auto name : noise_names)
-      noises.emplace_back(name);
-
-  std::vector<std::vector<std::pair<RecordedAudio, int>>> examples_sets;
-  // (first, add examples without any noise)
-  {
-    std::vector<std::pair<RecordedAudio, int>> examples;
-    examples.emplace_back(audio_examples[0], 0);
-    examples.emplace_back(audio_examples[1], 1);
-    examples.emplace_back(audio_examples[2], 2);
-    examples.emplace_back(audio_examples[3], 3);
-    examples_sets.push_back(examples);
-  }
-  for (auto const& noise : noises) // now a set of our examples for each noise
-  {
-    std::vector<std::pair<RecordedAudio, int>> examples;
-    examples.emplace_back(audio_examples[0], 0); examples.back().first.scale(0.7); examples.back().first += noise;
-    examples.emplace_back(audio_examples[1], 1); examples.back().first.scale(0.7); examples.back().first += noise;
-    examples.emplace_back(audio_examples[2], 2); examples.back().first.scale(0.7); examples.back().first += noise;
-    examples.emplace_back(audio_examples[3], 3); examples.back().first.scale(0.7); examples.back().first += noise;
-    examples_sets.push_back(examples);
-  }
-  // finally, a quiet version, for a challenge/tie breaker
-  {
-    std::vector<std::pair<RecordedAudio, int>> examples;
-    examples.emplace_back(audio_examples[0], 0); examples.back().first.scale(0.3);
-    examples.emplace_back(audio_examples[1], 1); examples.back().first.scale(0.3);
-    examples.emplace_back(audio_examples[2], 2); examples.back().first.scale(0.3);
-    examples.emplace_back(audio_examples[3], 3); examples.back().first.scale(0.3);
-    examples_sets.push_back(examples);
-  }
-
-  TrainParamsFactory factory(examples_sets);
-
-  printf("beginning optimization computations...\n");
-  std::vector<TrainParamsCocoon> starting_cocoons = factory.startingSet();
-  std::set<TrainParams> candidates;
-  for (auto& cocoon : starting_cocoons)
-    candidates.insert(cocoon.awaitHatch());
-
-  // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
-  int shrinks = 0;
-  while (true)
-  {
-    auto it = candidates.begin();
-    TrainParams best = *it;
-
-    // begin parallel computations
-    std::vector<TrainParamsCocoon> step_cocoons = factory.patternAround(best);
-    // gather results of parallel computations
-    for (auto& cocoon : step_cocoons)
-      candidates.insert(cocoon.awaitHatch());
-
-    auto new_it = candidates.begin();
-    TrainParams new_best = *new_it;
-    TrainParams new_second = *(++new_it);
-    if (new_best == best)
-    {
-      shrinks++;
-      factory.shrinkSteps();
-    }
-
-    printf("current best: ");
-    best.printParams();
-    if (DOING_DEVELOPMENT_TESTING)
-    {
-      printf("scores: best: %s, 2nd: %s\n",
-            best.toString().c_str(), new_second.toString().c_str());
-    }
-
-    if (shrinks >= 5)
-      break; // we're probably close to an optimum
-  }
-  printf("converged; done.\n");
+  patternSearch(factory);
 }
