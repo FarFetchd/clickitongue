@@ -1,4 +1,4 @@
-#include "iterative_blow_trainer.h"
+#include "train_blow.h"
 
 #include <cassert>
 #include <random>
@@ -474,7 +474,7 @@ RecordedAudio recordExample(int desired_events)
 
 } // namespace
 
-void iterativeBlowTrainMain()
+void trainBlow()
 {
   // the int is number of events that are actually in each example
   std::vector<std::pair<RecordedAudio, int>> audio_examples;

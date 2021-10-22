@@ -8,9 +8,9 @@
 #include "cmdline_options.h"
 #include "constants.h"
 #include "easy_fourier.h"
-#include "iterative_blow_trainer.h"
-#include "iterative_tongue_trainer.h"
 #include "tongue_detector.h"
+#include "train_blow.h"
+#include "train_tongue.h"
 
 void crash(const char* s)
 {
@@ -85,9 +85,9 @@ void useOrTest(ClickitongueCmdlineOpts opts)
 void train(ClickitongueCmdlineOpts opts)
 {
   if (opts.detector.value() == "blow")
-    iterativeBlowTrainMain();
+    trainBlow();
   else if (opts.detector.value() == "tongue")
-    iterativeTongueTrainMain();
+    trainTongue();
 }
 
 const char kBadModeOpt[] = "Must specify --mode=train, test, use, record, or play.";

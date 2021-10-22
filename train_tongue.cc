@@ -1,4 +1,4 @@
-#include "iterative_tongue_trainer.h"
+#include "train_tongue.h"
 
 #include <cassert>
 #include <random>
@@ -346,7 +346,7 @@ RecordedAudio recordExample(int desired_events)
 
 } // namespace
 
-void iterativeTongueTrainMain()
+void trainTongue()
 {
   std::vector<std::pair<RecordedAudio, int>> audio_examples;
   if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
