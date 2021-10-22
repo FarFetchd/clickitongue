@@ -11,7 +11,7 @@
 
 namespace {
 
-constexpr bool DOING_DEVELOPMENT_TESTING = true;
+constexpr bool DOING_DEVELOPMENT_TESTING = false;
 
 class TrainParams
 {

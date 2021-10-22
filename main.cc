@@ -52,7 +52,7 @@ void useOrTest(ClickitongueCmdlineOpts opts)
         opts.high_off_thresh.value(), opts.high_spike_frac.value(),
         opts.high_spike_level.value());
 
-    AudioInput audio_input(blowDetectorCallback, &clicker);
+    AudioInput audio_input(blowDetectorCallback, &clicker, kFourierBlocksize);
     while (audio_input.active())
       Pa_Sleep(500);
   }
@@ -74,7 +74,7 @@ void useOrTest(ClickitongueCmdlineOpts opts)
         opts.tongue_low_hz.value(),  opts.tongue_high_hz.value(),
         opts.tongue_hzenergy_high.value(), opts.tongue_hzenergy_low.value(),
         opts.refrac_blocks.value());
-    AudioInput audio_input(tongueDetectorCallback, &clicker);
+    AudioInput audio_input(tongueDetectorCallback, &clicker, kFourierBlocksize);
     while (audio_input.active())
       Pa_Sleep(500);
   }

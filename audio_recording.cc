@@ -27,7 +27,7 @@ RecordedAudio::RecordedAudio(std::string fname)
 
 RecordedAudio::RecordedAudio(int seconds)
 {
-  AudioInput recorder(seconds);
+  AudioInput recorder(seconds, paFramesPerBufferUnspecified);
   while (recorder.active())
     Pa_Sleep(100);
   samples_ = recorder.recordedSamples();

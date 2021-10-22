@@ -35,17 +35,17 @@ class AudioInput
 {
 public:
   // Call me for a nice straightforward recording of audio.
-  AudioInput(int seconds_to_record, std::optional<int> frames_per_cb = std::nullopt);
+  AudioInput(int seconds_to_record, int frames_per_cb);
   // Call me if you want an audio input stream, and want to do your own stuff with it.
   AudioInput(int(*custom_record_cb)(const void*, void*, unsigned long,
                                     const PaStreamCallbackTimeInfo*,
                                     PaStreamCallbackFlags, void*), void* user_opaque,
-                                    std::optional<int> frames_per_cb = std::nullopt);
+                                    int frames_per_cb);
 
   void ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
                                   const PaStreamCallbackTimeInfo*,
                                   PaStreamCallbackFlags, void*), void* opaque,
-                                  std::optional<int> frames_per_cb);
+                                  int frames_per_cb);
 
   ~AudioInput();
 

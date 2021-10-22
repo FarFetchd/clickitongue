@@ -51,7 +51,7 @@ int recordCallback(const void* input_buf, void* output_buf,
   return done_or_continue;
 }
 
-AudioInput::AudioInput(int seconds_to_record, std::optional<int> frames_per_cb)
+AudioInput::AudioInput(int seconds_to_record, int frames_per_cb)
   : stream_(nullptr), data_(seconds_to_record * kFramesPerSec)
 {
   ctorCommon(recordCallback, &data_, frames_per_cb);
@@ -60,7 +60,7 @@ AudioInput::AudioInput(int seconds_to_record, std::optional<int> frames_per_cb)
 AudioInput::AudioInput(int(*custom_record_cb)(const void*, void*, unsigned long,
                        const PaStreamCallbackTimeInfo*,
                        PaStreamCallbackFlags, void*), void* user_opaque,
-                       std::optional<int> frames_per_cb)
+                       int frames_per_cb)
   : stream_(nullptr), data_(0)
 {
   ctorCommon(custom_record_cb, user_opaque, frames_per_cb);
@@ -69,7 +69,7 @@ AudioInput::AudioInput(int(*custom_record_cb)(const void*, void*, unsigned long,
 void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
                             const PaStreamCallbackTimeInfo*,
                             PaStreamCallbackFlags, void*), void* opaque,
-                            std::optional<int> frames_per_cb)
+                            int frames_per_cb)
 {
   PaError err = Pa_Initialize();
   if (err != paNoError) crash(err);
@@ -90,7 +90,7 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
 
   // TODO explore what adding paDitherOff to the flags here would do.
   err = Pa_OpenStream(&stream_, &input_param, NULL, kFramesPerSec,
-                      frames_per_cb.value_or(paFramesPerBufferUnspecified),
+                      frames_per_cb,//.value_or(paFramesPerBufferUnspecified),
                       paClipOff, record_cb, opaque);
   if (err != paNoError) crash(err);
   err = Pa_StartStream(stream_);
