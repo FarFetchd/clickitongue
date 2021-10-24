@@ -2,7 +2,6 @@
 * if we want tongue clicks to be right click alongside a puff/blow left click, then we'll need to add logic to tongue click
 to expect a LACK of energy outside the expected range.
 * get blow trainer to handle both on and off events for long blows.
-* multithread trainer optimizer
 * eventually handle wayland rather than X on linux.
 * support windows (does mingw cross compiling work even for linking in portaudio? that would be nice!)
 * support osx

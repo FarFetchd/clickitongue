@@ -1,7 +1,7 @@
 // Actual code for direct (careful) inclusion within an anonymous namespace,
 // so no include guard.
-// Hacky, but hugely cleans things up, and I'm not sure there's a clean way to
-// do it the "right" way with an interface base class.
+// Hacky, but does clean things up a bit, and I'm not sure there's a clean way
+// to do it the "right" way with an interface base class.
 
 void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
                            int max_length)
@@ -28,35 +28,26 @@ void patternSearch(TrainParamsFactory& factory)
   int shrinks = 0;
   while (true)
   {
-    std::vector<TrainParams> best;
-    for (int i=0; i<3 && i < candidates.size(); i++)
-      best.push_back(candidates[i]);
+    std::vector<TrainParams> old_candidates = candidates;
 
+    // patternAround() kicks of a bunch of parallel computation, and the
+    // awaitHatch() calls gather it all up.
     for (auto const& candidate : candidates)
-    {
-      // begin parallel computations
-      std::vector<TrainParamsCocoon> step_cocoons = factory.patternAround(candidate);
-      // gather results of parallel computations
-      for (auto& cocoon : step_cocoons)
+      for (auto& cocoon : factory.patternAround(candidate))
         addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 3);
-    }
 
-    std::vector<TrainParams> new_best;
-    for (int i=0; i<3 && i < candidates.size(); i++)
-      new_best.push_back(candidates[i]);
-
-    if (new_best.front() == best.front())
+    if (candidates.front() == old_candidates.front())
     {
       factory.shrinkSteps();
       shrinks++;
     }
 
     printf("current best: ");
-    new_best.front().printParams();
+    candidates.front().printParams();
     if (DOING_DEVELOPMENT_TESTING)
-      printf("best scores: %s\n", new_best.front().toString().c_str());
+      printf("best scores: %s\n", candidates.front().toString().c_str());
 
-    if (new_best == best)
+    if (candidates == old_candidates)
       break; // we'll no longer be changing anything
     if (shrinks >= 5)
       break; // we're probably close to an optimum
