@@ -30,7 +30,7 @@ void patternSearch(TrainParamsFactory& factory)
   {
     std::vector<TrainParams> old_candidates = candidates;
 
-    // patternAround() kicks of a bunch of parallel computation, and the
+    // patternAround() kicks off a bunch of parallel computation, and the
     // awaitHatch() calls gather it all up.
     for (auto const& candidate : candidates)
       for (auto& cocoon : factory.patternAround(candidate))
