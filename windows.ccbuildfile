@@ -1,0 +1,3 @@
+OutputBinaryFilename=clickitongue
+CompileCommandPrefix=x86_64-pc-msys-g++.exe -std=c++17 -O2 -pthread -Wall -Wno-sign-compare -I/c/msys64/mingw64/include -DCLICKITONGUE_WINDOWS
+LibrariesToLink=windows_libs/libportaudio.a -lwinmm windows_libs/libfftw3-3.dll
