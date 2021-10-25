@@ -2,8 +2,8 @@ Clickitongue carries out mouse clicks when triggered by mouth sounds picked
 up by your computer's microphone, to give sore wrists a rest.
 
 Clickitongue is still very much in early development, but is already basically
-usable. It currently runs on (non-Wayland) Linux only. Support for Wayland,
-Windows, and OSX is planned.
+usable. It currently runs on (non-Wayland) Linux and Windows only. Support for
+Wayland and OSX is planned.
 
 # COMPILATION / NEEDED LIBRARIES
 
@@ -23,6 +23,13 @@ $ make install
 ```
 
 Once all that is taken care of, run `./build.sh` to compile clickitongue.
+
+(That's for Linux. For Windows, install MSYS2, get ccsimplebuild, and from
+an MSYS2 terminal run
+`./ccsimplebuild.exe windows.ccbuildfile` in the main clickitongue dir.
+The resulting .exe needs to have all the .dlls from the windows_libs/ dir
+living in the same dir with it - but can be run normally; doesn't need
+MSYS2 installed).
 
 # USAGE
 

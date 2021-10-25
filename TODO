@@ -3,10 +3,10 @@
 to expect a LACK of energy outside the expected range.
 * get blow trainer to handle both on and off events for long blows.
 * eventually handle wayland rather than X on linux.
-* support windows (does mingw cross compiling work even for linking in portaudio? that would be nice!)
 * support osx
 * polished flow of first time setup --> configured regular usage
-
+* windows has a security thing preventing "run as admin" windows from receiving SendInput() from non-admin processes.
+  simply running clickitongue as admin fixes this; just need to get that smoothly into the flow for users.
 
 
 # SIM NOTES
