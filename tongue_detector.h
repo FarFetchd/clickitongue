@@ -3,7 +3,6 @@
 
 #include "portaudio.h"
 
-#include "actions.h"
 #include "constants.h"
 #include "detector.h"
 #include "easy_fourier.h"

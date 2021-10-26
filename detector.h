@@ -1,7 +1,6 @@
 #ifndef CLICKITONGUE_DETECTOR_H_
 #define CLICKITONGUE_DETECTOR_H_
 
-#include "actions.h"
 #include "blocking_queue.h"
 #include "constants.h"
 

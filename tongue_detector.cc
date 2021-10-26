@@ -69,7 +69,7 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
 //   {
 //     if (energy > 200)
 //       printf("%g\n", energy > 500 ? energy : 0);
-//    printEqualizerAlreadyFreq(lease.out, num_frames);
+//    g_fourier->printEqualizerAlreadyFreq(lease.out);
 //    g_fourier->printMaxBucket(cur_sample);
 //     print_once_per_10ms_chunks=0;
 //   }
