@@ -1,8 +1,13 @@
 #!/bin/bash
 
-OUTPUTFILENAME=`grep "OutputBinaryFilename=" default.ccbuildfile | sed 's/OutputBinaryFilename=//'`
-COMPILECOMMANDPREFIX=`grep "CompileCommandPrefix=" default.ccbuildfile | sed 's/CompileCommandPrefix=//'`
-LIBRARIESTOLINK=`grep "LibrariesToLink=" default.ccbuildfile | sed 's/LibrariesToLink=//'`
+BUILDFILENAME="default.ccbuildfile"
+if [ -n "$1" ]; then
+  BUILDFILENAME="$1"
+fi
+
+OUTPUTFILENAME=`grep "OutputBinaryFilename=" $BUILDFILENAME | sed 's/OutputBinaryFilename=//'`
+COMPILECOMMANDPREFIX=`grep "CompileCommandPrefix=" $BUILDFILENAME | sed 's/CompileCommandPrefix=//'`
+LIBRARIESTOLINK=`grep "LibrariesToLink=" $BUILDFILENAME | sed 's/LibrariesToLink=//'`
 
 echo "
 *******************************************************************************

@@ -24,9 +24,8 @@ $ make install
 
 Once all that is taken care of, run `./build.sh` to compile clickitongue.
 
-(That's for Linux. For Windows, install MSYS2, get ccsimplebuild, and from
-an MSYS2 terminal run
-`./ccsimplebuild.exe windows.ccbuildfile` in the main clickitongue dir.
+(That's for Linux. For Windows, install MSYS2, and from an MSYS2 terminal run
+`./build.sh windows.ccbuildfile` in the main clickitongue dir.
 The resulting .exe needs to have all the .dlls from the windows_libs/ dir
 living in the same dir with it - but can be run normally; doesn't need
 MSYS2 installed).
