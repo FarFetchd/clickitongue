@@ -54,3 +54,49 @@ void patternSearch(TrainParamsFactory& factory)
   }
   printf("converged; done.\n");
 }
+
+// hacky getch
+//================================================
+#include <termios.h>
+#include <cstdio>
+static struct termios old_termios, current_termios;
+
+void make_getchar_like_getch()
+{
+  tcgetattr(0, &old_termios); // grab old terminal i/o settings
+  current_termios = old_termios; // make new settings same as old settings
+  current_termios.c_lflag &= ~ICANON; // disable buffered i/o
+  current_termios.c_lflag &= ~ECHO;
+  tcsetattr(0, TCSANOW, &current_termios); // use these new terminal i/o settings now
+}
+// can now do:    char ch = getchar();
+// once you're done, restore normality with:
+void resetTermios()
+{
+  tcsetattr(0, TCSANOW, &old_termios);
+}
+
+RecordedAudio recordExampleCommon(int desired_events,
+                                  std::string dont_do_any_of_this,
+                                  std::string do_this_n_times)
+{
+  const int kSecondsToRecord = 4;
+  if (desired_events == 0)
+  {
+    printf("About to record! Will record for %d seconds. During that time, please "
+           "don't do ANY %s; this is just to record your typical "
+           "background sounds. Press any key when you are ready to start.\n",
+           kSecondsToRecord, dont_do_any_of_this.c_str());
+  }
+  else
+  {
+    printf("About to record! Will record for %d seconds. During that time, please "
+           "%s %d times. Press any key when you are ready to start.\n",
+           kSecondsToRecord, do_this_n_times.c_str(), desired_events);
+  }
+  make_getchar_like_getch(); getchar(); resetTermios();
+  printf("Now recording..."); fflush(stdout);
+  RecordedAudio recorder(kSecondsToRecord);
+  printf("recording done.\n");
+  return recorder;
+}

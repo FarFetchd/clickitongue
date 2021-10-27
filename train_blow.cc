@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "audio_recording.h"
-#include "getch.h"
 #include "blow_detector.h"
 
 namespace {
@@ -446,31 +445,13 @@ private:
   double pattern_divisor_ = 4.0;
 };
 
-RecordedAudio recordExample(int desired_events)
-{
-  const int kSecondsToRecord = 4;
-  if (desired_events == 0)
-  {
-    printf("About to record! Will record for %d seconds. During that time, please "
-           "don't do ANY blowing; this is just to record your typical "
-           "background sounds. Press any key when you are ready to start.\n",
-           kSecondsToRecord);
-  }
-  else
-  {
-    printf("About to record! Will record for %d seconds. During that time, please "
-           "blow on the mic %d times. Press any key when you are ready to start.\n",
-           kSecondsToRecord, desired_events);
-  }
-  make_getchar_like_getch(); getchar(); resetTermios();
-  printf("Now recording..."); fflush(stdout);
-  RecordedAudio recorder(kSecondsToRecord);
-  printf("recording done.\n");
-  return recorder;
-}
-
 // the following is actual code, not just a header:
 #include "train_common.h"
+
+RecordedAudio recordExample(int desired_events)
+{
+  return recordExampleCommon(desired_events, "blowing", "blow on the mic");
+}
 
 } // namespace
 
