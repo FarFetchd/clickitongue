@@ -7,10 +7,13 @@ void Detector::kickoffAction(Action action)
 {
   if (action == Action::RecordCurFrame)
     cur_frame_dest_->push_back(*cur_frame_src_);
-  else if (!action_queue_)
-    printf("action_queue_ null, cannot kickoff action\n");
-  else
-    action_queue_->enqueue(action);
+  else if (action != Action::NoAction)
+  {
+    if (!action_queue_)
+      printf("action_queue_ null, cannot kickoff action\n");
+    else
+      action_queue_->enqueue(action);
+  }
 }
 
 void Detector::setCurFrameSource(int* src)
