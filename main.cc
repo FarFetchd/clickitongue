@@ -18,14 +18,13 @@ void crash(const char* s)
   exit(1);
 }
 
-void useOrTest(ClickitongueCmdlineOpts opts)
+void useMain(ClickitongueCmdlineOpts opts)
 {
   BlockingQueue<Action> action_queue;
   ActionDispatcher action_dispatcher(&action_queue);
   std::thread action_dispatch(actionDispatch, &action_dispatcher);
 
   std::string detector = opts.detector.value();
-  Action action = opts.mode.value() == "use" ? Action::ClickLeft : Action::SayClick;
   if (detector == "blow")
   {
     if (!opts.lowpass_percent.has_value())
@@ -45,12 +44,11 @@ void useOrTest(ClickitongueCmdlineOpts opts)
     if (!opts.high_spike_level.has_value())
       crash("--detector=blow requires a value for --high_spike_level.");
 
-    BlowDetector clicker(
-        &action_queue, action, opts.lowpass_percent.value(),
-        opts.highpass_percent.value(), opts.low_on_thresh.value(),
-        opts.low_off_thresh.value(), opts.high_on_thresh.value(),
-        opts.high_off_thresh.value(), opts.high_spike_frac.value(),
-        opts.high_spike_level.value());
+    BlowDetector clicker(&action_queue, Action::ClickLeft,//Action::LeftDown, Action::LeftUp,
+        opts.lowpass_percent.value(), opts.highpass_percent.value(),
+        opts.low_on_thresh.value(), opts.low_off_thresh.value(),
+        opts.high_on_thresh.value(), opts.high_off_thresh.value(),
+        opts.high_spike_frac.value(), opts.high_spike_level.value());
 
     AudioInput audio_input(blowDetectorCallback, &clicker, kFourierBlocksize);
     while (audio_input.active())
@@ -69,9 +67,8 @@ void useOrTest(ClickitongueCmdlineOpts opts)
     if (!opts.refrac_blocks.has_value())
       crash("--detector=tongue requires a value for --refrac_blocks.");
 
-    TongueDetector clicker(
-        &action_queue, action,
-        opts.tongue_low_hz.value(),  opts.tongue_high_hz.value(),
+    TongueDetector clicker(&action_queue, Action::ClickLeft,
+        opts.tongue_low_hz.value(), opts.tongue_high_hz.value(),
         opts.tongue_hzenergy_high.value(), opts.tongue_hzenergy_low.value(),
         opts.refrac_blocks.value());
     AudioInput audio_input(tongueDetectorCallback, &clicker, kFourierBlocksize);
@@ -142,8 +139,8 @@ int main(int argc, char** argv)
   validateCmdlineOpts(opts);
   g_fourier = new EasyFourier(kFourierBlocksize);
 
-  if (opts.mode.value() == "use" || opts.mode.value() == "test")
-    useOrTest(opts);
+  if (opts.mode.value() == "use")
+    useMain(opts);
   else if (opts.mode.value() == "train")
     train(opts);
   else if (opts.mode.value() == "record")

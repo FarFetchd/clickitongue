@@ -25,9 +25,8 @@ using Sample = float;
 enum class Action
 {
   ClickLeft, ClickRight, LeftDown, LeftUp, RightDown, RightUp, ScrollDown, ScrollUp,
-  // these two are only used in training. RecordCurFrame requires having called
-  // setCurFrameDest() and setCurFrameSource().
-  SayClick, RecordCurFrame
+  RecordCurFrame, // for training only; requires having called setCurFrameDest() and setCurFrameSource().
+  NoAction
 };
 
 #endif // CLICKITONGUE_CONSTANTS_H_

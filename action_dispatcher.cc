@@ -23,10 +23,6 @@ bool ActionDispatcher::dispatchNextAction()
     return false;
   switch (action.value())
   {
-  case Action::SayClick:
-    static int click_print_num = 0;
-    printf("click %d!\n", ++click_print_num);
-    break;
   case Action::ClickLeft:
     clickLeft();
     break;
@@ -44,6 +40,8 @@ bool ActionDispatcher::dispatchNextAction()
     break;
   case Action::ScrollDown:
     scrollDown();
+    break;
+  case Action::NoAction:
     break;
   default:
     printf("action not implemented\n");
