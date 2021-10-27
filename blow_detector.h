@@ -19,8 +19,9 @@ public:
                double high_spike_frac, double high_spike_level,
                std::vector<int>* cur_frame_dest);
 
-  // Kicks off 'action' at each detected event.
-  BlowDetector(BlockingQueue<Action>* action_queue, Action action,
+  // Kicks off action_on, action_off at each corresponding detected event.
+  BlowDetector(BlockingQueue<Action>* action_queue,
+               Action action_on, Action action_off,
                double lowpass_percent, double highpass_percent,
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
@@ -29,7 +30,10 @@ public:
   void processAudio(const Sample* cur_sample, int num_frames) override;
 
 private:
-  const Action action_;
+  // action to be done when detector decides a blow has started...
+  const Action action_on_;
+  // ...or stopped.
+  const Action action_off_;
 
   // the percentile bucket (rounded) of the Fourier output that is the highest
   // we should consider in the lowpass half.

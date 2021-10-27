@@ -11,7 +11,8 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double high_on_thresh, double high_off_thresh,
                            double high_spike_frac, double high_spike_level,
                            std::vector<int>* cur_frame_dest)
-  : Detector(action_queue), action_(Action::RecordCurFrame),
+  : Detector(action_queue),
+    action_on_(Action::RecordCurFrame), action_off_(Action::NoAction),
     lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
     low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
     high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh),
@@ -22,18 +23,20 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
   track_cur_frame_ = true;
 }
 
-BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue, Action action,
+BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
+                           Action action_on, Action action_off,
                            double lowpass_percent, double highpass_percent,
                            double low_on_thresh, double low_off_thresh,
                            double high_on_thresh, double high_off_thresh,
                            double high_spike_frac, double high_spike_level)
-  : Detector(action_queue), action_(action),
+  : Detector(action_queue), action_on_(action_on), action_off_(action_off),
     lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
     low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
     high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh),
     high_spike_frac_(high_spike_frac), high_spike_level_(high_spike_level)
 {
-  assert(action_ != Action::RecordCurFrame);
+  assert(action_on_ != Action::RecordCurFrame);
+  assert(action_off_ != Action::RecordCurFrame);
 }
 
 void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
@@ -86,17 +89,13 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
     mouse_down_at_least_one_block_ = true;
   else if (avg_low > low_on_thresh_ && avg_high > high_on_thresh_ && many_high_spikes && !mouse_down_)
   {
-    if (action_ == Action::RecordCurFrame)
-      kickoffAction(Action::RecordCurFrame);
-    else
-      kickoffAction(Action::LeftDown);
+    kickoffAction(action_on_);
     mouse_down_ = true;
     mouse_down_at_least_one_block_ = false;
   }
   else if (avg_low < low_off_thresh_ && avg_high < high_off_thresh_ && mouse_down_)
   {
-    if (action_ != Action::RecordCurFrame)
-      kickoffAction(Action::LeftUp);
+    kickoffAction(action_off_);
     mouse_down_ = false;
   }
 }

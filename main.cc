@@ -44,7 +44,7 @@ void useMain(ClickitongueCmdlineOpts opts)
     if (!opts.high_spike_level.has_value())
       crash("--detector=blow requires a value for --high_spike_level.");
 
-    BlowDetector clicker(&action_queue, Action::ClickLeft,//Action::LeftDown, Action::LeftUp,
+    BlowDetector clicker(&action_queue, Action::LeftDown, Action::LeftUp,
         opts.lowpass_percent.value(), opts.highpass_percent.value(),
         opts.low_on_thresh.value(), opts.low_off_thresh.value(),
         opts.high_on_thresh.value(), opts.high_off_thresh.value(),
