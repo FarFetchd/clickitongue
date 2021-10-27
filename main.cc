@@ -90,6 +90,20 @@ void train(ClickitongueCmdlineOpts opts)
     trainTongue();
 }
 
+int equalizerCallback(const void* inputBuffer, void* outputBuffer,
+                      unsigned long framesPerBuffer,
+                      const PaStreamCallbackTimeInfo* timeInfo,
+                      PaStreamCallbackFlags statusFlags, void* userData)
+{
+  static int print_once_per_10_6ms_chunks = 0;
+  if (++print_once_per_10_6ms_chunks == 10)
+  {
+    print_once_per_10_6ms_chunks = 0;
+    g_fourier->printEqualizer(static_cast<const float*>(inputBuffer));
+  }
+  return paContinue;
+}
+
 const char kBadModeOpt[] = "Must specify --mode=train, test, use, record, or play.";
 const char kBadDetectorOpt[] = "Must specify --detector=blow or tongue.";
 
@@ -99,7 +113,7 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
     crash(kBadModeOpt);
   std::string mode = opts.mode.value();
   if (mode != "train" && mode != "test" && mode != "use" && mode != "record" &&
-      mode != "play")
+      mode != "play" && mode != "equalizer")
   {
     crash(kBadModeOpt);
   }
@@ -141,6 +155,12 @@ int main(int argc, char** argv)
   {
     RecordedAudio audio(opts.filename.value());
     audio.play();
+  }
+  else if (opts.mode.value() == "equalizer")
+  {
+    AudioInput audio_input(equalizerCallback, nullptr, kFourierBlocksize);
+    while (audio_input.active())
+      Pa_Sleep(500);
   }
 
   Pa_Terminate(); // corresponds to the Pa_Initialize() at the start
