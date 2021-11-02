@@ -2,11 +2,21 @@
 * if we want tongue clicks to be right click alongside a puff/blow left click, then we'll need to add logic to tongue click
 to expect a LACK of energy outside the expected range.
 * get blow trainer to handle both on and off events for long blows.
-* eventually handle wayland rather than X on linux.
-* support osx
 * polished flow of first time setup --> configured regular usage
 * windows has a security thing preventing "run as admin" windows from receiving SendInput() from non-admin processes.
   simply running clickitongue as admin fixes this; just need to get that smoothly into the flow for users.
+* if we end up packaging standard noise files to train against, be sure to use network order ints when saving them
+* structopt has a single header include; switch to that
+* debian package libportaudio2 may be all the user needs, rather than the make install thing
+**** (try installing + using on a live boot)
+
+wishlist
+* support osx
+* eventually handle wayland rather than X on linux.
+* fun idea: ascending and descending whistles to control scroll wheel. need to track frequencies at a finer resolution; try
+  "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
+* FFTW wisdom
+
 
 
 # SIM NOTES

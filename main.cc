@@ -12,6 +12,8 @@
 #include "train_blow.h"
 #include "train_tongue.h"
 
+#include "config_io.h"
+
 void crash(const char* s)
 {
   fprintf(stderr, "%s\n", s);
@@ -101,21 +103,25 @@ int equalizerCallback(const void* inputBuffer, void* outputBuffer,
   return paContinue;
 }
 
-const char kBadModeOpt[] = "Must specify --mode=train, test, use, record, or play.";
 const char kBadDetectorOpt[] = "Must specify --detector=blow or tongue.";
 
 void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 {
   if (!opts.mode.has_value())
-    crash(kBadModeOpt);
+  {
+    printf("No --mode= specified; using default behavior (which is probably "
+           "what you want).\n");
+    return;
+  }
   std::string mode = opts.mode.value();
-  if (mode != "train" && mode != "test" && mode != "use" && mode != "record" &&
+  if (mode != "train" && mode != "use" && mode != "record" &&
       mode != "play" && mode != "equalizer")
   {
-    crash(kBadModeOpt);
+    crash("Invalid --mode= value. Must specify --mode=train, use, record,"
+          "play, or equalizer. (Or not specify it).");
   }
 
-  if (mode == "train" || mode == "test" || mode == "use")
+  if (mode == "train" || mode == "use")
   {
     if (!opts.detector.has_value())
       crash(kBadDetectorOpt);
@@ -127,7 +133,22 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
       crash("Must specify a --filename=");
 }
 
-// TODO on linux, make use of PaAlsa_EnableRealtimeScheduling
+void defaultMain()
+{
+  if (auto maybe_config = readConfig(); maybe_config.has_value())
+  {
+    Config config = maybe_config.value();
+    // TODO
+  }
+  else
+  {
+    fprintf(stderr, "It looks like this is your first time running Clickitongue. First, we're going to train Clickitongue on the acoustics and typical background noise of your particular enivornment.\n"); // TODO
+
+    // TODO writeConfig()
+    fprintf(stderr, "Clickitongue should now be configured. Entering normal operation.\n");
+    defaultMain();
+  }
+}
 
 int main(int argc, char** argv)
 {
@@ -139,26 +160,31 @@ int main(int argc, char** argv)
   validateCmdlineOpts(opts);
   g_fourier = new EasyFourier(kFourierBlocksize);
 
-  if (opts.mode.value() == "use")
-    useMain(opts);
-  else if (opts.mode.value() == "train")
-    train(opts);
-  else if (opts.mode.value() == "record")
+  if (opts.mode.has_value())
   {
-    RecordedAudio audio(opts.duration_seconds.value());
-    audio.recordToFile(opts.filename.value());
+    if (opts.mode.value() == "record")
+    {
+      RecordedAudio audio(opts.duration_seconds.value());
+      audio.recordToFile(opts.filename.value());
+    }
+    else if (opts.mode.value() == "play")
+    {
+      RecordedAudio audio(opts.filename.value());
+      audio.play();
+    }
+    else if (opts.mode.value() == "equalizer")
+    {
+      AudioInput audio_input(equalizerCallback, nullptr, kFourierBlocksize);
+      while (audio_input.active())
+        Pa_Sleep(500);
+    }
+    else if (opts.mode.value() == "use")
+      useMain(opts);
+    else if (opts.mode.value() == "train")
+      train(opts); // TODO verbosity param
   }
-  else if (opts.mode.value() == "play")
-  {
-    RecordedAudio audio(opts.filename.value());
-    audio.play();
-  }
-  else if (opts.mode.value() == "equalizer")
-  {
-    AudioInput audio_input(equalizerCallback, nullptr, kFourierBlocksize);
-    while (audio_input.active())
-      Pa_Sleep(500);
-  }
+  else
+    defaultMain();
 
   Pa_Terminate(); // corresponds to the Pa_Initialize() at the start
   return 0;
