@@ -232,7 +232,7 @@ public:
                      std::vector<std::string> const& noise_fnames)
   {
     std::vector<RecordedAudio> noises;
-    if (DOING_DEVELOPMENT_TESTING)
+    if (DOING_DEVELOPMENT_TESTING) // TODO either trim, or do always and add noise files
       for (auto name : noise_fnames)
         noises.emplace_back(name);
 
@@ -455,7 +455,7 @@ RecordedAudio recordExample(int desired_events)
 
 } // namespace
 
-void trainBlow()
+void trainBlow(bool verbose)
 {
   // the int is number of events that are actually in each example
   std::vector<std::pair<RecordedAudio, int>> audio_examples;
@@ -476,5 +476,5 @@ void trainBlow()
   std::vector<std::string> noise_fnames = {"falls_of_fall.pcm", "brandenburg.pcm"};
   TrainParamsFactory factory(audio_examples, noise_fnames);
 
-  patternSearch(factory);
+  patternSearch(factory, verbose);
 }

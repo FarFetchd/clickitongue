@@ -1,6 +1,8 @@
 #ifndef CLICKITONGUE_CONSTANTS_H_
 #define CLICKITONGUE_CONSTANTS_H_
 
+#include <string>
+
 // Important terminology: each single float value is a sample. A chunk of
 // kNumChannels samples (usually 2) is a frame. If you see a pointer to a buffer
 // of "samples" together with that buffer's length called num_frames, then that

@@ -81,14 +81,6 @@ void useMain(ClickitongueCmdlineOpts opts)
   action_dispatch.join();
 }
 
-void train(ClickitongueCmdlineOpts opts)
-{
-  if (opts.detector.value() == "blow")
-    trainBlow();
-  else if (opts.detector.value() == "tongue")
-    trainTongue();
-}
-
 int equalizerCallback(const void* inputBuffer, void* outputBuffer,
                       unsigned long framesPerBuffer,
                       const PaStreamCallbackTimeInfo* timeInfo,
@@ -180,8 +172,10 @@ int main(int argc, char** argv)
     }
     else if (opts.mode.value() == "use")
       useMain(opts);
-    else if (opts.mode.value() == "train")
-      train(opts); // TODO verbosity param
+    else if (opts.mode.value() == "train" && opts.detector.value() == "blow")
+      trainBlow(/*verbose=*/true);
+    else if (opts.mode.value() == "train" && opts.detector.value() == "tongue")
+      trainTongue(/*verbose=*/true);
   }
   else
     defaultMain();
