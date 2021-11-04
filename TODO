@@ -2,8 +2,6 @@
 * if we want tongue clicks to be right click alongside a puff/blow left click, then we'll need to add logic to tongue click
 to expect a LACK of energy outside the expected range.
 * get blow trainer to handle both on and off events for long blows.
-* debian package libportaudio2 may be all the user needs, rather than the make install thing
-**** (try installing + using on a live boot)
 
 wishlist
 * support osx
@@ -13,6 +11,7 @@ wishlist
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
 * FFTW wisdom
 * translate into all languages we can get translators for
+* debian package
 
 
 # SIM NOTES
