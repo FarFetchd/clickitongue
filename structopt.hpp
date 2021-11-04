@@ -2728,7 +2728,7 @@ struct parser {
               "` provided for enum argument `" + std::string{name} +
               "`. Allowed values are {" + allowed_names_string + "}",
           visitor);
-      // TODO: Throw error invalid enum option
+      // to do: Throw error invalid enum option
     }
     return result;
   }
@@ -2892,7 +2892,7 @@ struct parser {
             for (auto &arg : potential_combined_argument) {
               if (!is_optional_field(arg)) {
                 is_combined_argument = false;
-                // TODO: report error unrecognized option in combined argument
+                // to do: report error unrecognized option in combined argument
               }
             }
 
