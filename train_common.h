@@ -76,7 +76,7 @@ void resetTermios()
   tcsetattr(0, TCSANOW, &old_termios);
 }
 
-RecordedAudio recordExampleCommon(int desired_events,
+AudioRecording recordExampleCommon(int desired_events,
                                   std::string dont_do_any_of_this,
                                   std::string do_this_n_times)
 {
@@ -103,7 +103,7 @@ RecordedAudio recordExampleCommon(int desired_events,
   make_getchar_like_getch(); getchar(); resetTermios();
   printf("Now recording..."); fflush(stdout);
 #endif
-  RecordedAudio recorder(kSecondsToRecord);
+  AudioRecording recorder(kSecondsToRecord);
   promptInfo("recording done.");
   return recorder;
 }

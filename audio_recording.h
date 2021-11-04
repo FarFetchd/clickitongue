@@ -6,14 +6,14 @@
 
 // For saving/loading raw PCM files. Reads/writes files with big-endian uint16
 // samples, but stores in memory as 32-bit float.
-class RecordedAudio
+class AudioRecording
 {
 public:
   // Loads fname as raw big-endian uint16 PCM
-  explicit RecordedAudio(std::string fname);
+  explicit AudioRecording(std::string fname);
   // Records 'seconds' of audio into samples_. (This ctor blocks until those
   // seconds of recording have finished).
-  explicit RecordedAudio(int seconds);
+  explicit AudioRecording(int seconds);
 
   // actual playback of samples_
   void play() const;
@@ -23,7 +23,7 @@ public:
   std::vector<float> const& samples() const;
 
   // Overlays rhs onto our own data. We ignore its end if it's longer than we are.
-  RecordedAudio& operator+=(RecordedAudio const& rhs);
+  AudioRecording& operator+=(AudioRecording const& rhs);
   // Scale up or down by this factor. TODO There is probably some decibel thing
   // that is the more correct way to do this.
   void scale(double factor);

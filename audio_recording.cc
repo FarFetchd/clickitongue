@@ -13,7 +13,7 @@ bool isLittleEndian()
   return as_bytes[0] == 1;
 }
 
-RecordedAudio::RecordedAudio(std::string fname)
+AudioRecording::AudioRecording(std::string fname)
 {
   bool little_endian = isLittleEndian();
   FILE* reader = fopen(fname.c_str(), "rb");
@@ -44,7 +44,7 @@ RecordedAudio::RecordedAudio(std::string fname)
   fclose(reader);
 }
 
-RecordedAudio::RecordedAudio(int seconds)
+AudioRecording::AudioRecording(int seconds)
 {
   AudioInput recorder(seconds, paFramesPerBufferUnspecified);
   while (recorder.active())
@@ -52,27 +52,27 @@ RecordedAudio::RecordedAudio(int seconds)
   samples_ = recorder.recordedSamples();
 }
 
-void RecordedAudio::play() const
+void AudioRecording::play() const
 {
   playRecorded(&samples_);
 }
 
-std::vector<float> const& RecordedAudio::samples() const { return samples_; }
+std::vector<float> const& AudioRecording::samples() const { return samples_; }
 
-RecordedAudio& RecordedAudio::operator+=(RecordedAudio const& rhs)
+AudioRecording& AudioRecording::operator+=(AudioRecording const& rhs)
 {
   for (int i = 0; i < samples_.size() && i < rhs.samples().size(); i++)
     samples_[i] += rhs.samples()[i];
   return *this;
 }
 
-void RecordedAudio::scale(double factor)
+void AudioRecording::scale(double factor)
 {
   for (float& s : samples_)
     s *= factor;
 }
 
-void RecordedAudio::recordToFile(std::string fname) const
+void AudioRecording::recordToFile(std::string fname) const
 {
   bool little_endian = isLittleEndian();
   FILE* writer = fopen(fname.c_str(), "wb");

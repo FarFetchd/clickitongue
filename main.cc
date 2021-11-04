@@ -270,12 +270,12 @@ int main(int argc, char** argv)
   {
     if (opts.mode.value() == "record")
     {
-      RecordedAudio audio(opts.duration_seconds.value());
+      AudioRecording audio(opts.duration_seconds.value());
       audio.recordToFile(opts.filename.value());
     }
     else if (opts.mode.value() == "play")
     {
-      RecordedAudio audio(opts.filename.value());
+      AudioRecording audio(opts.filename.value());
       audio.play();
     }
     else if (opts.mode.value() == "equalizer")

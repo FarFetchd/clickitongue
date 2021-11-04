@@ -64,7 +64,7 @@ public:
 
   // for each example-set, detectEvents on each example, and sum up that sets'
   // total violations. the score is a vector of those violations, one count per example-set.
-  void computeScore(std::vector<std::vector<std::pair<RecordedAudio, int>>> const& example_sets)
+  void computeScore(std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
   {
     score.clear();
     for (auto const& examples : example_sets)
@@ -157,7 +157,7 @@ double randomHighEnergy(double low)
 
 void runComputeScore(
     TrainParams* me,
-    std::vector<std::vector<std::pair<RecordedAudio, int>>> const& example_sets)
+    std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
 {
   me->computeScore(example_sets);
 }
@@ -168,7 +168,7 @@ public:
   TrainParamsCocoon(
       double tongue_low_hz, double tongue_high_hz, double tongue_hzenergy_high,
       double tongue_hzenergy_low, int refrac_blocks,
-      std::vector<std::vector<std::pair<RecordedAudio, int>>> const& example_sets)
+      std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
   : pupa_(std::make_unique<TrainParams>(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
           tongue_hzenergy_low, refrac_blocks)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(), example_sets)) {}
@@ -185,10 +185,10 @@ private:
 class TrainParamsFactory
 {
 public:
-  TrainParamsFactory(std::vector<std::pair<RecordedAudio, int>> const& raw_examples,
+  TrainParamsFactory(std::vector<std::pair<AudioRecording, int>> const& raw_examples,
                      std::vector<std::string> const& noise_fnames)
   {
-    std::vector<RecordedAudio> noises;
+    std::vector<AudioRecording> noises;
     if (DOING_DEVELOPMENT_TESTING) // TODO either trim, or do always and add noise files
       for (auto name : noise_fnames)
         noises.emplace_back(name);
@@ -197,7 +197,7 @@ public:
     examples_sets_.push_back(raw_examples);
     for (auto const& noise : noises) // now a set of our examples for each noise
     {
-      std::vector<std::pair<RecordedAudio, int>> examples = raw_examples;
+      std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
       for (auto& x : examples)
       {
         x.first.scale(0.7);
@@ -207,7 +207,7 @@ public:
     }
     // finally, a quiet version, for a challenge/tie breaker
     {
-      std::vector<std::pair<RecordedAudio, int>> examples = raw_examples;
+      std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
       for (auto& x : examples)
         x.first.scale(0.3);
       examples_sets_.push_back(examples);
@@ -313,7 +313,7 @@ public:
 private:
   // A vector of example-sets. Each example-set is a vector of samples of audio,
   // paired with how many events are expected to be in that audio.
-  std::vector<std::vector<std::pair<RecordedAudio, int>>> examples_sets_;
+  std::vector<std::vector<std::pair<AudioRecording, int>>> examples_sets_;
   // Each variable's offset will be (kVarMax-kVarMin)/pattern_divisor_
   double pattern_divisor_ = 4.0;
 };
@@ -321,7 +321,7 @@ private:
 // the following is actual code, not just a header:
 #include "train_common.h"
 
-RecordedAudio recordExample(int desired_events)
+AudioRecording recordExample(int desired_events)
 {
   return recordExampleCommon(desired_events, "tongue clicks", "tongue click");
 }
@@ -330,13 +330,13 @@ RecordedAudio recordExample(int desired_events)
 
 TongueConfig trainTongue(Action action, bool verbose)
 {
-  std::vector<std::pair<RecordedAudio, int>> audio_examples;
+  std::vector<std::pair<AudioRecording, int>> audio_examples;
   if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
   {
-    audio_examples.emplace_back(RecordedAudio("clicks_0.pcm"), 0);
-    audio_examples.emplace_back(RecordedAudio("clicks_1.pcm"), 1);
-    audio_examples.emplace_back(RecordedAudio("clicks_2.pcm"), 2);
-    audio_examples.emplace_back(RecordedAudio("clicks_3.pcm"), 3);
+    audio_examples.emplace_back(AudioRecording("clicks_0.pcm"), 0);
+    audio_examples.emplace_back(AudioRecording("clicks_1.pcm"), 1);
+    audio_examples.emplace_back(AudioRecording("clicks_2.pcm"), 2);
+    audio_examples.emplace_back(AudioRecording("clicks_3.pcm"), 3);
   }
   else // for actual use
   {
