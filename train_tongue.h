@@ -1,6 +1,8 @@
 #ifndef CLICKITONGUE_TRAIN_TONGUE_H_
 #define CLICKITONGUE_TRAIN_TONGUE_H_
 
-void trainTongue(bool verbose);
+#include "config_io.h"
+
+TongueConfig trainTongue(Action action, bool verbose = false);
 
 #endif // CLICKITONGUE_TRAIN_TONGUE_H_

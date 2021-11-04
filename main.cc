@@ -8,6 +8,7 @@
 #include "cmdline_options.h"
 #include "constants.h"
 #include "easy_fourier.h"
+#include "interaction.h"
 #include "tongue_detector.h"
 #include "train_blow.h"
 #include "train_tongue.h"
@@ -18,6 +19,40 @@ void crash(const char* s)
 {
   fprintf(stderr, "%s\n", s);
   exit(1);
+}
+
+std::thread spawnBlowDetector(
+    BlockingQueue<Action>* action_queue, Action action_on, Action action_off,
+    double lowpass_percent, double highpass_percent, double low_on_thresh,
+    double low_off_thresh, double high_on_thresh, double high_off_thresh,
+    double high_spike_frac, double high_spike_level)
+{
+  return std::thread([=]()
+  {
+    BlowDetector clicker(action_queue, action_on, action_off, lowpass_percent,
+                         highpass_percent, low_on_thresh, low_off_thresh,
+                         high_on_thresh, high_off_thresh, high_spike_frac,
+                         high_spike_level);
+    AudioInput audio_input(blowDetectorCallback, &clicker, kFourierBlocksize);
+    while (audio_input.active())
+      Pa_Sleep(500);
+  });
+}
+
+std::thread spawnTongueDetector(
+    BlockingQueue<Action>* action_queue, Action action, double tongue_low_hz,
+    double tongue_high_hz, double tongue_hzenergy_high,
+    double tongue_hzenergy_low, int refrac_blocks)
+{
+  return std::thread([=]()
+  {
+    TongueDetector clicker(action_queue, action, tongue_low_hz, tongue_high_hz,
+                           tongue_hzenergy_high, tongue_hzenergy_low,
+                           refrac_blocks);
+    AudioInput audio_input(tongueDetectorCallback, &clicker, kFourierBlocksize);
+    while (audio_input.active())
+      Pa_Sleep(500);
+  });
 }
 
 void useMain(ClickitongueCmdlineOpts opts)
@@ -46,15 +81,13 @@ void useMain(ClickitongueCmdlineOpts opts)
     if (!opts.high_spike_level.has_value())
       crash("--detector=blow requires a value for --high_spike_level.");
 
-    BlowDetector clicker(&action_queue, Action::LeftDown, Action::LeftUp,
+    std::thread blow_thread = spawnBlowDetector(
+        &action_queue, Action::LeftDown, Action::LeftUp,
         opts.lowpass_percent.value(), opts.highpass_percent.value(),
         opts.low_on_thresh.value(), opts.low_off_thresh.value(),
         opts.high_on_thresh.value(), opts.high_off_thresh.value(),
         opts.high_spike_frac.value(), opts.high_spike_level.value());
-
-    AudioInput audio_input(blowDetectorCallback, &clicker, kFourierBlocksize);
-    while (audio_input.active())
-      Pa_Sleep(500);
+    blow_thread.join();
   }
   else if (detector == "tongue")
   {
@@ -69,13 +102,11 @@ void useMain(ClickitongueCmdlineOpts opts)
     if (!opts.refrac_blocks.has_value())
       crash("--detector=tongue requires a value for --refrac_blocks.");
 
-    TongueDetector clicker(&action_queue, Action::ClickLeft,
-        opts.tongue_low_hz.value(), opts.tongue_high_hz.value(),
-        opts.tongue_hzenergy_high.value(), opts.tongue_hzenergy_low.value(),
-        opts.refrac_blocks.value());
-    AudioInput audio_input(tongueDetectorCallback, &clicker, kFourierBlocksize);
-    while (audio_input.active())
-      Pa_Sleep(500);
+    std::thread tongue_thread = spawnTongueDetector(
+        &action_queue, Action::ClickLeft, opts.tongue_low_hz.value(),
+        opts.tongue_high_hz.value(), opts.tongue_hzenergy_high.value(),
+        opts.tongue_hzenergy_low.value(), opts.refrac_blocks.value());
+    tongue_thread.join();
   }
   action_dispatcher.shutdown();
   action_dispatch.join();
@@ -100,11 +131,7 @@ const char kBadDetectorOpt[] = "Must specify --detector=blow or tongue.";
 void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 {
   if (!opts.mode.has_value())
-  {
-    printf("No --mode= specified; using default behavior (which is probably "
-           "what you want).\n");
     return;
-  }
   std::string mode = opts.mode.value();
   if (mode != "train" && mode != "use" && mode != "record" &&
       mode != "play" && mode != "equalizer")
@@ -125,27 +152,114 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
       crash("Must specify a --filename=");
 }
 
-void defaultMain()
+void normalOperation(Config config)
 {
-  if (auto maybe_config = readConfig(); maybe_config.has_value())
+  BlockingQueue<Action> action_queue;
+  ActionDispatcher action_dispatcher(&action_queue);
+  std::thread action_dispatch(actionDispatch, &action_dispatcher);
+
+  std::thread blow_thread;
+  if (config.blow.enabled)
   {
-    Config config = maybe_config.value();
-    // TODO
+    printf("spawning blow detector for left clicks\n");
+    blow_thread = spawnBlowDetector(
+        &action_queue, config.blow.action_on, config.blow.action_off,
+        config.blow.lowpass_percent, config.blow.highpass_percent,
+        config.blow.low_on_thresh, config.blow.low_off_thresh,
+        config.blow.high_on_thresh, config.blow.high_off_thresh,
+        config.blow.high_spike_frac, config.blow.high_spike_level);
+  }
+  std::thread tongue_thread;
+  if (config.tongue.enabled)
+  {
+    printf("spawning tongue detector for %s clicks\n",
+           config.tongue.action == Action::ClickRight ? "right" : "left");
+    tongue_thread = spawnTongueDetector(
+        &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
+        config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
+        config.tongue.tongue_hzenergy_low, config.tongue.refrac_blocks);
+  }
+
+  if (config.blow.enabled)
+    blow_thread.join();
+  if (config.tongue.enabled)
+    tongue_thread.join();
+  action_dispatcher.shutdown();
+  action_dispatch.join();
+}
+
+void firstTimeTrain()
+{
+  promptInfo(
+"It looks like this is your first time running Clickitongue.\n"
+"First, we're going to train Clickitongue on the acoustics\n"
+"and typical background noise of your particular enivornment.");
+
+  bool try_blows = promptYesNo(
+"Will you be able to keep your mic positioned no more than a few centimeters\n"
+"from your mouth for long-term usage? If so, Clickitongue will be able to \n"
+"recognize blowing in addition to tongue clicking, allowing both left and \n"
+"right clicking. Otherwise, Clickitongue will only be able to left click.\n\n"
+"So: will your mic be close enough to directly blow on?");
+
+  Config config;
+  if (try_blows)
+    config.blow = trainBlow();
+  Action tongue_action = config.blow.enabled ? Action::ClickRight
+                                             : Action::ClickLeft;
+  config.tongue = trainTongue(tongue_action);
+
+  if (config.blow.enabled && config.tongue.enabled)
+  {
+    promptInfo(
+"Clickitongue should now be configured. Blow on the mic to left click, keep "
+"blowing to hold the left 'button' down. Tongue click to right click.\n\n"
+"Now entering normal operation.");
+  }
+  else if (config.tongue.enabled)
+  {
+    promptInfo(
+"Clickitongue should now be configured. Tongue click to left click.\n\n"
+"Now entering normal operation.");
   }
   else
   {
-    fprintf(stderr, "It looks like this is your first time running Clickitongue. First, we're going to train Clickitongue on the acoustics and typical background noise of your particular enivornment.\n"); // TODO
-
-    // TODO writeConfig()
-    fprintf(stderr, "Clickitongue should now be configured. Entering normal operation.\n");
-    defaultMain();
+    promptInfo(
+"Clickitongue was not able to find parameters that distinguish your tongue "
+"clicks from background noise with acceptable accuracy. Remove sources of "
+"background noise, move the mic closer to your mouth, and try again.");
+    return;
   }
+#ifdef CLICKITONGUE_WINDOWS
+  promptInfo(
+"A note on admin privileges:\n\nWindows does not allow lesser privileged "
+"processes to send clicks to processes running as admin. If you ever find that "
+"just one particular window refuses to listen to Clickitongue's clicks, try "
+"running Clickitongue as admin. (But you might never encounter this problem.)");
+#endif
+
+  if (!writeConfig(config))
+  {
+    promptInfo("Failed to write config file. You'll have to redo this "
+               "training the next time you run Clickitongue.");
+  }
+  normalOperation(config);
+}
+
+void defaultMain()
+{
+  if (auto maybe_config = readConfig(); maybe_config.has_value())
+    normalOperation(maybe_config.value());
+  else
+    firstTimeTrain();
 }
 
 int main(int argc, char** argv)
 {
   Pa_Initialize(); // get its annoying spam out of the way immediately
-  printf("\n\n******IGNORE THE ABOVE!!! clickitongue is now running.******\n\n");
+#ifndef CLICKITONGUE_WINDOWS
+  promptInfo("****clickitongue is now running.****");
+#endif
 
   ClickitongueCmdlineOpts opts =
       structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
@@ -175,7 +289,7 @@ int main(int argc, char** argv)
     else if (opts.mode.value() == "train" && opts.detector.value() == "blow")
       trainBlow(/*verbose=*/true);
     else if (opts.mode.value() == "train" && opts.detector.value() == "tongue")
-      trainTongue(/*verbose=*/true);
+      trainTongue(Action::ClickLeft, /*verbose=*/true);
   }
   else
     defaultMain();

@@ -4,6 +4,8 @@
 
 #include <cstring>
 
+#include "interaction.h"
+
 Action parseAction(std::string str)
 {
   if (str == "ClickLeft") return Action::ClickLeft;
@@ -88,32 +90,51 @@ std::optional<Config> readConfig()
   return Config(reader);
 }
 
-void writeConfig(Config config)
+bool writeConfig(Config config)
 {
+  bool successful = true;
   std::string config_dir = getConfigDir();
-  mkdir(config_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // TODO other OSes... although msys might work for this, right?
-  std::ofstream out(config_dir + "/default.clickitongue");
+  try
+  {
+    mkdir(config_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // TODO other OSes... although msys might work for this, right?
+    std::ofstream out(config_dir + "/default.clickitongue");
 
-  if (config.blow.enabled)
-  {
-    out << "blow_action_on" << actionString(config.blow.action_on) << "\n"
-        << "blow_action_off" << actionString(config.blow.action_off) << "\n"
-        << "blow_lowpass_percent" << config.blow.lowpass_percent << "\n"
-        << "blow_highpass_percent" << config.blow.highpass_percent << "\n"
-        << "blow_low_on_thresh" << config.blow.low_on_thresh << "\n"
-        << "blow_low_off_thresh" << config.blow.low_off_thresh << "\n"
-        << "blow_high_on_thresh" << config.blow.high_on_thresh << "\n"
-        << "blow_high_off_thresh" << config.blow.high_off_thresh << "\n"
-        << "blow_high_spike_frac" << config.blow.high_spike_frac << "\n"
-        << "blow_high_spike_level" << config.blow.high_spike_level << std::endl;
+    if (config.blow.enabled)
+    {
+      out << "blow_action_on: " << actionString(config.blow.action_on) << "\n"
+          << "blow_action_off: " << actionString(config.blow.action_off) << "\n"
+          << "blow_lowpass_percent: " << config.blow.lowpass_percent << "\n"
+          << "blow_highpass_percent: " << config.blow.highpass_percent << "\n"
+          << "blow_low_on_thresh: " << config.blow.low_on_thresh << "\n"
+          << "blow_low_off_thresh: " << config.blow.low_off_thresh << "\n"
+          << "blow_high_on_thresh: " << config.blow.high_on_thresh << "\n"
+          << "blow_high_off_thresh: " << config.blow.high_off_thresh << "\n"
+          << "blow_high_spike_frac: " << config.blow.high_spike_frac << "\n"
+          << "blow_high_spike_level: " << config.blow.high_spike_level << std::endl;
+    }
+    if (config.tongue.enabled)
+    {
+      out << "tongue_action: " << actionString(config.tongue.action) << "\n"
+          << "tongue_low_hz: " << config.tongue.tongue_low_hz << "\n"
+          << "tongue_high_hz: " << config.tongue.tongue_high_hz << "\n"
+          << "tongue_hzenergy_high: " << config.tongue.tongue_hzenergy_high << "\n"
+          << "tongue_hzenergy_low: " << config.tongue.tongue_hzenergy_low << "\n"
+          << "tongue_refrac_blocks: " << config.tongue.refrac_blocks << std::endl;
+    }
   }
-  if (config.tongue.enabled)
+  catch (std::exception const& e)
   {
-    out << "tongue_action" << actionString(config.tongue.action) << "\n"
-        << "tongue_low_hz" << config.tongue.tongue_low_hz << "\n"
-        << "tongue_high_hz" << config.tongue.tongue_high_hz << "\n"
-        << "tongue_hzenergy_high" << config.tongue.tongue_hzenergy_high << "\n"
-        << "tongue_hzenergy_low" << config.tongue.tongue_hzenergy_low << "\n"
-        << "tongue_refrac_blocks" << config.tongue.refrac_blocks << std::endl;
+    successful = false;
   }
+
+  std::optional<Config> test_read = readConfig();
+  if (!test_read.has_value())
+    successful = false;
+  if (!successful)
+  {
+    std::string prompt = "Attempt to write config file " + config_dir +
+                         "/default.clickitongue failed.";
+    promptInfo(prompt.c_str());
+  }
+  return successful;
 }

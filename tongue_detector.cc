@@ -29,7 +29,6 @@ TongueDetector::TongueDetector(BlockingQueue<Action>* action_queue, Action actio
     tongue_hzenergy_high_(tongue_hzenergy_high),
     tongue_hzenergy_low_(tongue_hzenergy_low), refrac_blocks_(refrac_blocks)
 {
-// TODO  assert tongue_low_hz_ not out of range, same for high
   assert(action_ != Action::RecordCurFrame);
 }
 
@@ -64,6 +63,7 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
   energy += (tongue_high_hz_ - (g_fourier->freqOfBin(high_bin_ind) - g_fourier->halfWidth()))
             * fabs(lease.out[high_bin_ind][0]);
 
+            // TODO trim
 //  static int print_once_per_10ms_chunks = 0;
 //  if (++print_once_per_10ms_chunks == 4)
 //   {

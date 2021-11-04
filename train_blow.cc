@@ -7,6 +7,7 @@
 
 #include "audio_recording.h"
 #include "blow_detector.h"
+#include "interaction.h"
 
 namespace {
 
@@ -455,7 +456,7 @@ RecordedAudio recordExample(int desired_events)
 
 } // namespace
 
-void trainBlow(bool verbose)
+BlowConfig trainBlow(bool verbose)
 {
   // the int is number of events that are actually in each example
   std::vector<std::pair<RecordedAudio, int>> audio_examples;
@@ -474,7 +475,22 @@ void trainBlow(bool verbose)
     audio_examples.emplace_back(recordExample(3), 3);
   }
   std::vector<std::string> noise_fnames = {"falls_of_fall.pcm", "brandenburg.pcm"};
-  TrainParamsFactory factory(audio_examples, noise_fnames);
 
-  patternSearch(factory, verbose);
+  TrainParamsFactory factory(audio_examples, noise_fnames);
+  TrainParams best = patternSearch(factory, verbose);
+
+  BlowConfig ret;
+  ret.action_on = Action::LeftDown;
+  ret.action_off = Action::LeftUp;
+  ret.lowpass_percent = best.lowpass_percent;
+  ret.highpass_percent = best.highpass_percent;
+  ret.low_on_thresh = best.low_on_thresh;
+  ret.low_off_thresh = best.low_off_thresh;
+  ret.high_on_thresh = best.high_on_thresh;
+  ret.high_off_thresh = best.high_off_thresh;
+  ret.high_spike_frac = best.high_spike_frac;
+  ret.high_spike_level = best.high_spike_level;
+
+  ret.enabled = (best.score[0] == 0 && best.score[1] < 2);
+  return ret;
 }

@@ -54,6 +54,7 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
     lease.in[i] = cur_sample[i * kNumChannels];
   lease.runFFT();
 
+  // TODO trim
 //   static int print_once_per_10ms_chunks = 0;
 //   if (++print_once_per_10ms_chunks == 20)
 //   {

@@ -1,10 +1,7 @@
-* for fancy blowing, have dedicated click, and LMB down. click is "a block passes threshold T1 in one window and does NOT pass T2 in the next." LMB down is T1 followed by T2. dedicated click should have a refrac block or two. at the same time, listen for something else ('hot' breathing? tongue clicking? both?) to do right clicks.
+* the default config file location is currently linux specific.
 * if we want tongue clicks to be right click alongside a puff/blow left click, then we'll need to add logic to tongue click
 to expect a LACK of energy outside the expected range.
 * get blow trainer to handle both on and off events for long blows.
-* polished flow of first time setup --> configured regular usage
-* windows has a security thing preventing "run as admin" windows from receiving SendInput() from non-admin processes.
-  simply running clickitongue as admin fixes this; just need to get that smoothly into the flow for users.
 * if we end up packaging standard noise files to train against, be sure to use network order ints when saving them
 * structopt has a single header include; switch to that
 * debian package libportaudio2 may be all the user needs, rather than the make install thing
@@ -13,10 +10,11 @@ to expect a LACK of energy outside the expected range.
 wishlist
 * support osx
 * eventually handle wayland rather than X on linux.
+* easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
 * fun idea: ascending and descending whistles to control scroll wheel. need to track frequencies at a finer resolution; try
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
 * FFTW wisdom
-
+* translate into all languages we can get translators for
 
 
 # SIM NOTES

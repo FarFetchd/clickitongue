@@ -7,6 +7,7 @@
 
 struct BlowConfig
 {
+  BlowConfig() : enabled(false) {}
   BlowConfig(farfetchd::ConfigReader const& cfg);
 
   bool enabled;
@@ -24,6 +25,7 @@ struct BlowConfig
 
 struct TongueConfig
 {
+  TongueConfig() : enabled(false) {}
   TongueConfig(farfetchd::ConfigReader const& cfg);
 
   bool enabled;
@@ -37,12 +39,13 @@ struct TongueConfig
 
 struct Config
 {
+  Config() {}
   Config(farfetchd::ConfigReader const& cfg) : blow(cfg), tongue(cfg) {}
   BlowConfig blow;
   TongueConfig tongue;
 };
 
 std::optional<Config> readConfig();
-void writeConfig(Config config);
+bool writeConfig(Config config);
 
 #endif // CLICKITONGUE_CONFIG_IO_H_

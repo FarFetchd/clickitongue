@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "audio_recording.h"
+#include "interaction.h"
 #include "tongue_detector.h"
 
 namespace {
@@ -327,7 +328,7 @@ RecordedAudio recordExample(int desired_events)
 
 } // namespace
 
-void trainTongue(bool verbose)
+TongueConfig trainTongue(Action action, bool verbose)
 {
   std::vector<std::pair<RecordedAudio, int>> audio_examples;
   if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
@@ -345,7 +346,18 @@ void trainTongue(bool verbose)
     audio_examples.emplace_back(recordExample(3), 3);
   }
   std::vector<std::string> noise_fnames = {"falls_of_fall.pcm", "brandenburg.pcm"};
-  TrainParamsFactory factory(audio_examples, noise_fnames);
 
-  patternSearch(factory, verbose);
+  TrainParamsFactory factory(audio_examples, noise_fnames);
+  TrainParams best = patternSearch(factory, verbose);
+
+  TongueConfig ret;
+  ret.action = action;
+  ret.tongue_low_hz = best.tongue_low_hz;
+  ret.tongue_high_hz = best.tongue_high_hz;
+  ret.tongue_hzenergy_high = best.tongue_hzenergy_high;
+  ret.tongue_hzenergy_low = best.tongue_hzenergy_low;
+  ret.refrac_blocks = best.refrac_blocks;
+
+  ret.enabled = (best.score[0] == 0 && best.score[1] < 2);
+  return ret;
 }

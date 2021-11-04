@@ -18,7 +18,7 @@ void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
 }
 
 // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
-void patternSearch(TrainParamsFactory& factory, bool verbose)
+TrainParams patternSearch(TrainParamsFactory& factory, bool verbose)
 {
   printf("beginning optimization computations...\n");
   std::vector<TrainParams> candidates;
@@ -26,9 +26,10 @@ void patternSearch(TrainParamsFactory& factory, bool verbose)
     addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 8);
 
   int shrinks = 0;
-  while (true)
+  std::vector<TrainParams> old_candidates;
+  while (candidates != old_candidates && shrinks < 5)
   {
-    std::vector<TrainParams> old_candidates = candidates;
+    old_candidates = candidates;
 
     // patternAround() kicks off a bunch of parallel computation, and the
     // awaitHatch() calls gather it all up.
@@ -48,14 +49,10 @@ void patternSearch(TrainParamsFactory& factory, bool verbose)
       candidates.front().printParams();
       printf("best scores: %s\n", candidates.front().toString().c_str());
     }
-
-    if (candidates == old_candidates)
-      break; // we'll no longer be changing anything
-    if (shrinks >= 5)
-      break; // we're probably close to an optimum
   }
   if (verbose)
     printf("converged; done.\n");
+  return candidates.front();
 }
 
 // hacky getch
@@ -86,20 +83,27 @@ RecordedAudio recordExampleCommon(int desired_events,
   const int kSecondsToRecord = 4;
   if (desired_events == 0)
   {
-    printf("About to record! Will record for %d seconds. During that time, please "
-           "don't do ANY %s; this is just to record your typical "
-           "background sounds. Press any key when you are ready to start.\n",
-           kSecondsToRecord, dont_do_any_of_this.c_str());
+    char msg[1024];
+    sprintf(msg, "About to record! Will record for %d seconds. During that time, "
+            "please don't do ANY %s; this is just to record your typical "
+            "background sounds.\n",
+            kSecondsToRecord, dont_do_any_of_this.c_str());
+    promptInfo(msg);
   }
   else
   {
-    printf("About to record! Will record for %d seconds. During that time, please "
-           "%s %d times. Press any key when you are ready to start.\n",
-           kSecondsToRecord, do_this_n_times.c_str(), desired_events);
+    char msg[1024];
+    sprintf(msg, "About to record! Will record for %d seconds. During that time, "
+            "please %s %d times.\n",
+            kSecondsToRecord, do_this_n_times.c_str(), desired_events);
+    promptInfo(msg);
   }
+#ifndef CLICKITONGUE_WINDOWS
+  printf("Press any key when you are ready to start."); fflush(stdout);
   make_getchar_like_getch(); getchar(); resetTermios();
   printf("Now recording..."); fflush(stdout);
+#endif
   RecordedAudio recorder(kSecondsToRecord);
-  printf("recording done.\n");
+  promptInfo("recording done.");
   return recorder;
 }

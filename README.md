@@ -1,9 +1,9 @@
 Clickitongue carries out mouse clicks when triggered by mouth sounds picked
 up by your computer's microphone, to give sore wrists a rest.
 
-Clickitongue is still very much in early development, but is already basically
-usable. It currently runs on (non-Wayland) Linux and Windows only. Support for
-Wayland and OSX is planned.
+Clickitongue is still in development, but is already basically usable. It
+currently runs on (non-Wayland) Linux and Windows only. Support for Wayland and
+OSX is planned.
 
 # COMPILATION / NEEDED LIBRARIES
 
@@ -32,24 +32,18 @@ MSYS2 installed).
 
 # USAGE
 
-First, decide whether you'll be using tongue clicks, or blowing. If you have a
-microphone that you can position like half an inch in front of your mouth,
-blowing will be better (remove any fuzzy/spongy windscreens for best results).
-If not, tongue clicks should work. Don't worry about mic quality - even the
-built-in mic of an X1 Carbon ThinkPad works for tongue clicks, and any mic
-positioned near your mouth should work for blowing.
+If you have a microphone that you can position like 2cm in front of your mouth,
+you'll be able to use blowing in addition to tongue clicks, allowing both left
+and right clicks. Remove any fuzzy/spongy windscreens for best blowing results!
+If you can't keep the mic nearby, tongue clicks will still work. Don't worry
+about mic quality - even the built-in mic of an X1 Carbon ThinkPad works for
+tongue clicks, and any mic positioned near your mouth should work for blowing.
 
-Train Clickitongue on some samples of your personal setup: run either
-`./clickitongue --mode=train --detector=tongue` or
-`./clickitongue --mode=train --detector=blow` and follow the instructions. For
-blow training, short bursts as if you were going to say "pu" are best.
-Once trained, those same bursts will work for clicks. You can also do a
-prolonged blow to hold the mouse button down. (Tongue clicks do not have a
-hold-down mode).
+The first time you run Clickitongue, it will have you train it to detect your
+particular tongue click and blowing sounds, in your particular acoustic
+environment. For blow training, short soft bursts as if you were going to say
+"pu" are best. The tongue clicks it expects are like 0:31-0:34 of
+[this video.](https://youtu.be/L7sWPZArUN0?t=31)
 
-The training will go through an optimization algorithm, printing out command
-line parameter configurations at each step. Once the optimization has converged,
-copy the last batch of command line parameters it printed, and use them in
-`./clickitongue --mode=use --detector=tongue REPLACE_ME_WITH_THE_PARAMS` or
-`./clickitongue --mode=use --detector=blow REPLACE_ME_WITH_THE_PARAMS`. This
-command will run forever, doing mouse clicks when it detects the right sound.
+After that first time training, you should be able to simply run Clickitongue
+and immediately start clicking.
