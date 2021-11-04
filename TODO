@@ -3,7 +3,6 @@
 to expect a LACK of energy outside the expected range.
 * get blow trainer to handle both on and off events for long blows.
 * if we end up packaging standard noise files to train against, be sure to use network order ints when saving them
-* structopt has a single header include; switch to that
 * debian package libportaudio2 may be all the user needs, rather than the make install thing
 **** (try installing + using on a live boot)
 

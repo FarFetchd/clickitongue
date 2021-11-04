@@ -1,7 +1,7 @@
 #ifndef CLICKITONGUE_CMDLINE_OPTIONS_H_
 #define CLICKITONGUE_CMDLINE_OPTIONS_H_
 
-#include "structopt/app.hpp"
+#include "structopt.hpp"
 
 struct ClickitongueCmdlineOpts
 {
