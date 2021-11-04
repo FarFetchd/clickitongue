@@ -33,6 +33,12 @@ public:
     assert(!l.score.empty());
     assert(!r.score.empty());
     assert(l.score.size() == r.score.size());
+
+    // the first (i.e. noiseless) example set is the most important, even
+    // more important than sum of violations across all examples.
+    if (l.score[0] < r.score[0])
+        return true;
+
     int l_sum = std::accumulate(l.score.begin(), l.score.end(), 0);
     int r_sum = std::accumulate(r.score.begin(), r.score.end(), 0);
     if (l_sum < r_sum)
@@ -40,7 +46,7 @@ public:
     else if (l_sum > r_sum)
       return false;
 
-    for (int i=0; i<l.score.size(); i++)
+    for (int i=1; i<l.score.size(); i++)
       if (l.score[i] < r.score[i])
         return true;
 
@@ -120,13 +126,13 @@ private:
   std::uniform_real_distribution<double> dist_;
 };
 
-const double kMinLowHz = 300;
-const double kMaxLowHz = 2500;
-const double kMinHighHz = 700;
-const double kMaxHighHz = 5500;
-const double kMinLowEnergy = 100;
-const double kMaxLowEnergy = 4100;
-const double kMinHighEnergy = 300;
+const double kMinLowHz = 500;
+const double kMaxLowHz = 1500;
+const double kMinHighHz = 1000;
+const double kMaxHighHz = 4000;
+const double kMinLowEnergy = 50;
+const double kMaxLowEnergy = 2000;
+const double kMinHighEnergy = 1000;
 const double kMaxHighEnergy = 16000;
 double randomLowHz()
 {
@@ -189,9 +195,8 @@ public:
                      std::vector<std::string> const& noise_fnames)
   {
     std::vector<AudioRecording> noises;
-    if (DOING_DEVELOPMENT_TESTING) // TODO either trim, or do always and add noise files
-      for (auto name : noise_fnames)
-        noises.emplace_back(name);
+    for (auto name : noise_fnames)
+      noises.emplace_back(name);
 
     // (first, add the base examples, without any noise)
     examples_sets_.push_back(raw_examples);
@@ -199,17 +204,14 @@ public:
     {
       std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
       for (auto& x : examples)
-      {
-        x.first.scale(0.7);
         x.first += noise;
-      }
       examples_sets_.push_back(examples);
     }
     // finally, a quiet version, for a challenge/tie breaker
     {
       std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
       for (auto& x : examples)
-        x.first.scale(0.3);
+        x.first.scale(0.5);
       examples_sets_.push_back(examples);
     }
   }
@@ -333,19 +335,17 @@ TongueConfig trainTongue(Action action, bool verbose)
   std::vector<std::pair<AudioRecording, int>> audio_examples;
   if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
   {
-    audio_examples.emplace_back(AudioRecording("clicks_0.pcm"), 0);
-    audio_examples.emplace_back(AudioRecording("clicks_1.pcm"), 1);
-    audio_examples.emplace_back(AudioRecording("clicks_2.pcm"), 2);
-    audio_examples.emplace_back(AudioRecording("clicks_3.pcm"), 3);
+    audio_examples.emplace_back(AudioRecording("data/clicks_0.pcm"), 0);
+    audio_examples.emplace_back(AudioRecording("data/clicks_1.pcm"), 1);
+    audio_examples.emplace_back(AudioRecording("data/clicks_2.pcm"), 2);
+    audio_examples.emplace_back(AudioRecording("data/clicks_3.pcm"), 3);
   }
   else // for actual use
-  {
-    audio_examples.emplace_back(recordExample(0), 0);
-    audio_examples.emplace_back(recordExample(1), 1);
-    audio_examples.emplace_back(recordExample(2), 2);
-    audio_examples.emplace_back(recordExample(3), 3);
-  }
-  std::vector<std::string> noise_fnames = {"falls_of_fall.pcm", "brandenburg.pcm"};
+    for (int i = 0; i < 6; i++)
+      audio_examples.emplace_back(recordExample(i), i);
+
+  std::vector<std::string> noise_fnames =
+      {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
 
   TrainParamsFactory factory(audio_examples, noise_fnames);
   TrainParams best = patternSearch(factory, verbose);
