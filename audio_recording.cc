@@ -5,8 +5,17 @@
 #include "audio_input.h"
 #include "audio_output.h"
 
+// (don't want to incude weird networking headers just to get htons)
+bool isLittleEndian()
+{
+  int as_int = 1;
+  char* as_bytes = reinterpret_cast<char*>(&as_int);
+  return as_bytes[0] == 1;
+}
+
 RecordedAudio::RecordedAudio(std::string fname)
 {
+  bool little_endian = isLittleEndian();
   FILE* reader = fopen(fname.c_str(), "rb");
   if (!reader)
   {
@@ -16,11 +25,21 @@ RecordedAudio::RecordedAudio(std::string fname)
   fseek(reader, 0, SEEK_END);
   size_t flen = ftell(reader);
   rewind(reader);
-  for (size_t bytes_read = 0; bytes_read < flen; bytes_read += sizeof(Sample))
+  for (size_t bytes_read = 0; bytes_read < flen; bytes_read += sizeof(uint16_t))
   {
-    Sample cur;
-    assert(1 == fread(&cur, sizeof(Sample), 1, reader));
-    samples_.push_back(cur);
+    uint16_t cur16;
+    assert(1 == fread(&cur16, sizeof(uint16_t), 1, reader));
+    if (little_endian)
+    {
+      char* as_bytes = reinterpret_cast<char*>(&cur16);
+      as_bytes[0] ^= as_bytes[1];
+      as_bytes[1] ^= as_bytes[0];
+      as_bytes[0] ^= as_bytes[1];
+    }
+    double temp = cur16;
+    temp -= 32768.0;
+    temp /= 32767.0;
+    samples_.push_back((float)temp);
   }
   fclose(reader);
 }
@@ -55,10 +74,29 @@ void RecordedAudio::scale(double factor)
 
 void RecordedAudio::recordToFile(std::string fname) const
 {
+  bool little_endian = isLittleEndian();
   FILE* writer = fopen(fname.c_str(), "wb");
-  fwrite(samples_.data(), sizeof(Sample), samples_.size(), writer);
+  for (float sample : samples_)
+  {
+    uint16_t sample16;
+    double temp = ((double)sample) * 32767.0 + 32768.0;
+    if (temp > 65534.5)
+      sample16 = 65535;
+    else if (temp < 0.5)
+      sample16 = 0;
+    else
+      sample16 = (uint16_t)(((uint32_t)(temp*2.0))/2);
+    if (little_endian)
+    {
+      char* as_bytes = reinterpret_cast<char*>(&sample16);
+      as_bytes[0] ^= as_bytes[1];
+      as_bytes[1] ^= as_bytes[0];
+      as_bytes[0] ^= as_bytes[1];
+    }
+    fwrite(&sample16, sizeof(uint16_t), 1, writer);
+  }
   fclose(writer);
   float seconds = (samples_.size() / kNumChannels) / (float)kFramesPerSec;
-  printf("Wrote %g seconds of float format %d channel %d Hz audio to %s.\n",
+  printf("Wrote %g seconds of big-endian uint16 %d channel %d Hz audio to %s.\n",
          seconds, kNumChannels, kFramesPerSec, fname.c_str());
 }

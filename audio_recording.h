@@ -4,11 +4,12 @@
 #include <string>
 #include <vector>
 
-// For saving/loading raw PCM files.
+// For saving/loading raw PCM files. Reads/writes files with big-endian uint16
+// samples, but stores in memory as 32-bit float.
 class RecordedAudio
 {
 public:
-  // Loads fname as raw float PCM
+  // Loads fname as raw big-endian uint16 PCM
   explicit RecordedAudio(std::string fname);
   // Records 'seconds' of audio into samples_. (This ctor blocks until those
   // seconds of recording have finished).
