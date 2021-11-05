@@ -188,6 +188,7 @@ void normalOperation(Config config)
   action_dispatch.join();
 }
 
+constexpr char kDefaultConfig[] = "default";
 void firstTimeTrain()
 {
   promptInfo(
@@ -238,7 +239,7 @@ void firstTimeTrain()
 "running Clickitongue as admin. (But you might never encounter this problem.)");
 #endif
 
-  if (!writeConfig(config))
+  if (!writeConfig(config, kDefaultConfig))
   {
     promptInfo("Failed to write config file. You'll have to redo this "
                "training the next time you run Clickitongue.");
@@ -248,7 +249,7 @@ void firstTimeTrain()
 
 void defaultMain()
 {
-  if (auto maybe_config = readConfig(); maybe_config.has_value())
+  if (auto maybe_config = readConfig(kDefaultConfig); maybe_config.has_value())
     normalOperation(maybe_config.value());
   else
     firstTimeTrain();

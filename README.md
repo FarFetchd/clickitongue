@@ -26,7 +26,7 @@ Download the Windows release .zip, unzip it, and run clickitongue.exe.
 If you want to click any windows belonging to run-as-admin programs, you'll
 have to run clickitongue.exe as admin.
 
-# USAGE
+# Usage
 
 If you have a microphone that you can position like 2cm in front of your mouth,
 you'll be able to use blowing in addition to tongue clicks, allowing both left

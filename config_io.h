@@ -45,7 +45,7 @@ struct Config
   TongueConfig tongue;
 };
 
-std::optional<Config> readConfig();
-bool writeConfig(Config config);
+std::optional<Config> readConfig(std::string config_name);
+bool writeConfig(Config config, std::string config_name);
 
 #endif // CLICKITONGUE_CONFIG_IO_H_

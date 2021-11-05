@@ -1,8 +1,8 @@
-* the default config file location is currently linux specific... hmm maybe in windows they can just live in the .exe dir.
 * if we want tongue clicks to be right click alongside a puff/blow left click, then we'll need to add logic to tongue click
 to expect a LACK of energy outside the expected range.
 *** and/or: record the tongue+blow examples outside of the training, and then feed both to both, with the other's as examples where there should be 0 events.
 * make windows exe+dll+data release package (and keep updated)
+* profile. if the noticeable cpu usage is not almost all FFTW, i'm going to be super embarrassed.
 
 wishlist
 * support osx   https://stackoverflow.com/questions/2369806/simulating-mouse-clicks-on-mac-os-x-does-not-work-for-some-applications

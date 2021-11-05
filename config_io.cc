@@ -72,34 +72,54 @@ TongueConfig::TongueConfig(farfetchd::ConfigReader const& cfg)
               tongue_hzenergy_low >= 0 && refrac_blocks >= 0);
 }
 
+#ifdef CLICKITONGUE_LINUX
 std::string getHomeDir()
 {
   char home_dir[1024];
   memset(home_dir, 0, 1024);
-  strncpy(home_dir, getenv("HOME"), 1023); //TODO handle other OSes
+  strncpy(home_dir, getenv("HOME"), 1023);
   return std::string(home_dir);
 }
+#define CONFIG_DIR_PATH getHomeDir() + "/.config/clickitongue/"
+#endif // CLICKITONGUE_LINUX
+#ifdef CLICKITONGUE_WINDOWS
+#define CONFIG_DIR_PATH std::string("")
+#endif // CLICKITONGUE_WINDOWS
+#ifdef CLICKITONGUE_OSX
+#error "OSX not yet supported"
+    // TODO mkdir and set config_path
+#endif // CLICKITONGUE_OSX
 
-std::optional<Config> readConfig()
+std::optional<Config> readConfig(std::string config_name)
 {
   farfetchd::ConfigReader reader;
-  if (!reader.parseFile(getHomeDir() + "/.config/clickitongue/default.clickitongue"))
+  if (!reader.parseFile(CONFIG_DIR_PATH + config_name + ".clickitongue"))
     return std::nullopt;
 
   return Config(reader);
 }
 
-bool writeConfig(Config config)
+bool writeConfig(Config config, std::string config_name)
 {
   bool successful = true;
-  std::string home_dir = getHomeDir();
-  std::string config_dir = home_dir + "/.config";
-  std::string clicki_config_dir = config_dir + "/clickitongue";
-  std::string config_path = clicki_config_dir + "/default.clickitongue";
+  std::string config_path;
   try
   {
-    mkdir(config_dir.c_str(), S_IRWXU); // TODO these mkdirs will be linux only
+#ifdef CLICKITONGUE_LINUX
+    std::string config_dir = getHomeDir() + "/.config";
+    std::string clicki_config_dir = config_dir + "/clickitongue";
+    config_path = clicki_config_dir + "/" + config_name + ".clickitongue";
+    mkdir(config_dir.c_str(), S_IRWXU);
     mkdir(clicki_config_dir.c_str(), S_IRWXU);
+#endif // CLICKITONGUE_LINUX
+#ifdef CLICKITONGUE_WINDOWS
+    config_path = config_name + ".clickitongue";
+#endif // CLICKITONGUE_WINDOWS
+#ifdef CLICKITONGUE_OSX
+#error "OSX not yet supported"
+    // TODO mkdir and set config_path
+#endif // CLICKITONGUE_OSX
+
     std::ofstream out(config_path);
 
     if (config.blow.enabled)
@@ -130,14 +150,13 @@ bool writeConfig(Config config)
     successful = false;
   }
 
-  std::optional<Config> test_read = readConfig();
+  std::optional<Config> test_read = readConfig(config_name);
   if (!test_read.has_value())
     successful = false;
   if (!successful)
   {
-    std::string prompt = "Attempt to write config file " + config_dir +
-                         "/default.clickitongue failed.";
-    promptInfo(prompt.c_str());
+    std::string m = "Attempt to write config file " + config_path + " failed.";
+    promptInfo(m.c_str());
   }
   return successful;
 }
