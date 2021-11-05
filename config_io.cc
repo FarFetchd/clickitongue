@@ -72,19 +72,18 @@ TongueConfig::TongueConfig(farfetchd::ConfigReader const& cfg)
               tongue_hzenergy_low >= 0 && refrac_blocks >= 0);
 }
 
-std::string getConfigDir()
+std::string getHomeDir()
 {
   char home_dir[1024];
   memset(home_dir, 0, 1024);
   strncpy(home_dir, getenv("HOME"), 1023); //TODO handle other OSes
-  std::string config_path(home_dir);
-  return config_path + "/.config/clickitongue";
+  return std::string(home_dir);
 }
 
 std::optional<Config> readConfig()
 {
   farfetchd::ConfigReader reader;
-  if (!reader.parseFile(getConfigDir() + "/default.clickitongue"))
+  if (!reader.parseFile(getHomeDir() + "/.config/clickitongue/default.clickitongue"))
     return std::nullopt;
 
   return Config(reader);
@@ -93,11 +92,15 @@ std::optional<Config> readConfig()
 bool writeConfig(Config config)
 {
   bool successful = true;
-  std::string config_dir = getConfigDir();
+  std::string home_dir = getHomeDir();
+  std::string config_dir = home_dir + "/.config";
+  std::string clicki_config_dir = config_dir + "/clickitongue";
+  std::string config_path = clicki_config_dir + "/default.clickitongue";
   try
   {
-    mkdir(config_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // TODO other OSes... although msys might work for this, right?
-    std::ofstream out(config_dir + "/default.clickitongue");
+    mkdir(config_dir.c_str(), S_IRWXU); // TODO these mkdirs will be linux only
+    mkdir(clicki_config_dir.c_str(), S_IRWXU);
+    std::ofstream out(config_path);
 
     if (config.blow.enabled)
     {

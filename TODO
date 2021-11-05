@@ -1,11 +1,11 @@
-* the default config file location is currently linux specific.
+* the default config file location is currently linux specific... hmm maybe in windows they can just live in the .exe dir.
 * if we want tongue clicks to be right click alongside a puff/blow left click, then we'll need to add logic to tongue click
 to expect a LACK of energy outside the expected range.
-* get blow trainer to handle both on and off events for long blows.
+*** and/or: record the tongue+blow examples outside of the training, and then feed both to both, with the other's as examples where there should be 0 events.
+* make windows exe+dll+data release package (and keep updated)
 
 wishlist
-* support osx
-* eventually handle wayland rather than X on linux.
+* support osx   https://stackoverflow.com/questions/2369806/simulating-mouse-clicks-on-mac-os-x-does-not-work-for-some-applications
 * easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
 * fun idea: ascending and descending whistles to control scroll wheel. need to track frequencies at a finer resolution; try
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
@@ -16,16 +16,21 @@ wishlist
 
 # SIM NOTES
 
-working pretty well for laptop builtin mic:
-./clickitongue --mode=use --detector=tongue --tongue_low_hz=750 --tongue_high_hz=950 --tongue_hzenergy_high=1500 --tongue_hzenergy_low=500 --refrac_blocks=8 --fourier_blocksize_frames=256
+pretty good:
 
-best of this batch have 0 violations
---tongue_low_hz=1000 --tongue_high_hz=1500 --tongue_hzenergy_high=4100 --tongue_hzenergy_low=1100 --refrac_blocks=12 --blocksize=256
---tongue_low_hz=1000 --tongue_high_hz=1500 --tongue_hzenergy_high=4100 --tongue_hzenergy_low=2100 --refrac_blocks=12 --blocksize=256
-
-from the nifty new random optimization:
-./clickitongue --mode=test --detector=tongue --tongue_low_hz=957.202 --tongue_high_hz=2168.13 --tongue_hzenergy_high=6980.68 --tongue_hzenergy_low=1193.79 --refrac_blocks=12 --blocksize=256
-wow!
-./clickitongue --mode=test --detector=tongue --tongue_low_hz=998.848 --tongue_high_hz=1786.5 --tongue_hzenergy_high=4985.03 --tongue_hzenergy_low=1232.3 --refrac_blocks=12 --blocksize=256
-
-
+blow_action_on: LeftDown
+blow_action_off: LeftUp
+blow_lowpass_percent: 0.0631087
+blow_highpass_percent: 0.385033
+blow_low_on_thresh: 13.8616
+blow_low_off_thresh: 5.61658
+blow_high_on_thresh: 1.18298
+blow_high_off_thresh: 0.0664113
+blow_high_spike_frac: 0.373932
+blow_high_spike_level: 0.2
+tongue_action: ClickRight
+tongue_low_hz: 1250
+tongue_high_hz: 3250
+tongue_hzenergy_high: 12250
+tongue_hzenergy_low: 1512.5
+tongue_refrac_blocks: 12

@@ -4,6 +4,11 @@
 #include "blocking_queue.h"
 #include "constants.h"
 
+#ifdef CLICKITONGUE_LINUX
+extern int g_linux_uinput_fd;
+void initLinuxUinput();
+#endif // CLICKITONGUE_LINUX
+
 class ActionDispatcher
 {
 public:

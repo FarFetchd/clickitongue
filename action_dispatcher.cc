@@ -1,9 +1,6 @@
 #include "action_dispatcher.h"
 
 #ifdef CLICKITONGUE_LINUX
-extern "C" {
-#include <xdo.h>
-}
 #include "action_dispatcher_linux.h"
 #endif // CLICKITONGUE_LINUX
 #ifdef CLICKITONGUE_WINDOWS

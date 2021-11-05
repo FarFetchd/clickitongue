@@ -254,12 +254,23 @@ void defaultMain()
     firstTimeTrain();
 }
 
+#ifdef CLICKITONGUE_LINUX
+#include <unistd.h> // for geteuid
+#endif
+
 int main(int argc, char** argv)
 {
+#ifdef CLICKITONGUE_LINUX
+  if (geteuid() != 0)
+    crash("clickitongue must be run as root.");
+#endif // CLICKITONGUE_LINUX
   Pa_Initialize(); // get its annoying spam out of the way immediately
 #ifndef CLICKITONGUE_WINDOWS
   promptInfo("****clickitongue is now running.****");
-#endif
+#endif // CLICKITONGUE_WINDOWS
+#ifdef CLICKITONGUE_LINUX
+  initLinuxUinput();
+#endif // CLICKITONGUE_LINUX
 
   ClickitongueCmdlineOpts opts =
       structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
