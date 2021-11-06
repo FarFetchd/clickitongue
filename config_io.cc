@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 
 #include <cstring>
+#include <sstream>
 
 #include "interaction.h"
 
@@ -36,6 +37,34 @@ std::string actionString(Action action)
     case Action::NoAction: return "NoAction";
     default: return "!!!!!actionString() was given an unknown action!!!!!";
   }
+}
+
+std::string Config::toString() const
+{
+  std::stringstream sts;
+  if (blow.enabled)
+  {
+    sts << "blow_action_on: " << actionString(blow.action_on) << "\n"
+        << "blow_action_off: " << actionString(blow.action_off) << "\n"
+        << "blow_lowpass_percent: " << blow.lowpass_percent << "\n"
+        << "blow_highpass_percent: " << blow.highpass_percent << "\n"
+        << "blow_low_on_thresh: " << blow.low_on_thresh << "\n"
+        << "blow_low_off_thresh: " << blow.low_off_thresh << "\n"
+        << "blow_high_on_thresh: " << blow.high_on_thresh << "\n"
+        << "blow_high_off_thresh: " << blow.high_off_thresh << "\n"
+        << "blow_high_spike_frac: " << blow.high_spike_frac << "\n"
+        << "blow_high_spike_level: " << blow.high_spike_level << "\n";
+  }
+  if (tongue.enabled)
+  {
+    sts << "tongue_action: " << actionString(tongue.action) << "\n"
+        << "tongue_low_hz: " << tongue.tongue_low_hz << "\n"
+        << "tongue_high_hz: " << tongue.tongue_high_hz << "\n"
+        << "tongue_hzenergy_high: " << tongue.tongue_hzenergy_high << "\n"
+        << "tongue_hzenergy_low: " << tongue.tongue_hzenergy_low << "\n"
+        << "tongue_refrac_blocks: " << tongue.refrac_blocks << "\n";
+  }
+  return sts.str();
 }
 
 BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
@@ -121,29 +150,7 @@ bool writeConfig(Config config, std::string config_name)
 #endif // CLICKITONGUE_OSX
 
     std::ofstream out(config_path);
-
-    if (config.blow.enabled)
-    {
-      out << "blow_action_on: " << actionString(config.blow.action_on) << "\n"
-          << "blow_action_off: " << actionString(config.blow.action_off) << "\n"
-          << "blow_lowpass_percent: " << config.blow.lowpass_percent << "\n"
-          << "blow_highpass_percent: " << config.blow.highpass_percent << "\n"
-          << "blow_low_on_thresh: " << config.blow.low_on_thresh << "\n"
-          << "blow_low_off_thresh: " << config.blow.low_off_thresh << "\n"
-          << "blow_high_on_thresh: " << config.blow.high_on_thresh << "\n"
-          << "blow_high_off_thresh: " << config.blow.high_off_thresh << "\n"
-          << "blow_high_spike_frac: " << config.blow.high_spike_frac << "\n"
-          << "blow_high_spike_level: " << config.blow.high_spike_level << std::endl;
-    }
-    if (config.tongue.enabled)
-    {
-      out << "tongue_action: " << actionString(config.tongue.action) << "\n"
-          << "tongue_low_hz: " << config.tongue.tongue_low_hz << "\n"
-          << "tongue_high_hz: " << config.tongue.tongue_high_hz << "\n"
-          << "tongue_hzenergy_high: " << config.tongue.tongue_hzenergy_high << "\n"
-          << "tongue_hzenergy_low: " << config.tongue.tongue_hzenergy_low << "\n"
-          << "tongue_refrac_blocks: " << config.tongue.refrac_blocks << std::endl;
-    }
+    out << config.toString();
   }
   catch (std::exception const& e)
   {

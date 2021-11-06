@@ -41,6 +41,8 @@ struct Config
 {
   Config() {}
   Config(farfetchd::ConfigReader const& cfg) : blow(cfg), tongue(cfg) {}
+  std::string toString() const;
+
   BlowConfig blow;
   TongueConfig tongue;
 };

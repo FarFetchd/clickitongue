@@ -154,6 +154,12 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 
 void normalOperation(Config config)
 {
+  if (!config.blow.enabled && !config.tongue.enabled)
+  {
+    promptInfo("Neither tongue nor blow is enabled. Exiting.");
+    return;
+  }
+
   BlockingQueue<Action> action_queue;
   ActionDispatcher action_dispatcher(&action_queue);
   std::thread action_dispatch(actionDispatch, &action_dispatcher);
@@ -179,6 +185,7 @@ void normalOperation(Config config)
         config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
         config.tongue.tongue_hzenergy_low, config.tongue.refrac_blocks);
   }
+  printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
   if (config.blow.enabled)
     blow_thread.join();
