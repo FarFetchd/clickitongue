@@ -77,8 +77,8 @@ void resetTermios()
 }
 
 AudioRecording recordExampleCommon(int desired_events,
-                                  std::string dont_do_any_of_this,
-                                  std::string do_this_n_times)
+                                   std::string dont_do_any_of_this,
+                                   std::string do_this_n_times)
 {
   const int kSecondsToRecord = 4;
   if (desired_events == 0)

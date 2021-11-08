@@ -11,8 +11,6 @@
 
 namespace {
 
-constexpr bool DOING_DEVELOPMENT_TESTING = false;
-
 class TrainParams
 {
 public:
@@ -451,28 +449,16 @@ private:
 // the following is actual code, not just a header:
 #include "train_common.h"
 
-AudioRecording recordExample(int desired_events)
+} // namespace
+
+AudioRecording recordExampleBlow(int desired_events)
 {
   return recordExampleCommon(desired_events, "blowing", "blow on the mic");
 }
 
-} // namespace
-
-BlowConfig trainBlow(bool verbose)
+BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
+                     bool verbose)
 {
-  // the int is number of events that are actually in each example
-  std::vector<std::pair<AudioRecording, int>> audio_examples;
-  if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
-  {
-    audio_examples.emplace_back(AudioRecording("data/blows_0.pcm"), 0);
-    audio_examples.emplace_back(AudioRecording("data/blows_1.pcm"), 1);
-    audio_examples.emplace_back(AudioRecording("data/blows_2.pcm"), 2);
-    audio_examples.emplace_back(AudioRecording("data/blows_3.pcm"), 3);
-  }
-  else // for actual use
-    for (int i = 0; i < 6; i++)
-      audio_examples.emplace_back(recordExample(i), i);
-
   std::vector<std::string> noise_fnames =
       {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
 

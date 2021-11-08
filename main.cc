@@ -195,6 +195,7 @@ void normalOperation(Config config)
   action_dispatch.join();
 }
 
+constexpr bool DOING_DEVELOPMENT_TESTING = false;
 constexpr char kDefaultConfig[] = "default";
 void firstTimeTrain()
 {
@@ -210,12 +211,44 @@ void firstTimeTrain()
 "right clicking. Otherwise, Clickitongue will only be able to left click.\n\n"
 "So: will your mic be close enough to directly blow on?");
 
+  std::vector<std::pair<AudioRecording, int>> blow_examples;
+  if (try_blows)
+  {
+    if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
+    {
+      blow_examples.emplace_back(AudioRecording("data/blows_0.pcm"), 0);
+      blow_examples.emplace_back(AudioRecording("data/blows_1.pcm"), 1);
+      blow_examples.emplace_back(AudioRecording("data/blows_2.pcm"), 2);
+      blow_examples.emplace_back(AudioRecording("data/blows_3.pcm"), 3);
+    }
+    else // for actual use
+      for (int i = 0; i < 6; i++)
+        blow_examples.emplace_back(recordExampleBlow(i), i);
+  }
+  std::vector<std::pair<AudioRecording, int>> tongue_examples;
+  if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
+  {
+    tongue_examples.emplace_back(AudioRecording("data/clicks_0.pcm"), 0);
+    tongue_examples.emplace_back(AudioRecording("data/clicks_1.pcm"), 1);
+    tongue_examples.emplace_back(AudioRecording("data/clicks_2.pcm"), 2);
+    tongue_examples.emplace_back(AudioRecording("data/clicks_3.pcm"), 3);
+  }
+  else // for actual use
+    for (int i = 0; i < 6; i++)
+      tongue_examples.emplace_back(recordExampleTongue(i), i);
+
+  // all examples of one is a negative example for the other
+  for (auto const& ex_pair : blow_examples)
+    tongue_examples.emplace_back(ex_pair.first, 0);
+  for (auto const& ex_pair : tongue_examples)
+    blow_examples.emplace_back(ex_pair.first, 0);
+
   Config config;
   if (try_blows)
-    config.blow = trainBlow();
+    config.blow = trainBlow(blow_examples);
   Action tongue_action = config.blow.enabled ? Action::ClickRight
                                              : Action::ClickLeft;
-  config.tongue = trainTongue(tongue_action);
+  config.tongue = trainTongue(tongue_examples, tongue_action);
 
   if (config.blow.enabled && config.tongue.enabled)
   {
@@ -305,10 +338,10 @@ int main(int argc, char** argv)
     }
     else if (opts.mode.value() == "use")
       useMain(opts);
-    else if (opts.mode.value() == "train" && opts.detector.value() == "blow")
-      trainBlow(/*verbose=*/true);
-    else if (opts.mode.value() == "train" && opts.detector.value() == "tongue")
-      trainTongue(Action::ClickLeft, /*verbose=*/true);
+//     else if (opts.mode.value() == "train" && opts.detector.value() == "blow")
+//       trainBlow(/*verbose=*/true);
+//     else if (opts.mode.value() == "train" && opts.detector.value() == "tongue")
+//       trainTongue(Action::ClickLeft, /*verbose=*/true);
   }
   else
     defaultMain();
