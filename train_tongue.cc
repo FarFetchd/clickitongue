@@ -132,6 +132,7 @@ private:
   std::mt19937 mt_;
   std::uniform_real_distribution<double> dist_;
 };
+double randomBetween(double a, double b) { return RandomStuff(a, b).random(); }
 
 const double kMinLowHz = 500;
 const double kMaxLowHz = 1500;
@@ -384,6 +385,22 @@ public:
         x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac,
         x.tongue_high_spike_frac, rite_spike_level, examples_sets_);
 
+    // and some random points within the pattern grid, the idea being that if
+    // there are two params that only improve when changed together, pattern
+    // search would miss it.
+    for (int i=0; i<10; i++)
+    {
+      double tongue_low_hz = randomBetween(left_tongue_low_hz, rite_tongue_low_hz);
+      double tongue_high_hz = randomBetween(left_tongue_high_hz, rite_tongue_high_hz);
+      double hzenergy_high = randomBetween(left_hzenergy_high, rite_hzenergy_high);
+      double hzenergy_low = randomBetween(left_hzenergy_low, rite_hzenergy_low);
+      double spikes_freq_frac = randomBetween(left_spikes_freq_frac, rite_spikes_freq_frac);
+      double spike_frac = randomBetween(left_spike_frac, rite_spike_frac);
+      double spike_level = randomBetween(left_spike_level, rite_spike_level);
+      ret.emplace_back(tongue_low_hz, tongue_high_hz, hzenergy_high, hzenergy_low,
+                       spikes_freq_frac, spike_frac, spike_level, examples_sets_);
+    }
+
     return ret;
   }
 
@@ -426,6 +443,6 @@ TongueConfig trainTongue(std::vector<std::pair<AudioRecording, int>> const& audi
   ret.tongue_high_spike_frac = best.tongue_high_spike_frac;
   ret.tongue_high_spike_level = best.tongue_high_spike_level;
 
-  ret.enabled = (best.score[0] == 0 && best.score[1] < 2);
+  ret.enabled = (best.score[0] < 2 && best.score[1] < 3);
   return ret;
 }

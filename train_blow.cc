@@ -133,6 +133,7 @@ private:
   std::mt19937 mt_;
   std::uniform_real_distribution<double> dist_;
 };
+double randomBetween(double a, double b) { return RandomStuff(a, b).random(); }
 
 const double kMinLowPassPercent = 0.03;
 const double kMaxLowPassPercent = 0.1;
@@ -419,6 +420,23 @@ public:
         x.high_on_thresh, x.high_off_thresh, x.high_spike_frac, rite_high_spike_level,
         examples_sets_);
 
+    // and some random points within the pattern grid, the idea being that if
+    // there are two params that only improve when changed together, pattern
+    // search would miss it.
+    for (int i=0; i<10; i++)
+    {
+      double lowpass_percent = randomBetween(left_lowpass_percent, rite_lowpass_percent);
+      double highpass_percent = randomBetween(left_highpass_percent, rite_highpass_percent);
+      double low_off_thresh = randomBetween(left_low_off_thresh, rite_low_off_thresh);
+      double low_on_thresh = randomBetween(left_low_on_thresh, rite_low_on_thresh);
+      double high_off_thresh = randomBetween(left_high_off_thresh, rite_high_off_thresh);
+      double high_on_thresh = randomBetween(left_high_on_thresh, rite_high_on_thresh);
+      double high_spike_frac = randomBetween(left_high_spike_frac, rite_high_spike_frac);
+      double high_spike_level = randomBetween(left_high_spike_level, rite_high_spike_level);
+      ret.emplace_back(lowpass_percent, highpass_percent, low_off_thresh, low_on_thresh,
+                       high_off_thresh, high_on_thresh, high_spike_frac, high_spike_level, examples_sets_);
+    }
+
     return ret;
   }
 
@@ -463,6 +481,6 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.high_spike_frac = best.high_spike_frac;
   ret.high_spike_level = best.high_spike_level;
 
-  ret.enabled = (best.score[0] == 0 && best.score[1] < 2);
+  ret.enabled = (best.score[0] < 2 && best.score[1] < 3);
   return ret;
 }
