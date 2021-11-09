@@ -27,6 +27,7 @@ TrainParams patternSearch(TrainParamsFactory& factory, bool verbose)
 
   int shrinks = 0;
   std::vector<TrainParams> old_candidates;
+  std::vector<TrainParams> historical_bests;
   while (candidates != old_candidates && shrinks < 5)
   {
     old_candidates = candidates;
@@ -37,10 +38,14 @@ TrainParams patternSearch(TrainParamsFactory& factory, bool verbose)
       for (auto& cocoon : factory.patternAround(candidate))
         addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 3);
 
-    if (candidates.front() == old_candidates.front())
+    for (auto const& old_best : historical_bests)
     {
-      factory.shrinkSteps();
-      shrinks++;
+      if (candidates.front() == old_best)
+      {
+        factory.shrinkSteps();
+        shrinks++;
+        break;
+      }
     }
 
     if (verbose)
@@ -49,6 +54,7 @@ TrainParams patternSearch(TrainParamsFactory& factory, bool verbose)
       candidates.front().printParams();
       printf("best scores: %s\n", candidates.front().toString().c_str());
     }
+    historical_bests.push_back(candidates.front());
   }
   if (verbose)
     printf("converged; done.\n");
