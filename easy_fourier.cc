@@ -3,6 +3,7 @@
 #include <cmath>
 #include <thread>
 
+#include "config_io.h"
 #include "constants.h"
 
 EasyFourier* g_fourier = nullptr;
@@ -20,6 +21,26 @@ EasyFourier::EasyFourier(int blocksize)
   : blocksize_(blocksize), bin_width_(kNyquist / ((double)(blocksize_ / 2 + 1))),
     half_width_(bin_width_ / 2.0), bin_freq_(makeBinFreqs(blocksize_, bin_width_))
 {
+  // (have to load / create wisdom BEFORE creating FourierWorkers, or else the
+  //  workers won't benefit from the wisdom).
+  std::string wisdom_path = getAndEnsureConfigDir() + "1d_blocksize" +
+                            std::to_string(blocksize)+"_real_to_complex.fftw_wisdom";
+  if (!fftw_import_wisdom_from_filename(wisdom_path.c_str()))
+  {
+    printf("No wisdom file found. Will now let FFTW practice a bit to learn...\n");
+    double* in = fftw_alloc_real(blocksize);
+    fftw_complex* out = fftw_alloc_complex(blocksize / 2 + 1);
+    fftw_plan fft_plan = fftw_plan_dft_r2c_1d(blocksize, in, out, FFTW_PATIENT | FFTW_DESTROY_INPUT);
+    printf("Wisdom acquired. Now writing...");
+    if (!fftw_export_wisdom_to_filename(wisdom_path.c_str()))
+      printf("unable to write to %s\n", wisdom_path.c_str());
+    else
+      printf("done.\n");
+    fftw_free(in);
+    fftw_free(out);
+    fftw_destroy_plan(fft_plan);
+  }
+
   unsigned int num_threads = std::thread::hardware_concurrency();
   if (num_threads == 0)
     num_threads = 1;
@@ -117,7 +138,8 @@ void EasyFourier::releaseWorker(int id)
 EasyFourier::FourierWorker::FourierWorker(int blocksize)
   : in(fftw_alloc_real(blocksize)),
     out(fftw_alloc_complex(blocksize / 2 + 1)),
-    fft_plan(fftw_plan_dft_r2c_1d(blocksize, in, out, FFTW_ESTIMATE | FFTW_DESTROY_INPUT)) {} // TODO wisdom
+    fft_plan(fftw_plan_dft_r2c_1d(blocksize, in, out, FFTW_PATIENT | FFTW_DESTROY_INPUT))
+{}
 
 EasyFourier::FourierWorker::~FourierWorker()
 {

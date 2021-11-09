@@ -117,20 +117,30 @@ std::string getHomeDir()
   strncpy(home_dir, getenv("HOME"), 1023);
   return std::string(home_dir);
 }
-#define CONFIG_DIR_PATH getHomeDir() + "/.config/clickitongue/"
+#endif // CLICKITONGUE_LINUX
+
+std::string getAndEnsureConfigDir()
+{
+#ifdef CLICKITONGUE_LINUX
+  std::string config_dir = getHomeDir() + "/.config";
+  mkdir(config_dir.c_str(), S_IRWXU);
+  std::string clicki_config_dir = config_dir + "/clickitongue";
+  mkdir(clicki_config_dir.c_str(), S_IRWXU);
+  return clicki_config_dir + "/";
 #endif // CLICKITONGUE_LINUX
 #ifdef CLICKITONGUE_WINDOWS
-#define CONFIG_DIR_PATH std::string("")
+  return "";
 #endif // CLICKITONGUE_WINDOWS
 #ifdef CLICKITONGUE_OSX
 #error "OSX not yet supported"
     // TODO mkdir and set config_path
 #endif // CLICKITONGUE_OSX
+}
 
 std::optional<Config> readConfig(std::string config_name)
 {
   farfetchd::ConfigReader reader;
-  if (!reader.parseFile(CONFIG_DIR_PATH + config_name + ".clickitongue"))
+  if (!reader.parseFile(getAndEnsureConfigDir() + config_name + ".clickitongue"))
     return std::nullopt;
 
   return Config(reader);
@@ -142,22 +152,7 @@ bool writeConfig(Config config, std::string config_name)
   std::string config_path;
   try
   {
-#ifdef CLICKITONGUE_LINUX
-    std::string config_dir = getHomeDir() + "/.config";
-    std::string clicki_config_dir = config_dir + "/clickitongue";
-    config_path = clicki_config_dir + "/" + config_name + ".clickitongue";
-    mkdir(config_dir.c_str(), S_IRWXU);
-    mkdir(clicki_config_dir.c_str(), S_IRWXU);
-#endif // CLICKITONGUE_LINUX
-#ifdef CLICKITONGUE_WINDOWS
-    config_path = config_name + ".clickitongue";
-#endif // CLICKITONGUE_WINDOWS
-#ifdef CLICKITONGUE_OSX
-#error "OSX not yet supported"
-    // TODO mkdir and set config_path
-#endif // CLICKITONGUE_OSX
-
-    std::ofstream out(config_path);
+    std::ofstream out(getAndEnsureConfigDir() + config_name + ".clickitongue");
     out << config.toString();
   }
   catch (std::exception const& e)

@@ -52,4 +52,6 @@ struct Config
 std::optional<Config> readConfig(std::string config_name);
 bool writeConfig(Config config, std::string config_name);
 
+std::string getAndEnsureConfigDir();
+
 #endif // CLICKITONGUE_CONFIG_IO_H_
