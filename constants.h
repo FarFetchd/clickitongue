@@ -22,6 +22,10 @@ constexpr float kSilentSample = 0.0f;
 
 constexpr int kFourierBlocksize = 256; // must be 128, 256, 512, or 1024
 
+// How long (in units of kFourierBlocksize; 2 means 2*kFourierBlocksize) we must
+// observe low energy after an event before being willing to declare a second event.
+constexpr int kRefracBlocks = 12;
+
 using Sample = float;
 
 enum class Action

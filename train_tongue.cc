@@ -14,17 +14,16 @@ namespace {
 class TrainParams
 {
 public:
-  TrainParams(double tl, double th, double teh, double tel, int rb)
+  TrainParams(double tl, double th, double teh, double tel)
     : tongue_low_hz(tl), tongue_high_hz(th), tongue_hzenergy_high(teh),
-      tongue_hzenergy_low(tel), refrac_blocks(rb) {}
+      tongue_hzenergy_low(tel) {}
 
   bool operator==(TrainParams const& other) const
   {
     return tongue_low_hz == other.tongue_low_hz &&
            tongue_high_hz == other.tongue_high_hz &&
            tongue_hzenergy_high == other.tongue_hzenergy_high &&
-           tongue_hzenergy_low == other.tongue_hzenergy_low &&
-           refrac_blocks == other.refrac_blocks;
+           tongue_hzenergy_low == other.tongue_hzenergy_low;
   }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
   {
@@ -56,7 +55,7 @@ public:
     std::vector<int> event_frames;
     TongueDetector detector(nullptr, tongue_low_hz, tongue_high_hz,
                             tongue_hzenergy_high, tongue_hzenergy_low,
-                            refrac_blocks, &event_frames);
+                            &event_frames);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * kNumChannels < samples.size();
          sample_ind += kFourierBlocksize * kNumChannels)
@@ -93,16 +92,15 @@ public:
   void printParams()
   {
     printf("--tongue_low_hz=%g --tongue_high_hz=%g --tongue_hzenergy_high=%g "
-           "--tongue_hzenergy_low=%g --refrac_blocks=%d\n",
+           "--tongue_hzenergy_low=%g\n",
            tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-           tongue_hzenergy_low, refrac_blocks);
+           tongue_hzenergy_low);
   }
 
   double tongue_low_hz;
   double tongue_high_hz;
   double tongue_hzenergy_high;
   double tongue_hzenergy_low;
-  int refrac_blocks;
   std::vector<int> score;
 };
 
@@ -171,10 +169,10 @@ class TrainParamsCocoon
 public:
   TrainParamsCocoon(
       double tongue_low_hz, double tongue_high_hz, double tongue_hzenergy_high,
-      double tongue_hzenergy_low, int refrac_blocks,
+      double tongue_hzenergy_low,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
   : pupa_(std::make_unique<TrainParams>(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-          tongue_hzenergy_low, refrac_blocks)),
+          tongue_hzenergy_low)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(), example_sets)) {}
 
   TrainParams awaitHatch() { score_computer_->join(); return *pupa_; }
@@ -220,15 +218,12 @@ public:
     double tongue_high_hz = randomHighHz(tongue_low_hz);
     double tongue_hzenergy_low = randomLowEnergy();
     double tongue_hzenergy_high = randomHighEnergy(tongue_hzenergy_low);
-    int refrac_blocks = 12;
-    return TrainParamsCocoon(
-        tongue_low_hz, tongue_high_hz, tongue_hzenergy_high, tongue_hzenergy_low,
-        refrac_blocks, examples_sets_);
+    return TrainParamsCocoon(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
+                             tongue_hzenergy_low, examples_sets_);
   }
 
   std::vector<TrainParamsCocoon> startingSet()
   {
-    int refrac_blocks = 12;
     std::vector<TrainParamsCocoon> ret;
     for (double tongue_low_hz = kMinLowHz + 0.25*(kMaxLowHz-kMinLowHz);
                 tongue_low_hz <= kMinLowHz + 0.75*(kMaxLowHz-kMinLowHz);
@@ -246,12 +241,12 @@ public:
       if (tongue_low_hz < tongue_high_hz && tongue_hzenergy_low < tongue_hzenergy_high)
       {
         ret.emplace_back(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-                         tongue_hzenergy_low, refrac_blocks, examples_sets_);
+                         tongue_hzenergy_low, examples_sets_);
       }
     }
     ret.emplace_back((kMaxLowHz-kMinLowHz)/2.0, (kMaxHighHz-kMinHighHz)/2.0,
                      (kMaxHighEnergy-kMinHighEnergy)/2.0,
-                     (kMaxLowEnergy-kMinLowEnergy)/2.0, refrac_blocks, examples_sets_);
+                     (kMaxLowEnergy-kMinLowEnergy)/2.0, examples_sets_);
     for (int i = 0; i < 15; i++)
       ret.push_back(randomParams());
     return ret;
@@ -265,45 +260,45 @@ public:
     KEEP_IN_BOUNDS(kMinLowHz, left_tongue_low_hz, kMaxLowHz);
     ret.emplace_back(
         left_tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-        x.tongue_hzenergy_low, x.refrac_blocks, examples_sets_);
+        x.tongue_hzenergy_low, examples_sets_);
     double rite_tongue_low_hz = x.tongue_low_hz + (kMaxLowHz-kMinLowHz)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinLowHz, rite_tongue_low_hz, kMaxLowHz);
     if (rite_tongue_low_hz < x.tongue_high_hz) ret.emplace_back(
         rite_tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-        x.tongue_hzenergy_low, x.refrac_blocks, examples_sets_);
+        x.tongue_hzenergy_low, examples_sets_);
 
     double left_tongue_high_hz = x.tongue_high_hz - (kMaxHighHz-kMinHighHz)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinHighHz, left_tongue_high_hz, kMaxHighHz);
     if (x.tongue_low_hz < left_tongue_high_hz) ret.emplace_back(
         x.tongue_low_hz, left_tongue_high_hz, x.tongue_hzenergy_high,
-        x.tongue_hzenergy_low, x.refrac_blocks, examples_sets_);
+        x.tongue_hzenergy_low, examples_sets_);
     double rite_tongue_high_hz = x.tongue_high_hz + (kMaxHighHz-kMinHighHz)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinHighHz, rite_tongue_high_hz, kMaxHighHz);
     ret.emplace_back(
         x.tongue_low_hz, rite_tongue_high_hz, x.tongue_hzenergy_high,
-        x.tongue_hzenergy_low, x.refrac_blocks, examples_sets_);
+        x.tongue_hzenergy_low, examples_sets_);
 
     double left_hzenergy_high = x.tongue_hzenergy_high - (kMaxHighEnergy-kMinHighEnergy)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinHighEnergy, left_hzenergy_high, kMaxHighEnergy);
     if (x.tongue_hzenergy_low < left_hzenergy_high) ret.emplace_back(
         x.tongue_low_hz, x.tongue_high_hz, left_hzenergy_high,
-        x.tongue_hzenergy_low, x.refrac_blocks, examples_sets_);
+        x.tongue_hzenergy_low, examples_sets_);
     double rite_hzenergy_high = x.tongue_hzenergy_high + (kMaxHighEnergy-kMinHighEnergy)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinHighEnergy, rite_hzenergy_high, kMaxHighEnergy);
     ret.emplace_back(
         x.tongue_low_hz, x.tongue_high_hz, rite_hzenergy_high,
-        x.tongue_hzenergy_low, x.refrac_blocks, examples_sets_);
+        x.tongue_hzenergy_low, examples_sets_);
 
     double left_hzenergy_low = x.tongue_hzenergy_low - (kMaxLowEnergy-kMinLowEnergy)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinLowEnergy, left_hzenergy_low, kMaxLowEnergy);
     ret.emplace_back(
         x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-        left_hzenergy_low, x.refrac_blocks, examples_sets_);
+        left_hzenergy_low, examples_sets_);
     double rite_hzenergy_low = x.tongue_hzenergy_low + (kMaxLowEnergy-kMinLowEnergy)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinLowEnergy, rite_hzenergy_low, kMaxLowEnergy);
     if (rite_hzenergy_low < x.tongue_hzenergy_high) ret.emplace_back(
         x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-        rite_hzenergy_low, x.refrac_blocks, examples_sets_);
+        rite_hzenergy_low, examples_sets_);
 
     return ret;
   }
@@ -343,7 +338,6 @@ TongueConfig trainTongue(std::vector<std::pair<AudioRecording, int>> const& audi
   ret.tongue_high_hz = best.tongue_high_hz;
   ret.tongue_hzenergy_high = best.tongue_hzenergy_high;
   ret.tongue_hzenergy_low = best.tongue_hzenergy_low;
-  ret.refrac_blocks = best.refrac_blocks;
 
   ret.enabled = (best.score[0] == 0 && best.score[1] < 2);
   return ret;

@@ -34,7 +34,6 @@ struct TongueConfig
   double tongue_high_hz;
   double tongue_hzenergy_high;
   double tongue_hzenergy_low;
-  int refrac_blocks;
 };
 
 struct Config

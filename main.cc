@@ -42,13 +42,12 @@ std::thread spawnBlowDetector(
 std::thread spawnTongueDetector(
     BlockingQueue<Action>* action_queue, Action action, double tongue_low_hz,
     double tongue_high_hz, double tongue_hzenergy_high,
-    double tongue_hzenergy_low, int refrac_blocks)
+    double tongue_hzenergy_low)
 {
   return std::thread([=]()
   {
     TongueDetector clicker(action_queue, action, tongue_low_hz, tongue_high_hz,
-                           tongue_hzenergy_high, tongue_hzenergy_low,
-                           refrac_blocks);
+                           tongue_hzenergy_high, tongue_hzenergy_low);
     AudioInput audio_input(tongueDetectorCallback, &clicker, kFourierBlocksize);
     while (audio_input.active())
       Pa_Sleep(500);
@@ -99,13 +98,11 @@ void useMain(ClickitongueCmdlineOpts opts)
       crash("--detector=tongue requires a value for --tongue_hzenergy_high.");
     if (!opts.tongue_hzenergy_low.has_value())
       crash("--detector=tongue requires a value for --tongue_hzenergy_low.");
-    if (!opts.refrac_blocks.has_value())
-      crash("--detector=tongue requires a value for --refrac_blocks.");
 
     std::thread tongue_thread = spawnTongueDetector(
         &action_queue, Action::ClickLeft, opts.tongue_low_hz.value(),
         opts.tongue_high_hz.value(), opts.tongue_hzenergy_high.value(),
-        opts.tongue_hzenergy_low.value(), opts.refrac_blocks.value());
+        opts.tongue_hzenergy_low.value());
     tongue_thread.join();
   }
   action_dispatcher.shutdown();
@@ -183,7 +180,7 @@ void normalOperation(Config config)
     tongue_thread = spawnTongueDetector(
         &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
         config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
-        config.tongue.tongue_hzenergy_low, config.tongue.refrac_blocks);
+        config.tongue.tongue_hzenergy_low);
   }
   printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
