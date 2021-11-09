@@ -1,7 +1,6 @@
-* profile. if the noticeable cpu usage is not almost all FFTW, i'm going to be super embarrassed.
-    * FFTW_DESTROY_INPUT specifies that an out-of-place transform is allowed to overwrite its input array with arbitrary data; this can sometimes allow more efficient algorithms to be employed.  <---probably ok for us
-    * FFTW wisdom
+* FFTW wisdom
 * make windows exe+dll+data release package (and keep updated)
+* handle the double keypress in training
 
 wishlist
 * for left clicks: make a short period after the refractory period has passed more sensitive, to make double-click easier

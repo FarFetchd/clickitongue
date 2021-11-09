@@ -117,7 +117,7 @@ void EasyFourier::releaseWorker(int id)
 EasyFourier::FourierWorker::FourierWorker(int blocksize)
   : in(fftw_alloc_real(blocksize)),
     out(fftw_alloc_complex(blocksize / 2 + 1)),
-    fft_plan(fftw_plan_dft_r2c_1d(blocksize, in, out, FFTW_ESTIMATE)) {} // TODO wisdom
+    fft_plan(fftw_plan_dft_r2c_1d(blocksize, in, out, FFTW_ESTIMATE | FFTW_DESTROY_INPUT)) {} // TODO wisdom
 
 EasyFourier::FourierWorker::~FourierWorker()
 {
