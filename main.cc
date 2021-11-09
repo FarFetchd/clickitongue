@@ -42,12 +42,15 @@ std::thread spawnBlowDetector(
 std::thread spawnTongueDetector(
     BlockingQueue<Action>* action_queue, Action action, double tongue_low_hz,
     double tongue_high_hz, double tongue_hzenergy_high,
-    double tongue_hzenergy_low)
+    double tongue_hzenergy_low, double tongue_min_spikes_freq_frac,
+    double tongue_high_spike_frac, double tongue_high_spike_level)
 {
   return std::thread([=]()
   {
     TongueDetector clicker(action_queue, action, tongue_low_hz, tongue_high_hz,
-                           tongue_hzenergy_high, tongue_hzenergy_low);
+                           tongue_hzenergy_high, tongue_hzenergy_low,
+                           tongue_min_spikes_freq_frac, tongue_high_spike_frac,
+                           tongue_high_spike_level);
     AudioInput audio_input(tongueDetectorCallback, &clicker, kFourierBlocksize);
     while (audio_input.active())
       Pa_Sleep(500);
@@ -98,11 +101,18 @@ void useMain(ClickitongueCmdlineOpts opts)
       crash("--detector=tongue requires a value for --tongue_hzenergy_high.");
     if (!opts.tongue_hzenergy_low.has_value())
       crash("--detector=tongue requires a value for --tongue_hzenergy_low.");
+    if (!opts.tongue_min_spikes_freq_frac.has_value())
+      crash("--detector=tongue requires a value for --tongue_min_spikes_freq_frac.");
+    if (!opts.tongue_high_spike_frac.has_value())
+      crash("--detector=tongue requires a value for --tongue_high_spike_frac.");
+    if (!opts.tongue_high_spike_level.has_value())
+      crash("--detector=tongue requires a value for --tongue_high_spike_level.");
 
     std::thread tongue_thread = spawnTongueDetector(
         &action_queue, Action::ClickLeft, opts.tongue_low_hz.value(),
         opts.tongue_high_hz.value(), opts.tongue_hzenergy_high.value(),
-        opts.tongue_hzenergy_low.value());
+        opts.tongue_hzenergy_low.value(), opts.tongue_min_spikes_freq_frac.value(),
+        opts.tongue_high_spike_frac.value(), opts.tongue_high_spike_level.value());
     tongue_thread.join();
   }
   action_dispatcher.shutdown();
@@ -180,7 +190,8 @@ void normalOperation(Config config)
     tongue_thread = spawnTongueDetector(
         &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
         config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
-        config.tongue.tongue_hzenergy_low);
+        config.tongue.tongue_hzenergy_low, config.tongue.tongue_min_spikes_freq_frac,
+        config.tongue.tongue_high_spike_frac, config.tongue.tongue_high_spike_level);
   }
   printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
@@ -234,18 +245,24 @@ void firstTimeTrain()
     for (int i = 0; i < 6; i++)
       tongue_examples.emplace_back(recordExampleTongue(i), i);
 
-  // all examples of one is a negative example for the other
+  // all examples of one are negative examples for the other
+  std::vector<std::pair<AudioRecording, int>> tongue_examples_plus_neg;
+  std::vector<std::pair<AudioRecording, int>> blow_examples_plus_neg;
   for (auto const& ex_pair : blow_examples)
-    tongue_examples.emplace_back(ex_pair.first, 0);
+    blow_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
   for (auto const& ex_pair : tongue_examples)
-    blow_examples.emplace_back(ex_pair.first, 0);
+    tongue_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
+  for (auto const& ex_pair : blow_examples)
+    tongue_examples_plus_neg.emplace_back(ex_pair.first, 0);
+  for (auto const& ex_pair : tongue_examples)
+    blow_examples_plus_neg.emplace_back(ex_pair.first, 0);
 
   Config config;
   if (try_blows)
-    config.blow = trainBlow(blow_examples);
+    config.blow = trainBlow(blow_examples_plus_neg);
   Action tongue_action = config.blow.enabled ? Action::ClickRight
                                              : Action::ClickLeft;
-  config.tongue = trainTongue(tongue_examples, tongue_action);
+  config.tongue = trainTongue(tongue_examples_plus_neg, tongue_action);
 
   if (config.blow.enabled && config.tongue.enabled)
   {

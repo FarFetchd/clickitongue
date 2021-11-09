@@ -275,33 +275,19 @@ public:
         examples_sets_);
   }
 
+#define HIDEOUS_FOR(x, mn, mx) for (double x = mn + 0.25*( mx - mn ); x <= mn + 0.75*( mx - mn ); x += 0.5*( mx - mn ))
+
   std::vector<TrainParamsCocoon> startingSet()
   {
     std::vector<TrainParamsCocoon> ret;
-    for (double lowpass_percent = kMinLowPassPercent + 0.25*(kMaxLowPassPercent-kMinLowPassPercent);
-                lowpass_percent <= kMinLowPassPercent + 0.75*(kMaxLowPassPercent-kMinLowPassPercent);
-                lowpass_percent += 0.5*(kMaxLowPassPercent-kMinLowPassPercent))
-    for (double highpass_percent = kMinHighPassPercent + 0.25*(kMaxHighPassPercent-kMinHighPassPercent);
-                highpass_percent <= kMinHighPassPercent + 0.75*(kMaxHighPassPercent-kMinHighPassPercent);
-                highpass_percent += 0.5*(kMaxHighPassPercent-kMinHighPassPercent))
-    for (double low_off_thresh = kMinLowOffThresh + 0.25*(kMaxLowOffThresh-kMinLowOffThresh);
-                low_off_thresh <= kMinLowOffThresh + 0.75*(kMaxLowOffThresh-kMinLowOffThresh);
-                low_off_thresh += 0.5*(kMaxLowOffThresh-kMinLowOffThresh))
-    for (double low_on_thresh = kMinLowOnThresh + 0.25*(kMaxLowOnThresh-kMinLowOnThresh);
-                low_on_thresh <= kMinLowOnThresh + 0.75*(kMaxLowOnThresh-kMinLowOnThresh);
-                low_on_thresh += 0.5*(kMaxLowOnThresh-kMinLowOnThresh))
-    for (double high_on_thresh = kMinHighOnThresh + 0.25*(kMaxHighOnThresh-kMinHighOnThresh);
-                high_on_thresh <= kMinHighOnThresh + 0.75*(kMaxHighOnThresh-kMinHighOnThresh);
-                high_on_thresh += 0.5*(kMaxHighOnThresh-kMinHighOnThresh))
-    for (double high_off_thresh = kMinHighOffThresh + 0.25*(kMaxHighOffThresh-kMinHighOffThresh);
-                high_off_thresh <= kMinHighOffThresh + 0.75*(kMaxHighOffThresh-kMinHighOffThresh);
-                high_off_thresh += 0.5*(kMaxHighOffThresh-kMinHighOffThresh))
-    for (double high_spike_frac = kMinHighSpikeFrac + 0.25*(kMaxHighSpikeFrac-kMinHighSpikeFrac);
-                high_spike_frac <= kMinHighSpikeFrac + 0.75*(kMaxHighSpikeFrac-kMinHighSpikeFrac);
-                high_spike_frac += 0.5*(kMaxHighSpikeFrac-kMinHighSpikeFrac))
-    for (double high_spike_level = kMinHighSpikeLevel + 0.25*(kMaxHighSpikeLevel-kMinHighSpikeLevel);
-                high_spike_level <= kMinHighSpikeLevel + 0.75*(kMaxHighSpikeLevel-kMinHighSpikeLevel);
-                high_spike_level += 0.5*(kMaxHighSpikeLevel-kMinHighSpikeLevel))
+    HIDEOUS_FOR(lowpass_percent, kMinLowPassPercent, kMaxLowPassPercent)
+    HIDEOUS_FOR(highpass_percent, kMinHighPassPercent, kMaxHighPassPercent)
+    HIDEOUS_FOR(low_off_thresh, kMinLowOffThresh, kMaxLowOffThresh)
+    HIDEOUS_FOR(low_on_thresh, kMinLowOnThresh, kMaxLowOnThresh)
+    HIDEOUS_FOR(high_on_thresh, kMinHighOnThresh, kMaxHighOnThresh)
+    HIDEOUS_FOR(high_off_thresh, kMinHighOffThresh, kMaxHighOffThresh)
+    HIDEOUS_FOR(high_spike_frac, kMinHighSpikeFrac, kMaxHighSpikeFrac)
+    HIDEOUS_FOR(high_spike_level, kMinHighSpikeLevel, kMaxHighSpikeLevel)
     {
       if (lowpass_percent < highpass_percent && low_off_thresh < low_on_thresh &&
           high_off_thresh < high_on_thresh)

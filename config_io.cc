@@ -62,6 +62,10 @@ std::string Config::toString() const
         << "tongue_high_hz: " << tongue.tongue_high_hz << "\n"
         << "tongue_hzenergy_high: " << tongue.tongue_hzenergy_high << "\n"
         << "tongue_hzenergy_low: " << tongue.tongue_hzenergy_low << "\n"
+
+        << "tongue_min_spikes_freq_frac: " << tongue.tongue_min_spikes_freq_frac << "\n"
+        << "tongue_high_spike_frac: " << tongue.tongue_high_spike_frac << "\n"
+        << "tongue_high_spike_level: " << tongue.tongue_high_spike_level << "\n";
   }
   return sts.str();
 }
@@ -94,9 +98,15 @@ TongueConfig::TongueConfig(farfetchd::ConfigReader const& cfg)
   tongue_hzenergy_high = cfg.getDouble("tongue_hzenergy_high").value_or(-1);
   tongue_hzenergy_low = cfg.getDouble("tongue_hzenergy_low").value_or(-1);
 
+  tongue_min_spikes_freq_frac = cfg.getDouble("tongue_min_spikes_freq_frac")
+                                   .value_or(-1);
+  tongue_high_spike_frac = cfg.getDouble("tongue_high_spike_frac").value_or(-1);
+  tongue_high_spike_level = cfg.getDouble("tongue_high_spike_level").value_or(-1);
+
   enabled = (action != Action::NoAction && tongue_low_hz >= 0 &&
-              tongue_high_hz >= 0 && tongue_hzenergy_high >= 0 &&
-              tongue_hzenergy_low >= 0);
+             tongue_high_hz >= 0 && tongue_hzenergy_high >= 0 &&
+             tongue_hzenergy_low >= 0 && tongue_min_spikes_freq_frac >= 0 &&
+             tongue_high_spike_frac >= 0 && tongue_high_spike_level >= 0);
 }
 
 #ifdef CLICKITONGUE_LINUX

@@ -14,16 +14,21 @@ namespace {
 class TrainParams
 {
 public:
-  TrainParams(double tl, double th, double teh, double tel)
+  TrainParams(double tl, double th, double teh, double tel,
+              double tmsff, double thsf, double thsl)
     : tongue_low_hz(tl), tongue_high_hz(th), tongue_hzenergy_high(teh),
-      tongue_hzenergy_low(tel) {}
+      tongue_hzenergy_low(tel), tongue_min_spikes_freq_frac(tmsff),
+      tongue_high_spike_frac(thsf), tongue_high_spike_level(thsl) {}
 
   bool operator==(TrainParams const& other) const
   {
     return tongue_low_hz == other.tongue_low_hz &&
            tongue_high_hz == other.tongue_high_hz &&
            tongue_hzenergy_high == other.tongue_hzenergy_high &&
-           tongue_hzenergy_low == other.tongue_hzenergy_low;
+           tongue_hzenergy_low == other.tongue_hzenergy_low &&
+           tongue_min_spikes_freq_frac == other.tongue_min_spikes_freq_frac &&
+           tongue_high_spike_frac == other.tongue_high_spike_frac &&
+           tongue_high_spike_level == other.tongue_high_spike_level;
   }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
   {
@@ -53,9 +58,10 @@ public:
   int detectEvents(std::vector<Sample> const& samples)
   {
     std::vector<int> event_frames;
-    TongueDetector detector(nullptr, tongue_low_hz, tongue_high_hz,
-                            tongue_hzenergy_high, tongue_hzenergy_low,
-                            &event_frames);
+    TongueDetector detector(
+        nullptr, tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
+        tongue_hzenergy_low, tongue_min_spikes_freq_frac, tongue_high_spike_frac,
+        tongue_high_spike_level, &event_frames);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * kNumChannels < samples.size();
          sample_ind += kFourierBlocksize * kNumChannels)
@@ -92,15 +98,20 @@ public:
   void printParams()
   {
     printf("--tongue_low_hz=%g --tongue_high_hz=%g --tongue_hzenergy_high=%g "
-           "--tongue_hzenergy_low=%g\n",
+           "--tongue_hzenergy_low=%g --tongue_min_spikes_freq_frac=%g "
+           "--tongue_high_spike_frac=%g --tongue_high_spike_level=%g\n",
            tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-           tongue_hzenergy_low);
+           tongue_hzenergy_low, tongue_min_spikes_freq_frac,
+           tongue_high_spike_frac, tongue_high_spike_level);
   }
 
   double tongue_low_hz;
   double tongue_high_hz;
   double tongue_hzenergy_high;
   double tongue_hzenergy_low;
+  double tongue_min_spikes_freq_frac;
+  double tongue_high_spike_frac;
+  double tongue_high_spike_level;
   std::vector<int> score;
 };
 
@@ -130,6 +141,12 @@ const double kMinLowEnergy = 50;
 const double kMaxLowEnergy = 2000;
 const double kMinHighEnergy = 1000;
 const double kMaxHighEnergy = 16000;
+const double kMinSpikesFreqFrac = 0.25;
+const double kMaxSpikesFreqFrac = 0.85;
+const double kMinSpikeFrac = 0.2;
+const double kMaxSpikeFrac = 0.8;
+const double kMinSpikeLevel = 0.3;
+const double kMaxSpikeLevel = 3.0;
 double randomLowHz()
 {
   static RandomStuff* r = new RandomStuff(kMinHighHz, kMaxLowHz);
@@ -156,6 +173,21 @@ double randomHighEnergy(double low)
     ret = r->random();
   return ret;
 }
+double randomSpikesFreqFrac()
+{
+  static RandomStuff* r = new RandomStuff(kMinSpikesFreqFrac, kMaxSpikesFreqFrac);
+  return r->random();
+}
+double randomSpikeFrac()
+{
+  static RandomStuff* r = new RandomStuff(kMinSpikeFrac, kMaxSpikeFrac);
+  return r->random();
+}
+double randomSpikeLevel()
+{
+  static RandomStuff* r = new RandomStuff(kMinSpikeLevel, kMaxSpikeLevel);
+  return r->random();
+}
 
 void runComputeScore(
     TrainParams* me,
@@ -169,11 +201,16 @@ class TrainParamsCocoon
 public:
   TrainParamsCocoon(
       double tongue_low_hz, double tongue_high_hz, double tongue_hzenergy_high,
-      double tongue_hzenergy_low,
+      double tongue_hzenergy_low, double tongue_min_spikes_freq_frac,
+      double tongue_high_spike_frac, double tongue_high_spike_level,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
-  : pupa_(std::make_unique<TrainParams>(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-          tongue_hzenergy_low)),
-    score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(), example_sets)) {}
+  : pupa_(std::make_unique<TrainParams>(
+          tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
+          tongue_hzenergy_low, tongue_min_spikes_freq_frac,
+          tongue_high_spike_frac, tongue_high_spike_level)),
+    score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
+                                                  example_sets))
+    {}
 
   TrainParams awaitHatch() { score_computer_->join(); return *pupa_; }
 
@@ -218,35 +255,43 @@ public:
     double tongue_high_hz = randomHighHz(tongue_low_hz);
     double tongue_hzenergy_low = randomLowEnergy();
     double tongue_hzenergy_high = randomHighEnergy(tongue_hzenergy_low);
+    double tongue_min_spikes_freq_frac = randomSpikesFreqFrac();
+    double tongue_high_spike_frac = randomSpikeFrac();
+    double tongue_high_spike_level = randomSpikeLevel();
     return TrainParamsCocoon(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-                             tongue_hzenergy_low, examples_sets_);
+                             tongue_hzenergy_low, tongue_min_spikes_freq_frac,
+                             tongue_high_spike_frac, tongue_high_spike_level,
+                             examples_sets_);
   }
+
+#define HIDEOUS_FOR(x, mn, mx) for (double x = mn + 0.25*( mx - mn ); x <= mn + 0.75*( mx - mn ); x += 0.5*( mx - mn ))
 
   std::vector<TrainParamsCocoon> startingSet()
   {
     std::vector<TrainParamsCocoon> ret;
-    for (double tongue_low_hz = kMinLowHz + 0.25*(kMaxLowHz-kMinLowHz);
-                tongue_low_hz <= kMinLowHz + 0.75*(kMaxLowHz-kMinLowHz);
-                tongue_low_hz += 0.5*(kMaxLowHz-kMinLowHz))
-    for (double tongue_high_hz = kMinHighHz + 0.25*(kMaxHighHz-kMinHighHz);
-                tongue_high_hz <= kMinHighHz + 0.75*(kMaxHighHz-kMinHighHz);
-                tongue_high_hz += 0.5*(kMaxHighHz-kMinHighHz))
-    for (double tongue_hzenergy_high = kMinHighEnergy + 0.25*(kMaxHighEnergy-kMinHighEnergy);
-                tongue_hzenergy_high <= kMinHighEnergy + 0.75*(kMaxHighEnergy-kMinHighEnergy);
-                tongue_hzenergy_high += 0.5*(kMaxHighEnergy-kMinHighEnergy))
-    for (double tongue_hzenergy_low = kMinLowEnergy + 0.25*(kMaxLowEnergy-kMinLowEnergy);
-                tongue_hzenergy_low <= kMinLowEnergy + 0.75*(kMaxLowEnergy-kMinLowEnergy);
-                tongue_hzenergy_low += 0.5*(kMaxLowEnergy-kMinLowEnergy))
+    HIDEOUS_FOR(tongue_low_hz, kMinLowHz, kMaxLowHz)
+    HIDEOUS_FOR(tongue_high_hz, kMinHighHz, kMaxHighHz)
+    HIDEOUS_FOR(tongue_hzenergy_high, kMinHighEnergy, kMaxHighEnergy)
+    HIDEOUS_FOR(tongue_hzenergy_low, kMinLowEnergy, kMaxLowEnergy)
+    HIDEOUS_FOR(tongue_low_hz, kMinLowHz, kMaxLowHz)
+    HIDEOUS_FOR(tongue_min_spikes_freq_frac, kMinSpikesFreqFrac, kMaxSpikesFreqFrac)
+    HIDEOUS_FOR(tongue_high_spike_frac, kMinSpikeFrac, kMaxSpikeFrac)
+    HIDEOUS_FOR(tongue_high_spike_level, kMinSpikeLevel, kMaxSpikeLevel)
     {
       if (tongue_low_hz < tongue_high_hz && tongue_hzenergy_low < tongue_hzenergy_high)
       {
         ret.emplace_back(tongue_low_hz, tongue_high_hz, tongue_hzenergy_high,
-                         tongue_hzenergy_low, examples_sets_);
+                         tongue_hzenergy_low, tongue_min_spikes_freq_frac,
+                         tongue_high_spike_frac, tongue_high_spike_level,
+                         examples_sets_);
       }
     }
     ret.emplace_back((kMaxLowHz-kMinLowHz)/2.0, (kMaxHighHz-kMinHighHz)/2.0,
                      (kMaxHighEnergy-kMinHighEnergy)/2.0,
-                     (kMaxLowEnergy-kMinLowEnergy)/2.0, examples_sets_);
+                     (kMaxLowEnergy-kMinLowEnergy)/2.0,
+                     (kMaxSpikesFreqFrac-kMinSpikesFreqFrac)/2.0,
+                     (kMaxSpikeFrac-kMinSpikeFrac)/2.0,
+                     (kMaxSpikeLevel-kMinSpikeLevel)/2.0, examples_sets_);
     for (int i = 0; i < 15; i++)
       ret.push_back(randomParams());
     return ret;
@@ -260,45 +305,84 @@ public:
     KEEP_IN_BOUNDS(kMinLowHz, left_tongue_low_hz, kMaxLowHz);
     ret.emplace_back(
         left_tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-        x.tongue_hzenergy_low, examples_sets_);
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac, x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
     double rite_tongue_low_hz = x.tongue_low_hz + (kMaxLowHz-kMinLowHz)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinLowHz, rite_tongue_low_hz, kMaxLowHz);
     if (rite_tongue_low_hz < x.tongue_high_hz) ret.emplace_back(
         rite_tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-        x.tongue_hzenergy_low, examples_sets_);
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac, x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
 
     double left_tongue_high_hz = x.tongue_high_hz - (kMaxHighHz-kMinHighHz)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinHighHz, left_tongue_high_hz, kMaxHighHz);
     if (x.tongue_low_hz < left_tongue_high_hz) ret.emplace_back(
         x.tongue_low_hz, left_tongue_high_hz, x.tongue_hzenergy_high,
-        x.tongue_hzenergy_low, examples_sets_);
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac, x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
     double rite_tongue_high_hz = x.tongue_high_hz + (kMaxHighHz-kMinHighHz)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinHighHz, rite_tongue_high_hz, kMaxHighHz);
     ret.emplace_back(
         x.tongue_low_hz, rite_tongue_high_hz, x.tongue_hzenergy_high,
-        x.tongue_hzenergy_low, examples_sets_);
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac, x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
 
     double left_hzenergy_high = x.tongue_hzenergy_high - (kMaxHighEnergy-kMinHighEnergy)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinHighEnergy, left_hzenergy_high, kMaxHighEnergy);
     if (x.tongue_hzenergy_low < left_hzenergy_high) ret.emplace_back(
         x.tongue_low_hz, x.tongue_high_hz, left_hzenergy_high,
-        x.tongue_hzenergy_low, examples_sets_);
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac, x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
     double rite_hzenergy_high = x.tongue_hzenergy_high + (kMaxHighEnergy-kMinHighEnergy)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinHighEnergy, rite_hzenergy_high, kMaxHighEnergy);
     ret.emplace_back(
         x.tongue_low_hz, x.tongue_high_hz, rite_hzenergy_high,
-        x.tongue_hzenergy_low, examples_sets_);
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac, x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
 
     double left_hzenergy_low = x.tongue_hzenergy_low - (kMaxLowEnergy-kMinLowEnergy)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinLowEnergy, left_hzenergy_low, kMaxLowEnergy);
     ret.emplace_back(
         x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-        left_hzenergy_low, examples_sets_);
+        left_hzenergy_low, x.tongue_min_spikes_freq_frac, x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
     double rite_hzenergy_low = x.tongue_hzenergy_low + (kMaxLowEnergy-kMinLowEnergy)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinLowEnergy, rite_hzenergy_low, kMaxLowEnergy);
     if (rite_hzenergy_low < x.tongue_hzenergy_high) ret.emplace_back(
         x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
-        rite_hzenergy_low, examples_sets_);
+        rite_hzenergy_low, x.tongue_min_spikes_freq_frac, x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
+
+    double left_spikes_freq_frac = x.tongue_min_spikes_freq_frac - (kMaxSpikesFreqFrac-kMinSpikesFreqFrac)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinSpikesFreqFrac, left_spikes_freq_frac, kMaxSpikesFreqFrac);
+    ret.emplace_back(
+        x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
+        x.tongue_hzenergy_low, left_spikes_freq_frac,
+        x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
+    double rite_spikes_freq_frac = x.tongue_min_spikes_freq_frac + (kMaxSpikesFreqFrac-kMinSpikesFreqFrac)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinSpikesFreqFrac, rite_spikes_freq_frac, kMaxSpikesFreqFrac);
+    ret.emplace_back(
+        x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
+        x.tongue_hzenergy_low, rite_spikes_freq_frac,
+        x.tongue_high_spike_frac, x.tongue_high_spike_level, examples_sets_);
+
+    double left_spike_frac = x.tongue_high_spike_frac - (kMaxSpikeFrac-kMinSpikeFrac)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinSpikeFrac, left_spike_frac, kMaxSpikeFrac);
+    ret.emplace_back(
+        x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac,
+        left_spike_frac, x.tongue_high_spike_level, examples_sets_);
+    double rite_spike_frac = x.tongue_high_spike_frac + (kMaxSpikeFrac-kMinSpikeFrac)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinSpikeFrac, rite_spike_frac, kMaxSpikeFrac);
+    ret.emplace_back(
+        x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac,
+        rite_spike_frac, x.tongue_high_spike_level, examples_sets_);
+
+    double left_spike_level = x.tongue_high_spike_level - (kMaxSpikeLevel-kMinSpikeLevel)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinSpikeLevel, left_spike_level, kMaxSpikeLevel);
+    ret.emplace_back(
+        x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac,
+        x.tongue_high_spike_frac, left_spike_level, examples_sets_);
+    double rite_spike_level = x.tongue_high_spike_level + (kMaxSpikeLevel-kMinSpikeLevel)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinSpikeLevel, rite_spike_level, kMaxSpikeLevel);
+    ret.emplace_back(
+        x.tongue_low_hz, x.tongue_high_hz, x.tongue_hzenergy_high,
+        x.tongue_hzenergy_low, x.tongue_min_spikes_freq_frac,
+        x.tongue_high_spike_frac, rite_spike_level, examples_sets_);
 
     return ret;
   }
@@ -338,6 +422,9 @@ TongueConfig trainTongue(std::vector<std::pair<AudioRecording, int>> const& audi
   ret.tongue_high_hz = best.tongue_high_hz;
   ret.tongue_hzenergy_high = best.tongue_hzenergy_high;
   ret.tongue_hzenergy_low = best.tongue_hzenergy_low;
+  ret.tongue_min_spikes_freq_frac = best.tongue_min_spikes_freq_frac;
+  ret.tongue_high_spike_frac = best.tongue_high_spike_frac;
+  ret.tongue_high_spike_level = best.tongue_high_spike_level;
 
   ret.enabled = (best.score[0] == 0 && best.score[1] < 2);
   return ret;

@@ -15,13 +15,18 @@ public:
   TongueDetector(BlockingQueue<Action>* action_queue,
                  double tongue_low_hz, double tongue_high_hz,
                  double tongue_hzenergy_high, double tongue_hzenergy_low,
-                 int refrac_blocks, std::vector<int>* cur_frame_dest);
+                 double tongue_min_spikes_freq_frac,
+                 double tongue_high_spike_frac,
+                 double tongue_high_spike_level,
+                 std::vector<int>* cur_frame_dest);
 
   // Kicks off 'action' at each detected event.
   TongueDetector(BlockingQueue<Action>* action_queue, Action action,
                  double tongue_low_hz, double tongue_high_hz,
                  double tongue_hzenergy_high, double tongue_hzenergy_low,
-                 int refrac_blocks);
+                 double tongue_min_spikes_freq_frac,
+                 double tongue_high_spike_frac,
+                 double tongue_high_spike_level);
 
   void processAudio(const Sample* cur_sample, int num_frames) override;
 
@@ -34,11 +39,14 @@ private:
   const double tongue_hzenergy_high_;
   // The energy sum below which refractory period is allowed to count down.
   const double tongue_hzenergy_low_;
-  // How long (in units of blocksize_; 2 means 2*blocksize_) we must observe low
-  // energy after an event before being willing to declare a second event.
-  const int refrac_blocks_;
+  // Ignore the bottom min_spikes_freq_frac_ fraction of buckets when deciding
+  // whether "high frequencies have too many spikes".
+  const double tongue_min_spikes_freq_frac_;
+  const double tongue_high_spike_frac_;
+  const double tongue_high_spike_level_;
 
   int refrac_blocks_left_ = 0;
+  int blocks_until_activation_ = -1;
 
   // only needs to be kept up to date if you plan to use RecordCurFrame
   int cur_frame_ = 0;

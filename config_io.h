@@ -34,6 +34,9 @@ struct TongueConfig
   double tongue_high_hz;
   double tongue_hzenergy_high;
   double tongue_hzenergy_low;
+  double tongue_min_spikes_freq_frac;
+  double tongue_high_spike_frac;
+  double tongue_high_spike_level;
 };
 
 struct Config
