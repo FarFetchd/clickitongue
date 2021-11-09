@@ -59,6 +59,8 @@ private:
   // only needs to be kept up to date if you plan to use RecordCurFrame
   int cur_frame_ = 0;
   bool track_cur_frame_ = false;
+
+  int refrac_blocks_left_ = 0;
 };
 
 int blowDetectorCallback(const void* inputBuffer, void* outputBuffer,

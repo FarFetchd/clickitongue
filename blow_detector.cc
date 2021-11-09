@@ -88,16 +88,22 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
   // 1 block is 5.8ms, and my physical mouse clicks appear to be 50-80ms long).
   if (mouse_down_ && !mouse_down_at_least_one_block_)
     mouse_down_at_least_one_block_ = true;
-  else if (avg_low > low_on_thresh_ && avg_high > high_on_thresh_ && many_high_spikes && !mouse_down_)
+  else if (refrac_blocks_left_ == 0 && avg_low > low_on_thresh_ && avg_high > high_on_thresh_ && many_high_spikes && !mouse_down_)
   {
     kickoffAction(action_on_);
+    refrac_blocks_left_ = kRefracBlocks;
     mouse_down_ = true;
     mouse_down_at_least_one_block_ = false;
   }
-  else if (avg_low < low_off_thresh_ && avg_high < high_off_thresh_ && mouse_down_)
+  else if (avg_low < low_off_thresh_ && avg_high < high_off_thresh_)
   {
-    kickoffAction(action_off_);
-    mouse_down_ = false;
+    if (mouse_down_)
+    {
+      kickoffAction(action_off_);
+      mouse_down_ = false;
+    }
+    if (refrac_blocks_left_ > 0)
+      refrac_blocks_left_--;
   }
 }
 
