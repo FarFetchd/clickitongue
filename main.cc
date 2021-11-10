@@ -47,7 +47,7 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
           "play, or equalizer. (Or not specify it).");
   }
 
-  if (mode == "record" || (mode == "play" && !opts.filename.has_value()))
+  if ((mode == "record" || mode == "play") && !opts.filename.has_value())
     crash("Must specify a --filename=");
 }
 
@@ -141,23 +141,23 @@ void firstTimeTrain()
       tongue_examples.emplace_back(recordExampleTongue(i), i);
 
   // all examples of one are negative examples for the other
-  std::vector<std::pair<AudioRecording, int>> tongue_examples_plus_neg;
+//  std::vector<std::pair<AudioRecording, int>> tongue_examples_plus_neg;
   std::vector<std::pair<AudioRecording, int>> blow_examples_plus_neg;
   for (auto const& ex_pair : blow_examples)
     blow_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
-  for (auto const& ex_pair : tongue_examples)
-    tongue_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
-  for (auto const& ex_pair : blow_examples)
-    tongue_examples_plus_neg.emplace_back(ex_pair.first, 0);
+//   for (auto const& ex_pair : tongue_examples)
+//     tongue_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
+//   for (auto const& ex_pair : blow_examples)
+//     tongue_examples_plus_neg.emplace_back(ex_pair.first, 0);
   for (auto const& ex_pair : tongue_examples)
     blow_examples_plus_neg.emplace_back(ex_pair.first, 0);
 
   Config config;
   if (try_blows)
-    config.blow = trainBlow(blow_examples_plus_neg, true);
+    config.blow = trainBlow(blow_examples/*_plus_neg*/, true);
   Action tongue_action = config.blow.enabled ? Action::ClickRight
                                              : Action::ClickLeft;
-  config.tongue = trainTongue(tongue_examples_plus_neg, tongue_action, true);
+  config.tongue = trainTongue(tongue_examples/*_plus_neg*/, tongue_action, true);
 
   if (config.blow.enabled && config.tongue.enabled)
   {

@@ -57,6 +57,13 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
 
 void TongueDetector::processFourier(const fftw_complex* fft_bins)
 {
+  if (suppressed_by_blow_)
+  {
+    refrac_blocks_left_ = kRefracBlocks;
+    action_countdown_ = -1;
+    return;
+  }
+
   int bin_ind = 1;
   while (tongue_low_hz_ > g_fourier->freqOfBin(bin_ind) + kBinWidth/2.0)
     bin_ind++;
@@ -90,11 +97,6 @@ void TongueDetector::processFourier(const fftw_complex* fft_bins)
              (double)(num_buckets - first_high_bucket) > tongue_high_spike_frac_;
   bool too_high = avg_high > 1;
 
-//   if (too_many_high_spikes) // TODO trim
-//     printf("too many spikes\n");
-//   if (too_high)
-//     printf("too high\n");
-
   if (too_many_high_spikes || too_high)
     refrac_blocks_left_ = kRefracBlocks;
   else if (refrac_blocks_left_ > 0)
@@ -102,9 +104,27 @@ void TongueDetector::processFourier(const fftw_complex* fft_bins)
     if (energy < tongue_hzenergy_low_)
       refrac_blocks_left_--;
   }
-  else if (energy > tongue_hzenergy_high_)
+  else if (energy > tongue_hzenergy_high_ && action_countdown_ < 0)
+  {
+    action_countdown_ = wait_for_blow_ ? 8 : 1;
+  }
+
+  if (action_countdown_ > 0 && --action_countdown_ == 0)
   {
     kickoffAction(action_);
     refrac_blocks_left_ = kRefracBlocks;
+    action_countdown_ = -1;
   }
+}
+
+void TongueDetector::set_wait_for_blow(bool val) { wait_for_blow_ = val; }
+
+void TongueDetector::set_suppressed_by_blow(bool val)
+{
+  if (suppressed_by_blow_ && !val)
+  {
+    refrac_blocks_left_ = kRefracBlocks;
+    action_countdown_ = -1;
+  }
+  suppressed_by_blow_ = val;
 }

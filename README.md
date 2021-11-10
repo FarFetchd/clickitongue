@@ -2,7 +2,7 @@ Clickitongue carries out mouse clicks when triggered by mouth sounds picked
 up by your computer's microphone, to give sore wrists a rest.
 
 Clickitongue is still in development, but is already basically usable. It
-currently runs on Linux (both X and Wayland) and Windows only. Support for OSX
+currently runs on Linux (both X and Wayland) and Windows. Support for OSX
 is planned.
 
 # Installing on Linux
@@ -37,8 +37,8 @@ work for blowing. Remove any fuzzy/spongy windscreens for best blowing results!
 
 The first time you run Clickitongue, it will have you train it to detect your
 particular tongue click and blowing sounds, in your particular acoustic
-environment. For blow training, short soft bursts as if you were going to say
-"pu" are best. The tongue clicks it expects are like 0:31-0:34 of
+environment. For blow training, use short soft bursts - but not too soft.
+The tongue clicks it expects are like 0:31-0:34 of
 [this video.](https://youtu.be/L7sWPZArUN0?t=31)
 
 After that first time training, you should be able to simply run Clickitongue

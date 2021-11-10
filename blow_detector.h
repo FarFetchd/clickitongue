@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "detector.h"
 #include "easy_fourier.h"
+#include "tongue_detector.h"
 
 class BlowDetector : public Detector
 {
@@ -27,6 +28,8 @@ public:
 
   void processAudio(const Sample* cur_sample, int num_frames);
   void processFourier(const fftw_complex* fft_bins);
+
+  void set_tongue_link(TongueDetector* val);
 
 private:
   // action to be done when detector decides a blow has started...
@@ -54,6 +57,9 @@ private:
   // our understanding of the current state of the mouse button
   bool mouse_down_ = false;
   bool mouse_down_at_least_one_block_ = false;
+
+  // for coordinating with tongue detector (if it exists) by suppressing it
+  TongueDetector* tongue_link_ = nullptr;
 
   // only needs to be kept up to date if you plan to use RecordCurFrame
   int cur_frame_ = 0;

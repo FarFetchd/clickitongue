@@ -3,6 +3,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#ifdef CLICKITONGUE_LINUX
+#include "pa_linux_alsa.h"
+#endif // CLICKITONGUE_LINUX
+
 void crash(PaError err)
 {
   Pa_Terminate();
@@ -92,6 +96,10 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
   err = Pa_OpenStream(&stream_, &input_param, NULL, kFramesPerSec,
                       frames_per_cb,//.value_or(paFramesPerBufferUnspecified),
                       paClipOff, record_cb, opaque);
+#ifdef CLICKITONGUE_LINUX
+  PaAlsa_EnableRealtimeScheduling(stream_, 1);
+#endif // CLICKITONGUE_LINUX
+
   if (err != paNoError) crash(err);
   err = Pa_StartStream(stream_);
   if (err != paNoError) crash(err);

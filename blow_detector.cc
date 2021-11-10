@@ -85,6 +85,8 @@ void BlowDetector::processFourier(const fftw_complex* fft_bins)
     refrac_blocks_left_ = kRefracBlocks;
     mouse_down_ = true;
     mouse_down_at_least_one_block_ = false;
+    if (tongue_link_)
+      tongue_link_->set_suppressed_by_blow(true);
   }
   else if (avg_low < low_off_thresh_ && avg_high < high_off_thresh_)
   {
@@ -92,8 +94,12 @@ void BlowDetector::processFourier(const fftw_complex* fft_bins)
     {
       kickoffAction(action_off_);
       mouse_down_ = false;
+      if (tongue_link_)
+        tongue_link_->set_suppressed_by_blow(false);
     }
     if (refrac_blocks_left_ > 0)
       refrac_blocks_left_--;
   }
 }
+
+void BlowDetector::set_tongue_link(TongueDetector* val) { tongue_link_ = val; }

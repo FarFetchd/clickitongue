@@ -29,6 +29,9 @@ public:
   void processAudio(const Sample* cur_sample, int num_frames);
   void processFourier(const fftw_complex* fft_bins);
 
+  void set_wait_for_blow(bool val);
+  void set_suppressed_by_blow(bool val);
+
 private:
   const Action action_;
 
@@ -45,7 +48,16 @@ private:
   const double tongue_high_spike_level_;
 
   int refrac_blocks_left_ = 0;
-  int blocks_until_activation_ = -1;
+  int action_countdown_ = -1;
+
+  // For BlowDetector (if present) to help control this TongueDetector.
+  //
+  // wait_for_blow_ is a long-term "is it enabled".
+  // If true, we should wait a few blocks before doing our action.
+  bool wait_for_blow_ = false;
+  // suppressed_by_blow_ is a moment-to-moment "is the thing happening".
+  // While true, we should cancel any pending action, and not start any new ones.
+  bool suppressed_by_blow_ = false;
 
   // only needs to be kept up to date if you plan to use RecordCurFrame
   int cur_frame_ = 0;

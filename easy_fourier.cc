@@ -86,7 +86,7 @@ void EasyFourier::printEqualizerAlreadyFreq(fftw_complex* freq_buckets) const
   {
     int y = kMaxHeight - height;
     for (int x = 0; x < kFourierBlocksize / 2; x++)
-      if (fabs(freq_buckets[x][0]) > height)
+      if (freq_buckets[x+1][0]*freq_buckets[x+1][0] + freq_buckets[x+1][1]*freq_buckets[x+1][1] > 2*height)
         bars[columns * y + x] = '0';
       else
         bars[columns * y + x] = ' ';

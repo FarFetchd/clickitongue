@@ -1,9 +1,26 @@
 * get the blows and clicks to play together nicely
+****idea: keep feeding tongue examples to blow as negatives, but no longer do the reverse. instead, add logic that suppresses tongue activations when blow has recently been activated. (give tongue a few block activation delay to accommodate). eh..... tried it, seems like it's hard to get the blow detector to not trigger on tongue clicks.
+
+NEW IDEAS:
+* nose hum (works with headset, bet it wouldn't work with earbuds and especially not standalone mike) (and i THINK it's possible to filter out talking: talking will have high freq noise spikes, nose hum won't.)
+* whistle: single massive peak, low freqs should have little energy
+* blow as pink noise: every octave should have ~equal energy.
+
+
+
+
+back-to-basics note on FFT/DFT: ok, so the FFT outputs are spooky complex numbers. i knew that. apparently what you're ACTUALLY supposed to do with them, to get the power present in each freq bin, is to square the magnitude of each, i.e. real_part^2 + imag_part_coeff^2.
+*****the distributor should do this.
+*****search for all fabs().
+
+
+
 * make windows exe+dll+data release package (and keep updated)
 * handle the double keypress in training
 * polished, easy to follow training instructions
 
 wishlist
+* tell them if training failed because they were too soft, or there was too much noise. (based on whether negative or positive examples were failing).
 * for left clicks: make a short period after the refractory period has passed more sensitive, to make double-click easier
 * support osx   https://stackoverflow.com/questions/2369806/simulating-mouse-clicks-on-mac-os-x-does-not-work-for-some-applications
 * easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
@@ -11,6 +28,16 @@ wishlist
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
 * translate into all languages we can get translators for
 * debian package
+
+
+
+
+
+
+# CONFIG NOTES
+
+audio profile should be "Analog Stereo Duplex"
+
 
 
 # SIM NOTES

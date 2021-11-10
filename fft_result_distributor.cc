@@ -5,7 +5,14 @@
 FFTResultDistributor::FFTResultDistributor(std::optional<BlowDetector> blow_detector,
                                            std::optional<TongueDetector> tongue_detector)
   : blow_detector_(blow_detector), tongue_detector_(tongue_detector),
-    fft_lease_(g_fourier->borrowWorker()) {}
+    fft_lease_(g_fourier->borrowWorker())
+{
+  if (blow_detector_.has_value() && tongue_detector_.has_value())
+  {
+    blow_detector_->set_tongue_link(&tongue_detector_.value());
+    tongue_detector_->set_wait_for_blow(true);
+  }
+}
 
 void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames)
 {
