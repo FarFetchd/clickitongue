@@ -8,6 +8,7 @@
 #include "cmdline_options.h"
 #include "constants.h"
 #include "easy_fourier.h"
+#include "fft_result_distributor.h"
 #include "interaction.h"
 #include "tongue_detector.h"
 #include "train_blow.h"
@@ -19,104 +20,6 @@ void crash(const char* s)
 {
   fprintf(stderr, "%s\n", s);
   exit(1);
-}
-
-std::thread spawnBlowDetector(
-    BlockingQueue<Action>* action_queue, Action action_on, Action action_off,
-    double lowpass_percent, double highpass_percent, double low_on_thresh,
-    double low_off_thresh, double high_on_thresh, double high_off_thresh,
-    double high_spike_frac, double high_spike_level)
-{
-  return std::thread([=]()
-  {
-    BlowDetector clicker(action_queue, action_on, action_off, lowpass_percent,
-                         highpass_percent, low_on_thresh, low_off_thresh,
-                         high_on_thresh, high_off_thresh, high_spike_frac,
-                         high_spike_level);
-    AudioInput audio_input(blowDetectorCallback, &clicker, kFourierBlocksize);
-    while (audio_input.active())
-      Pa_Sleep(500);
-  });
-}
-
-std::thread spawnTongueDetector(
-    BlockingQueue<Action>* action_queue, Action action, double tongue_low_hz,
-    double tongue_high_hz, double tongue_hzenergy_high,
-    double tongue_hzenergy_low, double tongue_min_spikes_freq_frac,
-    double tongue_high_spike_frac, double tongue_high_spike_level)
-{
-  return std::thread([=]()
-  {
-    TongueDetector clicker(action_queue, action, tongue_low_hz, tongue_high_hz,
-                           tongue_hzenergy_high, tongue_hzenergy_low,
-                           tongue_min_spikes_freq_frac, tongue_high_spike_frac,
-                           tongue_high_spike_level);
-    AudioInput audio_input(tongueDetectorCallback, &clicker, kFourierBlocksize);
-    while (audio_input.active())
-      Pa_Sleep(500);
-  });
-}
-
-void useMain(ClickitongueCmdlineOpts opts)
-{
-  BlockingQueue<Action> action_queue;
-  ActionDispatcher action_dispatcher(&action_queue);
-  std::thread action_dispatch(actionDispatch, &action_dispatcher);
-
-  std::string detector = opts.detector.value();
-  if (detector == "blow")
-  {
-    if (!opts.lowpass_percent.has_value())
-      crash("--detector=blow requires a value for --lowpass_percent.");
-    if (!opts.highpass_percent.has_value())
-      crash("--detector=blow requires a value for --highpass_percent.");
-    if (!opts.low_on_thresh.has_value())
-      crash("--detector=blow requires a value for --low_on_thresh.");
-    if (!opts.low_off_thresh.has_value())
-      crash("--detector=blow requires a value for --low_off_thresh.");
-    if (!opts.high_on_thresh.has_value())
-      crash("--detector=blow requires a value for --high_on_thresh.");
-    if (!opts.high_off_thresh.has_value())
-      crash("--detector=blow requires a value for --high_off_thresh.");
-    if (!opts.high_spike_frac.has_value())
-      crash("--detector=blow requires a value for --high_spike_frac.");
-    if (!opts.high_spike_level.has_value())
-      crash("--detector=blow requires a value for --high_spike_level.");
-
-    std::thread blow_thread = spawnBlowDetector(
-        &action_queue, Action::LeftDown, Action::LeftUp,
-        opts.lowpass_percent.value(), opts.highpass_percent.value(),
-        opts.low_on_thresh.value(), opts.low_off_thresh.value(),
-        opts.high_on_thresh.value(), opts.high_off_thresh.value(),
-        opts.high_spike_frac.value(), opts.high_spike_level.value());
-    blow_thread.join();
-  }
-  else if (detector == "tongue")
-  {
-    if (!opts.tongue_low_hz.has_value())
-      crash("--detector=tongue requires a value for --tongue_low_hz.");
-    if (!opts.tongue_high_hz.has_value())
-      crash("--detector=tongue requires a value for --tongue_high_hz.");
-    if (!opts.tongue_hzenergy_high.has_value())
-      crash("--detector=tongue requires a value for --tongue_hzenergy_high.");
-    if (!opts.tongue_hzenergy_low.has_value())
-      crash("--detector=tongue requires a value for --tongue_hzenergy_low.");
-    if (!opts.tongue_min_spikes_freq_frac.has_value())
-      crash("--detector=tongue requires a value for --tongue_min_spikes_freq_frac.");
-    if (!opts.tongue_high_spike_frac.has_value())
-      crash("--detector=tongue requires a value for --tongue_high_spike_frac.");
-    if (!opts.tongue_high_spike_level.has_value())
-      crash("--detector=tongue requires a value for --tongue_high_spike_level.");
-
-    std::thread tongue_thread = spawnTongueDetector(
-        &action_queue, Action::ClickLeft, opts.tongue_low_hz.value(),
-        opts.tongue_high_hz.value(), opts.tongue_hzenergy_high.value(),
-        opts.tongue_hzenergy_low.value(), opts.tongue_min_spikes_freq_frac.value(),
-        opts.tongue_high_spike_frac.value(), opts.tongue_high_spike_level.value());
-    tongue_thread.join();
-  }
-  action_dispatcher.shutdown();
-  action_dispatch.join();
 }
 
 int equalizerCallback(const void* inputBuffer, void* outputBuffer,
@@ -133,30 +36,19 @@ int equalizerCallback(const void* inputBuffer, void* outputBuffer,
   return paContinue;
 }
 
-const char kBadDetectorOpt[] = "Must specify --detector=blow or tongue.";
-
 void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 {
   if (!opts.mode.has_value())
     return;
   std::string mode = opts.mode.value();
-  if (mode != "train" && mode != "use" && mode != "record" &&
-      mode != "play" && mode != "equalizer")
+  if (mode != "record" && mode != "play" && mode != "equalizer")
   {
     crash("Invalid --mode= value. Must specify --mode=train, use, record,"
           "play, or equalizer. (Or not specify it).");
   }
 
-  if (mode == "train" || mode == "use")
-  {
-    if (!opts.detector.has_value())
-      crash(kBadDetectorOpt);
-    if (opts.detector.value() != "blow" && opts.detector.value() != "tongue")
-      crash(kBadDetectorOpt);
-  }
-  else if (mode == "record" || mode == "play")
-    if (!opts.filename.has_value())
-      crash("Must specify a --filename=");
+  if (mode == "record" || (mode == "play" && !opts.filename.has_value()))
+    crash("Must specify a --filename=");
 }
 
 void normalOperation(Config config)
@@ -171,34 +63,37 @@ void normalOperation(Config config)
   ActionDispatcher action_dispatcher(&action_queue);
   std::thread action_dispatch(actionDispatch, &action_dispatcher);
 
-  std::thread blow_thread;
   if (config.blow.enabled)
-  {
     printf("spawning blow detector for left clicks\n");
-    blow_thread = spawnBlowDetector(
-        &action_queue, config.blow.action_on, config.blow.action_off,
-        config.blow.lowpass_percent, config.blow.highpass_percent,
-        config.blow.low_on_thresh, config.blow.low_off_thresh,
-        config.blow.high_on_thresh, config.blow.high_off_thresh,
-        config.blow.high_spike_frac, config.blow.high_spike_level);
-  }
-  std::thread tongue_thread;
   if (config.tongue.enabled)
   {
     printf("spawning tongue detector for %s clicks\n",
            config.tongue.action == Action::ClickRight ? "right" : "left");
-    tongue_thread = spawnTongueDetector(
-        &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
-        config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
-        config.tongue.tongue_hzenergy_low, config.tongue.tongue_min_spikes_freq_frac,
-        config.tongue.tongue_high_spike_frac, config.tongue.tongue_high_spike_level);
   }
   printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
-  if (config.blow.enabled)
-    blow_thread.join();
-  if (config.tongue.enabled)
-    tongue_thread.join();
+  FFTResultDistributor fft_distributor(
+      config.blow.enabled
+      ? BlowDetector(
+          &action_queue, config.blow.action_on, config.blow.action_off,
+          config.blow.lowpass_percent, config.blow.highpass_percent,
+          config.blow.low_on_thresh, config.blow.low_off_thresh,
+          config.blow.high_on_thresh, config.blow.high_off_thresh,
+          config.blow.high_spike_frac, config.blow.high_spike_level)
+      : std::optional<BlowDetector>(std::nullopt),
+
+      config.tongue.enabled
+      ? TongueDetector(
+          &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
+          config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
+          config.tongue.tongue_hzenergy_low, config.tongue.tongue_min_spikes_freq_frac,
+          config.tongue.tongue_high_spike_frac, config.tongue.tongue_high_spike_level)
+      : std::optional<TongueDetector>(std::nullopt));
+
+  AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
+  while (audio_input.active())
+    Pa_Sleep(500);
+
   action_dispatcher.shutdown();
   action_dispatch.join();
 }
@@ -259,10 +154,10 @@ void firstTimeTrain()
 
   Config config;
   if (try_blows)
-    config.blow = trainBlow(blow_examples_plus_neg);
+    config.blow = trainBlow(blow_examples_plus_neg, true);
   Action tongue_action = config.blow.enabled ? Action::ClickRight
                                              : Action::ClickLeft;
-  config.tongue = trainTongue(tongue_examples_plus_neg, tongue_action);
+  config.tongue = trainTongue(tongue_examples_plus_neg, tongue_action, true);
 
   if (config.blow.enabled && config.tongue.enabled)
   {
@@ -350,12 +245,6 @@ int main(int argc, char** argv)
       while (audio_input.active())
         Pa_Sleep(500);
     }
-    else if (opts.mode.value() == "use")
-      useMain(opts);
-//     else if (opts.mode.value() == "train" && opts.detector.value() == "blow")
-//       trainBlow(/*verbose=*/true);
-//     else if (opts.mode.value() == "train" && opts.detector.value() == "tongue")
-//       trainTongue(Action::ClickLeft, /*verbose=*/true);
   }
   else
     defaultMain();

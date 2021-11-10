@@ -41,11 +41,6 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
 
 void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
 {
-  if (num_frames != kFourierBlocksize)
-  {
-    printf("illegal num_frames: expected %d, got %d\n", kFourierBlocksize, num_frames);
-    exit(1);
-  }
   if (track_cur_frame_)
     cur_frame_ += kFourierBlocksize;
 
@@ -53,20 +48,16 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
   for (int i=0; i<kFourierBlocksize; i++)
     lease.in[i] = cur_sample[i * kNumChannels];
   lease.runFFT();
+  processFourier(lease.out);
+}
 
-  // TODO trim
-//   static int print_once_per_10ms_chunks = 0;
-//   if (++print_once_per_10ms_chunks == 20)
-//   {
-//     g_fourier.printEqualizerAlreadyFreq(lease.out);
-//     print_once_per_10ms_chunks=0;
-//   }
-
+void BlowDetector::processFourier(const fftw_complex* fft_bins)
+{
   const int num_buckets = kFourierBlocksize / 2 + 1;
   int last_low_bucket = round(lowpass_percent_ * num_buckets);
   double avg_low = 0;
   for (int i = 1; i <= last_low_bucket; i++)
-    avg_low += fabs(lease.out[i][0]);
+    avg_low += fabs(fft_bins[i][0]);
   avg_low /= (double)(last_low_bucket + 1);
 
   int first_high_bucket = round(highpass_percent_ * num_buckets);
@@ -74,7 +65,7 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
   int spike_count = 0;
   for (int i = first_high_bucket; i < num_buckets; i++)
   {
-    double val = fabs(lease.out[i][0]);
+    double val = fabs(fft_bins[i][0]);
     avg_high += val;
     if (val > high_spike_level_)
       spike_count++;
@@ -105,16 +96,4 @@ void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
     if (refrac_blocks_left_ > 0)
       refrac_blocks_left_--;
   }
-}
-
-int blowDetectorCallback(const void* inputBuffer, void* outputBuffer,
-                         unsigned long framesPerBuffer,
-                         const PaStreamCallbackTimeInfo* timeInfo,
-                         PaStreamCallbackFlags statusFlags, void* userData)
-{
-  BlowDetector* detector = static_cast<BlowDetector*>(userData);
-  const Sample* rptr = static_cast<const Sample*>(inputBuffer);
-  if (inputBuffer != NULL)
-    detector->processAudio(rptr, framesPerBuffer);
-  return paContinue;
 }

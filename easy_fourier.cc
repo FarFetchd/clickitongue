@@ -17,12 +17,8 @@ double* makeBinFreqs(int blocksize, double bin_width)
   return bin_freq;
 }
 
-EasyFourier::EasyFourier(int blocksize)
-  : blocksize_(blocksize), bin_width_(kNyquist / ((double)(blocksize_ / 2 + 1))),
-    half_width_(bin_width_ / 2.0), bin_freq_(makeBinFreqs(blocksize_, bin_width_))
+void loadOrCreateWisdom(int blocksize)
 {
-  // (have to load / create wisdom BEFORE creating FourierWorkers, or else the
-  //  workers won't benefit from the wisdom).
   std::string wisdom_path = getAndEnsureConfigDir() + "1d_blocksize" +
                             std::to_string(blocksize)+"_real_to_complex.fftw_wisdom";
   if (!fftw_import_wisdom_from_filename(wisdom_path.c_str()))
@@ -40,6 +36,15 @@ EasyFourier::EasyFourier(int blocksize)
     fftw_free(out);
     fftw_destroy_plan(fft_plan);
   }
+}
+
+EasyFourier::EasyFourier(int blocksize)
+  : blocksize_(blocksize), bin_width_(kNyquist / ((double)(blocksize_ / 2 + 1))),
+    half_width_(bin_width_ / 2.0), bin_freq_(makeBinFreqs(blocksize_, bin_width_))
+{
+  // (have to load / create wisdom BEFORE creating FourierWorkers, or else the
+  //  workers won't benefit from the wisdom).
+  loadOrCreateWisdom(blocksize_);
 
   unsigned int num_threads = std::thread::hardware_concurrency();
   if (num_threads == 0)

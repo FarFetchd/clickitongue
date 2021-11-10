@@ -45,11 +45,6 @@ TongueDetector::TongueDetector(BlockingQueue<Action>* action_queue, Action actio
 
 void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
 {
-  if (num_frames != kFourierBlocksize)
-  {
-    printf("illegal num_frames: expected %d, got %d\n", kFourierBlocksize, num_frames);
-    exit(1);
-  }
   if (track_cur_frame_)
     cur_frame_ += num_frames;
 
@@ -57,7 +52,11 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
   for (int i=0; i<kFourierBlocksize; i++)
     lease.in[i] = cur_sample[i * kNumChannels];
   lease.runFFT();
+  processFourier(lease.out);
+}
 
+void TongueDetector::processFourier(const fftw_complex* fft_bins)
+{
   int bin_ind = 1;
   while (tongue_low_hz_ > g_fourier->freqOfBin(bin_ind) + g_fourier->halfWidth())
     bin_ind++;
@@ -68,22 +67,11 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
 
   double energy = 0;
   for (int i = low_bin_ind + 1; i < high_bin_ind; i++)
-    energy += g_fourier->binWidth() * fabs(lease.out[i][0]);
+    energy += g_fourier->binWidth() * fabs(fft_bins[i][0]);
   energy += (g_fourier->freqOfBin(low_bin_ind) + g_fourier->halfWidth() - tongue_low_hz_)
-            * fabs(lease.out[low_bin_ind][0]);
+            * fabs(fft_bins[low_bin_ind][0]);
   energy += (tongue_high_hz_ - (g_fourier->freqOfBin(high_bin_ind) - g_fourier->halfWidth()))
-            * fabs(lease.out[high_bin_ind][0]);
-
-            // TODO trim
-//  static int print_once_per_10ms_chunks = 0;
-//  if (++print_once_per_10ms_chunks == 4)
-//   {
-//     if (energy > 200)
-//       printf("%g\n", energy > 500 ? energy : 0);
-//    g_fourier->printEqualizerAlreadyFreq(lease.out);
-//    g_fourier->printMaxBucket(cur_sample);
-//     print_once_per_10ms_chunks=0;
-//   }
+            * fabs(fft_bins[high_bin_ind][0]);
 
   const int num_buckets = kFourierBlocksize / 2 + 1;
   int first_high_bucket = round(tongue_min_spikes_freq_frac_ * num_buckets);
@@ -91,7 +79,7 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
   int spike_count = 0;
   for (int i = first_high_bucket; i < num_buckets; i++)
   {
-    double val = fabs(lease.out[i][0]);
+    double val = fabs(fft_bins[i][0]);
     avg_high += val;
     if (val > tongue_high_spike_level_)
       spike_count++;
@@ -119,16 +107,4 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
     kickoffAction(action_);
     refrac_blocks_left_ = kRefracBlocks;
   }
-}
-
-int tongueDetectorCallback(const void* inputBuffer, void* outputBuffer,
-                           unsigned long framesPerBuffer,
-                           const PaStreamCallbackTimeInfo* timeInfo,
-                           PaStreamCallbackFlags statusFlags, void* userData)
-{
-  TongueDetector* detector = static_cast<TongueDetector*>(userData);
-  const Sample* rptr = static_cast<const Sample*>(inputBuffer);
-  if (inputBuffer != NULL)
-    detector->processAudio(rptr, framesPerBuffer);
-  return paContinue;
 }

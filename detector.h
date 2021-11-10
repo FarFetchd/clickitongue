@@ -7,7 +7,10 @@
 class Detector
 {
 public:
-  virtual void processAudio(const Sample* cur_sample, int num_frames) = 0;
+// I ended up not actually using this polymorphism, so let's drop it unless
+// ever needed.
+//   virtual void processAudio(const Sample* cur_sample, int num_frames) = 0;
+//   virtual void processFourier(const fftw_complex* fft_bins) = 0;
   Detector() = delete;
 
 protected:

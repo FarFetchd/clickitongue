@@ -1,8 +1,6 @@
 #ifndef CLICKITONGUE_TONGUE_DETECTOR_H_
 #define CLICKITONGUE_TONGUE_DETECTOR_H_
 
-#include "portaudio.h"
-
 #include "constants.h"
 #include "detector.h"
 #include "easy_fourier.h"
@@ -28,7 +26,8 @@ public:
                  double tongue_high_spike_frac,
                  double tongue_high_spike_level);
 
-  void processAudio(const Sample* cur_sample, int num_frames) override;
+  void processAudio(const Sample* cur_sample, int num_frames);
+  void processFourier(const fftw_complex* fft_bins);
 
 private:
   const Action action_;
@@ -52,10 +51,5 @@ private:
   int cur_frame_ = 0;
   bool track_cur_frame_ = false;
 };
-
-int tongueDetectorCallback(const void* inputBuffer, void* outputBuffer,
-                           unsigned long framesPerBuffer,
-                           const PaStreamCallbackTimeInfo* timeInfo,
-                           PaStreamCallbackFlags statusFlags, void* userData);
 
 #endif // CLICKITONGUE_TONGUE_DETECTOR_H_

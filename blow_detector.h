@@ -1,8 +1,6 @@
 #ifndef CLICKITONGUE_BLOW_DETECTOR_H_
 #define CLICKITONGUE_BLOW_DETECTOR_H_
 
-#include "portaudio.h"
-
 #include "constants.h"
 #include "detector.h"
 #include "easy_fourier.h"
@@ -27,7 +25,8 @@ public:
                double high_on_thresh, double high_off_thresh,
                double high_spike_frac, double high_spike_level);
 
-  void processAudio(const Sample* cur_sample, int num_frames) override;
+  void processAudio(const Sample* cur_sample, int num_frames);
+  void processFourier(const fftw_complex* fft_bins);
 
 private:
   // action to be done when detector decides a blow has started...
@@ -62,10 +61,5 @@ private:
 
   int refrac_blocks_left_ = 0;
 };
-
-int blowDetectorCallback(const void* inputBuffer, void* outputBuffer,
-                         unsigned long framesPerBuffer,
-                         const PaStreamCallbackTimeInfo* timeInfo,
-                         PaStreamCallbackFlags statusFlags, void* userData);
 
 #endif // CLICKITONGUE_BLOW_DETECTOR_H_
