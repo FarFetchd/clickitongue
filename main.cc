@@ -225,7 +225,7 @@ int main(int argc, char** argv)
   ClickitongueCmdlineOpts opts =
       structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
   validateCmdlineOpts(opts);
-  g_fourier = new EasyFourier(kFourierBlocksize);
+  g_fourier = new EasyFourier();
 
   if (opts.mode.has_value())
   {

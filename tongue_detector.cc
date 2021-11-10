@@ -58,19 +58,19 @@ void TongueDetector::processAudio(const Sample* cur_sample, int num_frames)
 void TongueDetector::processFourier(const fftw_complex* fft_bins)
 {
   int bin_ind = 1;
-  while (tongue_low_hz_ > g_fourier->freqOfBin(bin_ind) + g_fourier->halfWidth())
+  while (tongue_low_hz_ > g_fourier->freqOfBin(bin_ind) + kBinWidth/2.0)
     bin_ind++;
   int low_bin_ind = bin_ind;
-  while (tongue_high_hz_ < g_fourier->freqOfBin(bin_ind) - g_fourier->halfWidth())
+  while (tongue_high_hz_ < g_fourier->freqOfBin(bin_ind) - kBinWidth/2.0)
     bin_ind++;
   int high_bin_ind = bin_ind;
 
   double energy = 0;
   for (int i = low_bin_ind + 1; i < high_bin_ind; i++)
-    energy += g_fourier->binWidth() * fabs(fft_bins[i][0]);
-  energy += (g_fourier->freqOfBin(low_bin_ind) + g_fourier->halfWidth() - tongue_low_hz_)
+    energy += kBinWidth * fabs(fft_bins[i][0]);
+  energy += (g_fourier->freqOfBin(low_bin_ind) + kBinWidth/2.0 - tongue_low_hz_)
             * fabs(fft_bins[low_bin_ind][0]);
-  energy += (tongue_high_hz_ - (g_fourier->freqOfBin(high_bin_ind) - g_fourier->halfWidth()))
+  energy += (tongue_high_hz_ - (g_fourier->freqOfBin(high_bin_ind) - kBinWidth/2.0))
             * fabs(fft_bins[high_bin_ind][0]);
 
   const int num_buckets = kFourierBlocksize / 2 + 1;

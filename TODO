@@ -1,6 +1,6 @@
 * make windows exe+dll+data release package (and keep updated)
 * handle the double keypress in training
-* EasyFourier could use the blocksize constant (and make some of its properties constant)
+* polished, easy to follow training instructions
 
 wishlist
 * for left clicks: make a short period after the refractory period has passed more sensitive, to make double-click easier

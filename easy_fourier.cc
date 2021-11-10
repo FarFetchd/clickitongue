@@ -8,25 +8,25 @@
 
 EasyFourier* g_fourier = nullptr;
 
-double* makeBinFreqs(int blocksize, double bin_width)
+double* makeBinFreqs()
 {
-  double* bin_freq = new double[blocksize/2 + 1];
+  double* bin_freq = new double[kFourierBlocksize/2 + 1];
   bin_freq[0] = 0;
-  for (int i = 1; i < blocksize / 2 + 1; i++)
-    bin_freq[i] = bin_freq[i-1] + bin_width;
+  for (int i = 1; i < kFourierBlocksize / 2 + 1; i++)
+    bin_freq[i] = bin_freq[i-1] + kBinWidth;
   return bin_freq;
 }
 
-void loadOrCreateWisdom(int blocksize)
+void loadOrCreateWisdom()
 {
   std::string wisdom_path = getAndEnsureConfigDir() + "1d_blocksize" +
-                            std::to_string(blocksize)+"_real_to_complex.fftw_wisdom";
+                            std::to_string(kFourierBlocksize)+"_real_to_complex.fftw_wisdom";
   if (!fftw_import_wisdom_from_filename(wisdom_path.c_str()))
   {
     printf("No wisdom file found. Will now let FFTW practice a bit to learn...\n");
-    double* in = fftw_alloc_real(blocksize);
-    fftw_complex* out = fftw_alloc_complex(blocksize / 2 + 1);
-    fftw_plan fft_plan = fftw_plan_dft_r2c_1d(blocksize, in, out, FFTW_PATIENT | FFTW_DESTROY_INPUT);
+    double* in = fftw_alloc_real(kFourierBlocksize);
+    fftw_complex* out = fftw_alloc_complex(kFourierBlocksize / 2 + 1);
+    fftw_plan fft_plan = fftw_plan_dft_r2c_1d(kFourierBlocksize, in, out, FFTW_PATIENT | FFTW_DESTROY_INPUT);
     printf("Wisdom acquired. Now writing...");
     if (!fftw_export_wisdom_to_filename(wisdom_path.c_str()))
       printf("unable to write to %s\n", wisdom_path.c_str());
@@ -38,13 +38,11 @@ void loadOrCreateWisdom(int blocksize)
   }
 }
 
-EasyFourier::EasyFourier(int blocksize)
-  : blocksize_(blocksize), bin_width_(kNyquist / ((double)(blocksize_ / 2 + 1))),
-    half_width_(bin_width_ / 2.0), bin_freq_(makeBinFreqs(blocksize_, bin_width_))
+EasyFourier::EasyFourier() : bin_freq_(makeBinFreqs())
 {
   // (have to load / create wisdom BEFORE creating FourierWorkers, or else the
   //  workers won't benefit from the wisdom).
-  loadOrCreateWisdom(blocksize_);
+  loadOrCreateWisdom();
 
   unsigned int num_threads = std::thread::hardware_concurrency();
   if (num_threads == 0)
@@ -52,7 +50,7 @@ EasyFourier::EasyFourier(int blocksize)
   if (num_threads > 32) // let's not get too crazy
     num_threads = 32;
   for (int i=0; i<num_threads; i++)
-    workers_.emplace_back(std::make_unique<FourierWorker>(blocksize_));
+    workers_.emplace_back(std::make_unique<FourierWorker>());
 }
 
 EasyFourier::~EasyFourier()
@@ -68,13 +66,11 @@ FourierLease EasyFourier::borrowWorker()
 }
 
 double EasyFourier::freqOfBin(int index) const { return bin_freq_[index]; }
-double EasyFourier::binWidth() const { return bin_width_; }
-double EasyFourier::halfWidth() const { return half_width_; }
 
 void EasyFourier::printEqualizer(const float* samples)
 {
   FourierLease lease = borrowWorker();
-  for (int i=0; i<blocksize_; i++)
+  for (int i=0; i<kFourierBlocksize; i++)
     lease.in[i] = samples[i * kNumChannels];
   lease.runFFT();
 
@@ -84,17 +80,17 @@ void EasyFourier::printEqualizer(const float* samples)
 void EasyFourier::printEqualizerAlreadyFreq(fftw_complex* freq_buckets) const
 {
   constexpr int kMaxHeight = 50;
-  const int columns = blocksize_ / 2 + 1; // including \n char at end
+  const int columns = kFourierBlocksize / 2 + 1; // including \n char at end
   char bars[columns * kMaxHeight + 1];
   for (int height = kMaxHeight; height > 0; height--)
   {
     int y = kMaxHeight - height;
-    for (int x = 0; x < blocksize_ / 2; x++)
+    for (int x = 0; x < kFourierBlocksize / 2; x++)
       if (fabs(freq_buckets[x][0]) > height)
         bars[columns * y + x] = '0';
       else
         bars[columns * y + x] = ' ';
-    bars[columns * y + blocksize_ / 2] = '\n';
+    bars[columns * y + kFourierBlocksize / 2] = '\n';
   }
   printf("\e[1;1H\e[2J");
   bars[columns * kMaxHeight] = 0;
@@ -104,13 +100,13 @@ void EasyFourier::printEqualizerAlreadyFreq(fftw_complex* freq_buckets) const
 void EasyFourier::printMaxBucket(const float* samples)
 {
   FourierLease lease = borrowWorker();
-  for (int i=0; i<blocksize_; i++)
+  for (int i=0; i<kFourierBlocksize; i++)
     lease.in[i] = samples[i * kNumChannels];
   lease.runFFT();
 
   double max = 0;
   int max_ind = 0;
-  for (int i = 0; i < blocksize_ / 2 + 1; i++)
+  for (int i = 0; i < kFourierBlocksize / 2 + 1; i++)
   {
     if (fabs(lease.out[i][0]) > max)
     {
@@ -118,11 +114,9 @@ void EasyFourier::printMaxBucket(const float* samples)
       max_ind = i;
     }
   }
-  float fraction = (float)max_ind / (float)(blocksize_ / 2 + 1);
+  float fraction = (float)max_ind / (float)(kFourierBlocksize / 2 + 1);
   printf("%g: %g\n", fraction * kNyquist, max);
 }
-
-int EasyFourier::blocksize() const { return blocksize_; }
 
 int EasyFourier::pickAndLockWorker()
 {
@@ -140,10 +134,10 @@ void EasyFourier::releaseWorker(int id)
   workers_[id]->mutex.unlock();
 }
 
-EasyFourier::FourierWorker::FourierWorker(int blocksize)
-  : in(fftw_alloc_real(blocksize)),
-    out(fftw_alloc_complex(blocksize / 2 + 1)),
-    fft_plan(fftw_plan_dft_r2c_1d(blocksize, in, out, FFTW_PATIENT | FFTW_DESTROY_INPUT))
+EasyFourier::FourierWorker::FourierWorker()
+  : in(fftw_alloc_real(kFourierBlocksize)),
+    out(fftw_alloc_complex(kFourierBlocksize / 2 + 1)),
+    fft_plan(fftw_plan_dft_r2c_1d(kFourierBlocksize, in, out, FFTW_PATIENT | FFTW_DESTROY_INPUT))
 {}
 
 EasyFourier::FourierWorker::~FourierWorker()
