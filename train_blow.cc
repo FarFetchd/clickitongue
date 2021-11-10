@@ -39,15 +39,13 @@ public:
 
     // the first (i.e. noiseless) example set is the most important, even
     // more important than sum of violations across all examples.
-    if (l.score[0] < r.score[0])
-        return true;
+    if (l.score[0] != r.score[0])
+      return l.score[0] < r.score[0];
 
     int l_sum = std::accumulate(l.score.begin(), l.score.end(), 0);
     int r_sum = std::accumulate(r.score.begin(), r.score.end(), 0);
-    if (l_sum < r_sum)
-      return true;
-    else if (l_sum > r_sum)
-      return false;
+    if (l_sum != r_sum)
+      return l_sum < r_sum;
 
     for (int i=1; i<l.score.size(); i++)
       if (l.score[i] < r.score[i])
@@ -89,7 +87,7 @@ public:
     }
   }
   // (score)
-  std::string toString()
+  std::string toString() const
   {
     std::string ret = "{";
     for (int x : score)
@@ -254,7 +252,7 @@ public:
     {
       std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
       for (auto& x : examples)
-        x.first.scale(0.5);
+        x.first.scale(0.75);
       examples_sets_.push_back(examples);
     }
   }
