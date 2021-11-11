@@ -5,9 +5,8 @@
 
 #include "portaudio.h"
 
-#include "blow_detector.h"
+#include "detector.h"
 #include "easy_fourier.h"
-#include "tongue_detector.h"
 #include "constants.h"
 
 // PortAudio has, through a callback, given us a block of samples. Do a single

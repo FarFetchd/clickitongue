@@ -7,6 +7,7 @@
 
 #include "audio_recording.h"
 #include "blow_detector.h"
+#include "fft_result_distributor.h"
 #include "interaction.h"
 
 namespace {
@@ -57,15 +58,19 @@ public:
   int detectEvents(std::vector<Sample> const& samples)
   {
     std::vector<int> event_frames;
-    BlowDetector detector(nullptr, lowpass_percent, highpass_percent,
-                          low_on_thresh, low_off_thresh, high_on_thresh,
-                          high_off_thresh, high_spike_frac, high_spike_level,
-                          &event_frames);
+    std::vector<std::unique_ptr<Detector>> just_one_detector;
+    just_one_detector.emplace_back(std::make_unique<BlowDetector>(
+        nullptr, lowpass_percent, highpass_percent, low_on_thresh,
+        low_off_thresh, high_on_thresh, high_off_thresh, high_spike_frac,
+        high_spike_level, &event_frames));
+
+    FFTResultDistributor wrapper(std::move(just_one_detector));
+
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * kNumChannels < samples.size();
          sample_ind += kFourierBlocksize * kNumChannels)
     {
-      detector.processAudio(samples.data() + sample_ind, kFourierBlocksize);
+      wrapper.processAudio(samples.data() + sample_ind, kFourierBlocksize);
     }
     return event_frames.size();
   }

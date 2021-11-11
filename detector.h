@@ -8,8 +8,6 @@
 class Detector
 {
 public:
-  void processAudio(const Sample* cur_sample, int num_frames);
-
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
   // each i is expected to be the squared magnitude (i.e. real^2 + imag_coeff^2)
   // of the original complex number output at bin i.

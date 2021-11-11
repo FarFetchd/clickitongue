@@ -4,17 +4,6 @@ Detector::Detector(BlockingQueue<Action>* action_queue,
                    std::vector<int>* cur_frame_dest)
   : action_queue_(action_queue), cur_frame_dest_(cur_frame_dest) {}
 
-void Detector::processAudio(const Sample* cur_sample, int num_frames)
-{
-  FourierLease lease = g_fourier->borrowWorker();
-  for (int i=0; i<kFourierBlocksize; i++)
-    lease.in[i] = cur_sample[i * kNumChannels];
-  lease.runFFT();
-  for (int i=0; i<kFourierBlocksize / 2 + 1; i++)
-    lease.out[i][0] = lease.out[i][0]*lease.out[i][0] + lease.out[i][1]*lease.out[i][1];
-  markFrameAndProcessFourier(lease.out);
-}
-
 void Detector::markFrameAndProcessFourier(const fftw_complex* freq_power)
 {
   cur_frame_ += kFourierBlocksize;

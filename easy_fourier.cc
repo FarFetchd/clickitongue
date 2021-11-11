@@ -1,6 +1,5 @@
 #include "easy_fourier.h"
 
-#include <cmath>
 #include <thread>
 
 #include "config_io.h"
@@ -116,13 +115,13 @@ void EasyFourier::printMaxBucket(const float* samples)
 
 int EasyFourier::pickAndLockWorker()
 {
-  for (int i=0; i<workers_.size(); i++)
-    if (workers_[i]->mutex.try_lock())
-      return i;
-
-  int random_await_index = rand() % workers_.size();
-  workers_[random_await_index]->mutex.lock();
-  return random_await_index;
+  while (true)
+  {
+    for (int i=0; i<workers_.size(); i++)
+      if (workers_[i]->mutex.try_lock())
+        return i;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
 }
 
 void EasyFourier::releaseWorker(int id)
