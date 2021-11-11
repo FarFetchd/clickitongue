@@ -9,11 +9,6 @@ NEW IDEAS:
 
 
 
-back-to-basics note on FFT/DFT: ok, so the FFT outputs are spooky complex numbers. i knew that. apparently what you're ACTUALLY supposed to do with them, to get the power present in each freq bin, is to square the magnitude of each, i.e. real_part^2 + imag_part_coeff^2.
-*****the distributor should do this.
-*****search for all fabs().
-
-
 
 * make windows exe+dll+data release package (and keep updated)
 * handle the double keypress in training

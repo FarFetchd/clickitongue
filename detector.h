@@ -3,27 +3,38 @@
 
 #include "blocking_queue.h"
 #include "constants.h"
+#include "easy_fourier.h"
 
 class Detector
 {
 public:
-// I ended up not actually using this polymorphism, so let's drop it unless
-// ever needed.
-//   virtual void processAudio(const Sample* cur_sample, int num_frames) = 0;
-//   virtual void processFourier(const fftw_complex* fft_bins) = 0;
+  void processAudio(const Sample* cur_sample, int num_frames);
+
+  // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
+  // each i is expected to be the squared magnitude (i.e. real^2 + imag_coeff^2)
+  // of the original complex number output at bin i.
+  // The imaginary coefficient (array index 1) is left untouched - although
+  // you're likely not at all interested in it.
+  void markFrameAndProcessFourier(const fftw_complex* freq_power);
+
   Detector() = delete;
 
 protected:
-  Detector(BlockingQueue<Action>* action_queue);
+  Detector(BlockingQueue<Action>* action_queue,
+           std::vector<int>* cur_frame_dest = nullptr);
   void kickoffAction(Action action);
 
-  void setCurFrameSource(int* src);
-  void setCurFrameDest(std::vector<int>* dest);
+  // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
+  // each i is expected to be the squared magnitude (i.e. real^2 + imag_coeff^2)
+  // of the original complex number output at bin i.
+  // The imaginary coefficient (array index 1) is left untouched - although
+  // you're likely not at all interested in it.
+  virtual void processFourier(const fftw_complex* freq_power) = 0;
 
 private:
-  std::vector<int>* cur_frame_dest_ = nullptr;
-  int* cur_frame_src_ = nullptr;
   BlockingQueue<Action>* action_queue_ = nullptr;
+  int cur_frame_ = 0;
+  std::vector<int>* cur_frame_dest_ = nullptr;
 };
 
 #endif // CLICKITONGUE_DETECTOR_H_

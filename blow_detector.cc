@@ -11,17 +11,13 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double high_on_thresh, double high_off_thresh,
                            double high_spike_frac, double high_spike_level,
                            std::vector<int>* cur_frame_dest)
-  : Detector(action_queue),
+  : Detector(action_queue, cur_frame_dest),
     action_on_(Action::RecordCurFrame), action_off_(Action::NoAction),
     lowpass_percent_(lowpass_percent), highpass_percent_(highpass_percent),
     low_on_thresh_(low_on_thresh), low_off_thresh_(low_off_thresh),
     high_on_thresh_(high_on_thresh), high_off_thresh_(high_off_thresh),
     high_spike_frac_(high_spike_frac), high_spike_level_(high_spike_level)
-{
-  setCurFrameDest(cur_frame_dest);
-  setCurFrameSource(&cur_frame_);
-  track_cur_frame_ = true;
-}
+{}
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            Action action_on, Action action_off,
@@ -39,25 +35,13 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
   assert(action_off_ != Action::RecordCurFrame);
 }
 
-void BlowDetector::processAudio(const Sample* cur_sample, int num_frames)
-{
-  if (track_cur_frame_)
-    cur_frame_ += kFourierBlocksize;
-
-  FourierLease lease = g_fourier->borrowWorker();
-  for (int i=0; i<kFourierBlocksize; i++)
-    lease.in[i] = cur_sample[i * kNumChannels];
-  lease.runFFT();
-  processFourier(lease.out);
-}
-
-void BlowDetector::processFourier(const fftw_complex* fft_bins)
+void BlowDetector::processFourier(const fftw_complex* freq_power)
 {
   const int num_buckets = kFourierBlocksize / 2 + 1;
   int last_low_bucket = round(lowpass_percent_ * num_buckets);
   double avg_low = 0;
   for (int i = 1; i <= last_low_bucket; i++)
-    avg_low += fabs(fft_bins[i][0]);
+    avg_low += freq_power[i][0];
   avg_low /= (double)(last_low_bucket + 1);
 
   int first_high_bucket = round(highpass_percent_ * num_buckets);
@@ -65,7 +49,7 @@ void BlowDetector::processFourier(const fftw_complex* fft_bins)
   int spike_count = 0;
   for (int i = first_high_bucket; i < num_buckets; i++)
   {
-    double val = fabs(fft_bins[i][0]);
+    double val = freq_power[i][0];
     avg_high += val;
     if (val > high_spike_level_)
       spike_count++;

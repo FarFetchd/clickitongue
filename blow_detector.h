@@ -26,10 +26,15 @@ public:
                double high_on_thresh, double high_off_thresh,
                double high_spike_frac, double high_spike_level);
 
-  void processAudio(const Sample* cur_sample, int num_frames);
-  void processFourier(const fftw_complex* fft_bins);
-
   void set_tongue_link(TongueDetector* val);
+
+protected:
+  // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
+  // each i is expected to be the squared magnitude (i.e. real^2 + imag_coeff^2)
+  // of the original complex number output at bin i.
+  // The imaginary coefficient (array index 1) is left untouched - although
+  // you're likely not at all interested in it.
+  void processFourier(const fftw_complex* freq_power);
 
 private:
   // action to be done when detector decides a blow has started...
@@ -60,10 +65,6 @@ private:
 
   // for coordinating with tongue detector (if it exists) by suppressing it
   TongueDetector* tongue_link_ = nullptr;
-
-  // only needs to be kept up to date if you plan to use RecordCurFrame
-  int cur_frame_ = 0;
-  bool track_cur_frame_ = false;
 
   int refrac_blocks_left_ = 0;
 };

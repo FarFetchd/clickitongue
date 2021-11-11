@@ -72,23 +72,25 @@ void normalOperation(Config config)
   }
   printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
-  FFTResultDistributor fft_distributor(
-      config.blow.enabled
-      ? BlowDetector(
-          &action_queue, config.blow.action_on, config.blow.action_off,
-          config.blow.lowpass_percent, config.blow.highpass_percent,
-          config.blow.low_on_thresh, config.blow.low_off_thresh,
-          config.blow.high_on_thresh, config.blow.high_off_thresh,
-          config.blow.high_spike_frac, config.blow.high_spike_level)
-      : std::optional<BlowDetector>(std::nullopt),
-
-      config.tongue.enabled
-      ? TongueDetector(
-          &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
-          config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
-          config.tongue.tongue_hzenergy_low, config.tongue.tongue_min_spikes_freq_frac,
-          config.tongue.tongue_high_spike_frac, config.tongue.tongue_high_spike_level)
-      : std::optional<TongueDetector>(std::nullopt));
+  std::vector<std::unique_ptr<Detector>> detectors;
+  if (config.blow.enabled)
+  {
+    detectors.emplace_back(std::make_unique<BlowDetector>(
+        &action_queue, config.blow.action_on, config.blow.action_off,
+        config.blow.lowpass_percent, config.blow.highpass_percent,
+        config.blow.low_on_thresh, config.blow.low_off_thresh,
+        config.blow.high_on_thresh, config.blow.high_off_thresh,
+        config.blow.high_spike_frac, config.blow.high_spike_level));
+  }
+  if (config.tongue.enabled)
+  {
+    detectors.emplace_back(std::make_unique<TongueDetector>(
+        &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
+        config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
+        config.tongue.tongue_hzenergy_low, config.tongue.tongue_min_spikes_freq_frac,
+        config.tongue.tongue_high_spike_frac, config.tongue.tongue_high_spike_level));
+  }
+  FFTResultDistributor fft_distributor(std::move(detectors));
 
   AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
   while (audio_input.active())

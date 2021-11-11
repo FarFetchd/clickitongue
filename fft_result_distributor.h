@@ -15,14 +15,12 @@
 class FFTResultDistributor
 {
 public:
-  FFTResultDistributor(std::optional<BlowDetector> blow_detector,
-                       std::optional<TongueDetector> tongue_detector);
+  FFTResultDistributor(std::vector<std::unique_ptr<Detector>>&& detectors);
 
   void processAudio(const Sample* cur_sample, int num_frames);
 
 private:
-  std::optional<BlowDetector> blow_detector_;
-  std::optional<TongueDetector> tongue_detector_;
+  std::vector<std::unique_ptr<Detector>> detectors_;
   FourierLease fft_lease_;
 };
 

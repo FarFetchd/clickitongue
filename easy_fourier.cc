@@ -74,11 +74,6 @@ void EasyFourier::printEqualizer(const float* samples)
     lease.in[i] = samples[i * kNumChannels];
   lease.runFFT();
 
-  printEqualizerAlreadyFreq(lease.out);
-}
-
-void EasyFourier::printEqualizerAlreadyFreq(fftw_complex* freq_buckets) const
-{
   constexpr int kMaxHeight = 50;
   const int columns = kFourierBlocksize / 2 + 1; // including \n char at end
   char bars[columns * kMaxHeight + 1];
@@ -86,7 +81,7 @@ void EasyFourier::printEqualizerAlreadyFreq(fftw_complex* freq_buckets) const
   {
     int y = kMaxHeight - height;
     for (int x = 0; x < kFourierBlocksize / 2; x++)
-      if (freq_buckets[x+1][0]*freq_buckets[x+1][0] + freq_buckets[x+1][1]*freq_buckets[x+1][1] > 2*height)
+      if (lease.out[x+1][0]*lease.out[x+1][0] + lease.out[x+1][1]*lease.out[x+1][1] > 2*height)
         bars[columns * y + x] = '0';
       else
         bars[columns * y + x] = ' ';
@@ -108,9 +103,10 @@ void EasyFourier::printMaxBucket(const float* samples)
   int max_ind = 0;
   for (int i = 0; i < kFourierBlocksize / 2 + 1; i++)
   {
-    if (fabs(lease.out[i][0]) > max)
+    double power = lease.out[i][0]*lease.out[i][0] + lease.out[i][1]*lease.out[i][1];
+    if (power > max)
     {
-      max = fabs(lease.out[i][0]);
+      max = power;
       max_ind = i;
     }
   }

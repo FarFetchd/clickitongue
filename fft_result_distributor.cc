@@ -2,17 +2,10 @@
 
 #include <cstdio>
 
-FFTResultDistributor::FFTResultDistributor(std::optional<BlowDetector> blow_detector,
-                                           std::optional<TongueDetector> tongue_detector)
-  : blow_detector_(blow_detector), tongue_detector_(tongue_detector),
+FFTResultDistributor::FFTResultDistributor(std::vector<std::unique_ptr<Detector>>&& detectors)
+  : detectors_(std::move(detectors)),
     fft_lease_(g_fourier->borrowWorker())
-{
-  if (blow_detector_.has_value() && tongue_detector_.has_value())
-  {
-    blow_detector_->set_tongue_link(&tongue_detector_.value());
-    tongue_detector_->set_wait_for_blow(true);
-  }
-}
+{}
 
 void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames)
 {
@@ -21,15 +14,16 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
     printf("illegal num_frames: expected %d, got %d\n", kFourierBlocksize, num_frames);
     exit(1);
   }
-
   for (int i=0; i<kFourierBlocksize; i++)
     fft_lease_.in[i] = cur_sample[i * kNumChannels];
   fft_lease_.runFFT();
-
-  if (blow_detector_.has_value())
-    blow_detector_->processFourier(fft_lease_.out);
-  if (tongue_detector_.has_value())
-    tongue_detector_->processFourier(fft_lease_.out);
+  for (int i=0; i<kFourierBlocksize / 2 + 1; i++)
+  {
+    fft_lease_.out[i][0] = fft_lease_.out[i][0]*fft_lease_.out[i][0] +
+                           fft_lease_.out[i][1]*fft_lease_.out[i][1];
+  }
+  for (auto& detector : detectors_)
+    detector->markFrameAndProcessFourier(fft_lease_.out);
 }
 
 
