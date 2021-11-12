@@ -9,11 +9,11 @@
 #include "constants.h"
 #include "easy_fourier.h"
 #include "fft_result_distributor.h"
+#include "hum_detector.h"
 #include "interaction.h"
 #include "pink_detector.h"
-#include "tongue_detector.h"
+#include "train_hum.h"
 #include "train_pink.h"
-#include "train_tongue.h"
 
 #include "config_io.h"
 
@@ -77,9 +77,9 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 
 void normalOperation(Config config)
 {
-  if (!config.pink.enabled && !config.tongue.enabled)
+  if (!config.pink.enabled && !config.hum.enabled)
   {
-    promptInfo("Neither tongue nor blow is enabled. Exiting.");
+    promptInfo("Neither hum nor blow is enabled. Exiting.");
     return;
   }
 
@@ -89,23 +89,14 @@ void normalOperation(Config config)
 
   if (config.pink.enabled)
     printf("spawning blow detector for left clicks\n");
-  if (config.tongue.enabled)
+  if (config.hum.enabled)
   {
-    printf("spawning tongue detector for %s clicks\n",
-           config.tongue.action == Action::ClickRight ? "right" : "left");
+    printf("spawning hum detector for %s clicks\n",
+           config.hum.action_on == Action::RightDown ? "right" : "left");
   }
   printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
   std::vector<std::unique_ptr<Detector>> detectors;
-//   if (config.blow.enabled) TODO trim
-//   {
-//     detectors.emplace_back(std::make_unique<BlowDetector>(
-//         &action_queue, config.blow.action_on, config.blow.action_off,
-//         config.blow.lowpass_percent, config.blow.highpass_percent,
-//         config.blow.low_on_thresh, config.blow.low_off_thresh,
-//         config.blow.high_on_thresh, config.blow.high_off_thresh,
-//         config.blow.high_spike_frac, config.blow.high_spike_level));
-//   }
   if (config.pink.enabled)
   {
     detectors.emplace_back(std::make_unique<PinkDetector>(
@@ -114,12 +105,12 @@ void normalOperation(Config config)
         config.pink.o6_off_thresh, config.pink.o7_on_thresh, config.pink.o7_off_thresh,
         config.pink.ewma_alpha));
   }
-  if (config.tongue.enabled)
+  if (config.hum.enabled)
   {
-    detectors.emplace_back(std::make_unique<TongueDetector>(
-        &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
-        config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
-        config.tongue.tongue_hzenergy_low));
+    detectors.emplace_back(std::make_unique<HumDetector>(
+        &action_queue, config.hum.action_on, config.hum.action_off,
+        config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o6_limit,
+        config.hum.ewma_alpha));
   }
   FFTResultDistributor fft_distributor(std::move(detectors));
 
@@ -143,7 +134,7 @@ void firstTimeTrain()
   bool try_blows = promptYesNo(
 "Will you be able to keep your mic positioned no more than a few centimeters\n"
 "from your mouth for long-term usage? If so, Clickitongue will be able to \n"
-"recognize blowing in addition to tongue clicking, allowing both left and \n"
+"recognize blowing in addition to humming, allowing both left and \n"
 "right clicking. Otherwise, Clickitongue will only be able to left click.\n\n"
 "So: will your mic be close enough to directly blow on?");
 
@@ -161,59 +152,62 @@ void firstTimeTrain()
     }
     else // for actual use
       for (int i = 0; i < 6; i++)
-        blow_examples.emplace_back(recordExampleBlow(i), i);
+        blow_examples.emplace_back(recordExamplePink(i), i);
   }
-  std::vector<std::pair<AudioRecording, int>> tongue_examples;
+  std::vector<std::pair<AudioRecording, int>> hum_examples;
   if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
   {
-    tongue_examples.emplace_back(AudioRecording("data/clicks_0.pcm"), 0);
-    tongue_examples.emplace_back(AudioRecording("data/clicks_1.pcm"), 1);
-    tongue_examples.emplace_back(AudioRecording("data/clicks_2.pcm"), 2);
-    tongue_examples.emplace_back(AudioRecording("data/clicks_3.pcm"), 3);
-    tongue_examples.emplace_back(AudioRecording("data/clicks_4.pcm"), 4);
-    tongue_examples.emplace_back(AudioRecording("data/clicks_5.pcm"), 5);
+    hum_examples.emplace_back(AudioRecording("data/hums_0.pcm"), 0);
+    hum_examples.emplace_back(AudioRecording("data/hums_1.pcm"), 1);
+    hum_examples.emplace_back(AudioRecording("data/hums_2.pcm"), 2);
+    hum_examples.emplace_back(AudioRecording("data/hums_3.pcm"), 3);
+    hum_examples.emplace_back(AudioRecording("data/hums_4.pcm"), 4);
+    hum_examples.emplace_back(AudioRecording("data/hums_5.pcm"), 5);
   }
   else // for actual use
     for (int i = 0; i < 6; i++)
-      tongue_examples.emplace_back(recordExampleTongue(i), i);
+      hum_examples.emplace_back(recordExampleHum(i), i);
 
   // all examples of one are negative examples for the other
-//  std::vector<std::pair<AudioRecording, int>> tongue_examples_plus_neg;
+  std::vector<std::pair<AudioRecording, int>> hum_examples_plus_neg;
   std::vector<std::pair<AudioRecording, int>> blow_examples_plus_neg;
   for (auto const& ex_pair : blow_examples)
     blow_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
-//   for (auto const& ex_pair : tongue_examples)
-//     tongue_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
-//   for (auto const& ex_pair : blow_examples)
-//     tongue_examples_plus_neg.emplace_back(ex_pair.first, 0);
-  for (auto const& ex_pair : tongue_examples)
+  for (auto const& ex_pair : hum_examples)
+    hum_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
+  for (auto const& ex_pair : blow_examples)
+    hum_examples_plus_neg.emplace_back(ex_pair.first, 0);
+  for (auto const& ex_pair : hum_examples)
     blow_examples_plus_neg.emplace_back(ex_pair.first, 0);
 
   Config config;
   if (try_blows)
-    config.pink = trainPink(blow_examples/*_plus_neg*/, true);
-  Action tongue_action = config.pink.enabled ? Action::ClickRight
-                                             : Action::ClickLeft;
-  config.tongue = trainTongue(tongue_examples/*_plus_neg*/, tongue_action, true);
+    config.pink = trainPink(blow_examples_plus_neg, true);
 
-  if (config.pink.enabled && config.tongue.enabled)
+  Action hum_on_action = config.pink.enabled ? Action::RightDown
+                                             : Action::LeftDown;
+  Action hum_off_action = config.pink.enabled ? Action::RightUp
+                                              : Action::LeftUp;
+  config.hum = trainHum(hum_examples_plus_neg, hum_on_action, hum_off_action, true);
+
+  if (config.pink.enabled && config.hum.enabled)
   {
     promptInfo(
 "Clickitongue should now be configured. Blow on the mic to left click, keep "
-"blowing to hold the left 'button' down. Tongue click to right click.\n\n"
+"blowing to hold the left 'button' down. Hum for right.\n\n"
 "Now entering normal operation.");
   }
-  else if (config.tongue.enabled)
+  else if (config.hum.enabled)
   {
     promptInfo(
-"Clickitongue should now be configured. Tongue click to left click.\n\n"
+"Clickitongue should now be configured. Hum to left click.\n\n"
 "Now entering normal operation.");
   }
   else
   {
     promptInfo(
-"Clickitongue was not able to find parameters that distinguish your tongue "
-"clicks from background noise with acceptable accuracy. Remove sources of "
+"Clickitongue was not able to find parameters that distinguish your humming "
+"from background noise with acceptable accuracy. Remove sources of "
 "background noise, move the mic closer to your mouth, and try again.");
     return;
   }

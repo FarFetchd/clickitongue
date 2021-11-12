@@ -4,7 +4,6 @@
 #include "constants.h"
 #include "detector.h"
 #include "easy_fourier.h"
-#include "tongue_detector.h"
 
 class BlowDetector : public Detector
 {

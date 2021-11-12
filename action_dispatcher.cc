@@ -32,6 +32,12 @@ bool ActionDispatcher::dispatchNextAction()
   case Action::ClickRight:
     clickRight();
     break;
+  case Action::RightDown:
+    rightDown();
+    break;
+  case Action::RightUp:
+    rightUp();
+    break;
   case Action::ScrollUp:
     scrollUp();
     break;

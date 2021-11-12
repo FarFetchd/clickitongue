@@ -40,28 +40,29 @@ struct PinkConfig
   double ewma_alpha;
 };
 
-struct TongueConfig
+struct HumConfig
 {
-  TongueConfig() : enabled(false) {}
-  TongueConfig(farfetchd::ConfigReader const& cfg);
+  HumConfig() : enabled(false) {}
+  HumConfig(farfetchd::ConfigReader const& cfg);
 
   bool enabled;
-  Action action;
-  double tongue_low_hz;
-  double tongue_high_hz;
-  double tongue_hzenergy_high;
-  double tongue_hzenergy_low;
+  Action action_on;
+  Action action_off;
+  double o1_on_thresh;
+  double o1_off_thresh;
+  double o6_limit;
+  double ewma_alpha;
 };
 
 struct Config
 {
   Config() {}
-  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), tongue(cfg) {}
+  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), pink(cfg), hum(cfg) {}
   std::string toString() const;
 
   BlowConfig blow;
   PinkConfig pink;
-  TongueConfig tongue;
+  HumConfig hum;
 };
 
 std::optional<Config> readConfig(std::string config_name);

@@ -24,6 +24,8 @@ private:
   void leftDown();
   void leftUp();
   void clickRight();
+  void rightDown();
+  void rightUp();
   void scrollUp();
   void scrollDown();
 

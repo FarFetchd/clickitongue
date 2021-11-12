@@ -67,13 +67,14 @@ std::string Config::toString() const
         << "pink_o7_off_thresh: " << pink.o7_off_thresh << "\n"
         << "pink_ewma_alpha: " << pink.ewma_alpha << "\n";
   }
-  if (tongue.enabled)
+  if (hum.enabled)
   {
-    sts << "tongue_action: " << actionString(tongue.action) << "\n"
-        << "tongue_low_hz: " << tongue.tongue_low_hz << "\n"
-        << "tongue_high_hz: " << tongue.tongue_high_hz << "\n"
-        << "tongue_hzenergy_high: " << tongue.tongue_hzenergy_high << "\n"
-        << "tongue_hzenergy_low: " << tongue.tongue_hzenergy_low << "\n";
+    sts << "hum_action_on: " << actionString(hum.action_on) << "\n"
+        << "hum_action_off: " << actionString(hum.action_off) << "\n"
+        << "hum_o1_on_thresh: " << hum.o1_on_thresh << "\n"
+        << "hum_o1_off_thresh: " << hum.o1_off_thresh << "\n"
+        << "hum_o6_limit: " << hum.o6_limit << "\n"
+        << "hum_ewma_alpha: " << hum.ewma_alpha << "\n";
   }
   return sts.str();
 }
@@ -116,17 +117,18 @@ PinkConfig::PinkConfig(farfetchd::ConfigReader const& cfg)
              ewma_alpha >= 0);
 }
 
-TongueConfig::TongueConfig(farfetchd::ConfigReader const& cfg)
+HumConfig::HumConfig(farfetchd::ConfigReader const& cfg)
 {
-  action = parseAction(cfg.getString("tongue_action").value_or("x"));
-  tongue_low_hz = cfg.getDouble("tongue_low_hz").value_or(-1);
-  tongue_high_hz = cfg.getDouble("tongue_high_hz").value_or(-1);
-  tongue_hzenergy_high = cfg.getDouble("tongue_hzenergy_high").value_or(-1);
-  tongue_hzenergy_low = cfg.getDouble("tongue_hzenergy_low").value_or(-1);
+  action_on = parseAction(cfg.getString("hum_action_on").value_or("x"));
+  action_off = parseAction(cfg.getString("hum_action_off").value_or("x"));
+  o1_on_thresh = cfg.getDouble("hum_o1_on_thresh").value_or(-1);
+  o1_off_thresh = cfg.getDouble("hum_o1_off_thresh").value_or(-1);
+  o6_limit = cfg.getDouble("hum_o6_limit").value_or(-1);
+  ewma_alpha = cfg.getDouble("hum_ewma_alpha").value_or(-1);
 
-  enabled = (action != Action::NoAction && tongue_low_hz >= 0 &&
-             tongue_high_hz >= 0 && tongue_hzenergy_high >= 0 &&
-             tongue_hzenergy_low >= 0);
+  enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
+             o1_on_thresh >= 0 && o1_off_thresh >= 0 && o6_limit >= 0 &&
+             ewma_alpha >= 0);
 }
 
 #ifdef CLICKITONGUE_LINUX

@@ -1,7 +1,12 @@
 
 NEW IDEAS:
-* nose hum (works with headset, bet it wouldn't work with earbuds and especially not standalone mike)
 
+NICE!!!! hum works! blow should inhibit hum, both during, and also set hum's refrac when ending.
+
+* introduce preferences to the optimization. all else equal, we should prefer to make "on" thresholds lower (without
+adding false positives) and "off" thresholds higher... well... we don't have a great way to check that they're being done
+properly, though.
+     * allow testing to record two sets of frame indices: one for on events, one for off.
 
 
 * whistle (breathing in): single massive peak, low freqs should have little energy

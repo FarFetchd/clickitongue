@@ -75,6 +75,14 @@ void ActionDispatcher::clickRight()
   uinputWrite(BTN_RIGHT, 1);
   uinputWrite(BTN_RIGHT, 0);
 }
+void ActionDispatcher::rightDown()
+{
+  uinputWrite(BTN_RIGHT, 1);
+}
+void ActionDispatcher::rightUp()
+{
+  uinputWrite(BTN_RIGHT, 0);
+}
 
 void ActionDispatcher::scrollUp()
 {

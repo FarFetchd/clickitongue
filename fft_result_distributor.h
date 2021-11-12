@@ -10,7 +10,7 @@
 #include "constants.h"
 
 // PortAudio has, through a callback, given us a block of samples. Do a single
-// FFT and pass the same result to both the tongue detector and blow detector.
+// FFT and pass the same result to all detectors present.
 class FFTResultDistributor
 {
 public:

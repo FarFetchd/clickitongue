@@ -4,7 +4,7 @@
 #include "audio_recording.h"
 #include "config_io.h"
 
-AudioRecording recordExampleBlow(int desired_events);
+AudioRecording recordExamplePink(int desired_events);
 
 // the int of the pair is the number of blow events that are supposed to be in
 // that particular AudioRecording.
