@@ -12,7 +12,7 @@
 #include "interaction.h"
 #include "pink_detector.h"
 #include "tongue_detector.h"
-#include "train_blow.h"
+#include "train_pink.h"
 #include "train_tongue.h"
 
 #include "config_io.h"
@@ -77,7 +77,7 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 
 void normalOperation(Config config)
 {
-  if (!config.blow.enabled && !config.tongue.enabled)
+  if (!config.pink.enabled && !config.tongue.enabled)
   {
     promptInfo("Neither tongue nor blow is enabled. Exiting.");
     return;
@@ -87,7 +87,7 @@ void normalOperation(Config config)
   ActionDispatcher action_dispatcher(&action_queue);
   std::thread action_dispatch(actionDispatch, &action_dispatcher);
 
-  if (config.blow.enabled)
+  if (config.pink.enabled)
     printf("spawning blow detector for left clicks\n");
   if (config.tongue.enabled)
   {
@@ -97,22 +97,29 @@ void normalOperation(Config config)
   printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
   std::vector<std::unique_ptr<Detector>> detectors;
-  if (config.blow.enabled)
+//   if (config.blow.enabled) TODO trim
+//   {
+//     detectors.emplace_back(std::make_unique<BlowDetector>(
+//         &action_queue, config.blow.action_on, config.blow.action_off,
+//         config.blow.lowpass_percent, config.blow.highpass_percent,
+//         config.blow.low_on_thresh, config.blow.low_off_thresh,
+//         config.blow.high_on_thresh, config.blow.high_off_thresh,
+//         config.blow.high_spike_frac, config.blow.high_spike_level));
+//   }
+  if (config.pink.enabled)
   {
-    detectors.emplace_back(std::make_unique<BlowDetector>(
-        &action_queue, config.blow.action_on, config.blow.action_off,
-        config.blow.lowpass_percent, config.blow.highpass_percent,
-        config.blow.low_on_thresh, config.blow.low_off_thresh,
-        config.blow.high_on_thresh, config.blow.high_off_thresh,
-        config.blow.high_spike_frac, config.blow.high_spike_level));
+    detectors.emplace_back(std::make_unique<PinkDetector>(
+        &action_queue, config.pink.action_on, config.pink.action_off,
+        config.pink.o5_on_thresh, config.pink.o5_off_thresh, config.pink.o6_on_thresh,
+        config.pink.o6_off_thresh, config.pink.o7_on_thresh, config.pink.o7_off_thresh,
+        config.pink.ewma_alpha));
   }
   if (config.tongue.enabled)
   {
     detectors.emplace_back(std::make_unique<TongueDetector>(
         &action_queue, config.tongue.action, config.tongue.tongue_low_hz,
         config.tongue.tongue_high_hz, config.tongue.tongue_hzenergy_high,
-        config.tongue.tongue_hzenergy_low, config.tongue.tongue_min_spikes_freq_frac,
-        config.tongue.tongue_high_spike_frac, config.tongue.tongue_high_spike_level));
+        config.tongue.tongue_hzenergy_low));
   }
   FFTResultDistributor fft_distributor(std::move(detectors));
 
@@ -124,7 +131,7 @@ void normalOperation(Config config)
   action_dispatch.join();
 }
 
-constexpr bool DOING_DEVELOPMENT_TESTING = false;
+constexpr bool DOING_DEVELOPMENT_TESTING = true;
 constexpr char kDefaultConfig[] = "default";
 void firstTimeTrain()
 {
@@ -149,6 +156,8 @@ void firstTimeTrain()
       blow_examples.emplace_back(AudioRecording("data/blows_1.pcm"), 1);
       blow_examples.emplace_back(AudioRecording("data/blows_2.pcm"), 2);
       blow_examples.emplace_back(AudioRecording("data/blows_3.pcm"), 3);
+      blow_examples.emplace_back(AudioRecording("data/blows_4.pcm"), 4);
+      blow_examples.emplace_back(AudioRecording("data/blows_5.pcm"), 5);
     }
     else // for actual use
       for (int i = 0; i < 6; i++)
@@ -161,6 +170,8 @@ void firstTimeTrain()
     tongue_examples.emplace_back(AudioRecording("data/clicks_1.pcm"), 1);
     tongue_examples.emplace_back(AudioRecording("data/clicks_2.pcm"), 2);
     tongue_examples.emplace_back(AudioRecording("data/clicks_3.pcm"), 3);
+    tongue_examples.emplace_back(AudioRecording("data/clicks_4.pcm"), 4);
+    tongue_examples.emplace_back(AudioRecording("data/clicks_5.pcm"), 5);
   }
   else // for actual use
     for (int i = 0; i < 6; i++)
@@ -180,12 +191,12 @@ void firstTimeTrain()
 
   Config config;
   if (try_blows)
-    config.blow = trainBlow(blow_examples/*_plus_neg*/, true);
-  Action tongue_action = config.blow.enabled ? Action::ClickRight
+    config.pink = trainPink(blow_examples/*_plus_neg*/, true);
+  Action tongue_action = config.pink.enabled ? Action::ClickRight
                                              : Action::ClickLeft;
   config.tongue = trainTongue(tongue_examples/*_plus_neg*/, tongue_action, true);
 
-  if (config.blow.enabled && config.tongue.enabled)
+  if (config.pink.enabled && config.tongue.enabled)
   {
     promptInfo(
 "Clickitongue should now be configured. Blow on the mic to left click, keep "
