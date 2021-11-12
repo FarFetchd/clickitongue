@@ -55,6 +55,18 @@ std::string Config::toString() const
         << "blow_high_spike_frac: " << blow.high_spike_frac << "\n"
         << "blow_high_spike_level: " << blow.high_spike_level << "\n";
   }
+  if (pink.enabled)
+  {
+    sts << "pink_action_on: " << actionString(pink.action_on) << "\n"
+        << "pink_action_off: " << actionString(pink.action_off) << "\n"
+        << "pink_o5_on_thresh: " << pink.o5_on_thresh << "\n"
+        << "pink_o5_off_thresh: " << pink.o5_off_thresh << "\n"
+        << "pink_o6_on_thresh: " << pink.o6_on_thresh << "\n"
+        << "pink_o6_off_thresh: " << pink.o6_off_thresh << "\n"
+        << "pink_o7_on_thresh: " << pink.o7_on_thresh << "\n"
+        << "pink_o7_off_thresh: " << pink.o7_off_thresh << "\n"
+        << "pink_ewma_alpha: " << pink.ewma_alpha << "\n";
+  }
   if (tongue.enabled)
   {
     sts << "tongue_action: " << actionString(tongue.action) << "\n"
@@ -88,6 +100,24 @@ BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
               low_on_thresh >= 0 && low_off_thresh >= 0 &&
               high_on_thresh >= 0 && high_off_thresh >= 0 &&
               high_spike_frac >= 0 && high_spike_level >= 0);
+}
+
+PinkConfig::PinkConfig(farfetchd::ConfigReader const& cfg)
+{
+  action_on = parseAction(cfg.getString("pink_action_on").value_or("x"));
+  action_off = parseAction(cfg.getString("pink_action_off").value_or("x"));
+  o5_on_thresh = cfg.getDouble("pink_o5_on_thresh").value_or(-1);
+  o5_off_thresh = cfg.getDouble("pink_o5_off_thresh").value_or(-1);
+  o6_on_thresh = cfg.getDouble("pink_o6_on_thresh").value_or(-1);
+  o6_off_thresh = cfg.getDouble("pink_o6_off_thresh").value_or(-1);
+  o7_on_thresh = cfg.getDouble("pink_o7_on_thresh").value_or(-1);
+  o7_off_thresh = cfg.getDouble("pink_o7_off_thresh").value_or(-1);
+  ewma_alpha = cfg.getDouble("pink_ewma_alpha").value_or(-1);
+
+  enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
+             o5_on_thresh >= 0 && o5_off_thresh >= 0 && o6_on_thresh >= 0 &&
+             o6_off_thresh >= 0 && o7_on_thresh >= 0 && o7_off_thresh >= 0 &&
+             ewma_alpha >= 0);
 }
 
 TongueConfig::TongueConfig(farfetchd::ConfigReader const& cfg)

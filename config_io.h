@@ -23,6 +23,23 @@ struct BlowConfig
   double high_spike_level;
 };
 
+struct PinkConfig
+{
+  PinkConfig() : enabled(false) {}
+  PinkConfig(farfetchd::ConfigReader const& cfg);
+
+  bool enabled;
+  Action action_on;
+  Action action_off;
+  double o5_on_thresh;
+  double o5_off_thresh;
+  double o6_on_thresh;
+  double o6_off_thresh;
+  double o7_on_thresh;
+  double o7_off_thresh;
+  double ewma_alpha;
+};
+
 struct TongueConfig
 {
   TongueConfig() : enabled(false) {}
@@ -46,6 +63,7 @@ struct Config
   std::string toString() const;
 
   BlowConfig blow;
+  PinkConfig pink;
   TongueConfig tongue;
 };
 
