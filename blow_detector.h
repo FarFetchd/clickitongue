@@ -25,9 +25,6 @@ public:
                double low_on_thresh, double low_off_thresh,
                double high_on_thresh, double high_off_thresh,
                double high_spike_frac, double high_spike_level);
-
-  void set_tongue_link(TongueDetector* val);
-
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
   // each i is expected to be the squared magnitude (i.e. real^2 + imag_coeff^2)
@@ -62,9 +59,6 @@ private:
   // our understanding of the current state of the mouse button
   bool mouse_down_ = false;
   bool mouse_down_at_least_one_block_ = false;
-
-  // for coordinating with tongue detector (if it exists) by suppressing it
-  TongueDetector* tongue_link_ = nullptr;
 
   int refrac_blocks_left_ = 0;
 };
