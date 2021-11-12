@@ -10,6 +10,7 @@
 #include "easy_fourier.h"
 #include "fft_result_distributor.h"
 #include "interaction.h"
+#include "pink_detector.h"
 #include "tongue_detector.h"
 #include "train_blow.h"
 #include "train_tongue.h"
@@ -27,12 +28,34 @@ int equalizerCallback(const void* inputBuffer, void* outputBuffer,
                       const PaStreamCallbackTimeInfo* timeInfo,
                       PaStreamCallbackFlags statusFlags, void* userData)
 {
-  static int print_once_per_10_6ms_chunks = 0;
-  if (++print_once_per_10_6ms_chunks == 10)
-  {
-    print_once_per_10_6ms_chunks = 0;
-    g_fourier->printEqualizer(static_cast<const float*>(inputBuffer));
-  }
+  g_fourier->printEqualizer(static_cast<const float*>(inputBuffer));
+  return paContinue;
+}
+
+int spikesCallback(const void* inputBuffer, void* outputBuffer,
+                   unsigned long framesPerBuffer,
+                   const PaStreamCallbackTimeInfo* timeInfo,
+                   PaStreamCallbackFlags statusFlags, void* userData)
+{
+  g_fourier->printTopTwoSpikes(static_cast<const float*>(inputBuffer));
+  return paContinue;
+}
+
+int octavesCallback(const void* inputBuffer, void* outputBuffer,
+                    unsigned long framesPerBuffer,
+                    const PaStreamCallbackTimeInfo* timeInfo,
+                    PaStreamCallbackFlags statusFlags, void* userData)
+{
+  g_fourier->printOctavePowers(static_cast<const float*>(inputBuffer));
+  return paContinue;
+}
+
+int overtonesCallback(const void* inputBuffer, void* outputBuffer,
+                      unsigned long framesPerBuffer,
+                      const PaStreamCallbackTimeInfo* timeInfo,
+                      PaStreamCallbackFlags statusFlags, void* userData)
+{
+  g_fourier->printOvertones(static_cast<const float*>(inputBuffer));
   return paContinue;
 }
 
@@ -41,10 +64,11 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
   if (!opts.mode.has_value())
     return;
   std::string mode = opts.mode.value();
-  if (mode != "record" && mode != "play" && mode != "equalizer")
+  if (mode != "record" && mode != "play" && mode != "equalizer" &&
+      mode != "spikes" && mode != "octaves" && mode != "overtones")
   {
     crash("Invalid --mode= value. Must specify --mode=train, use, record,"
-          "play, or equalizer. (Or not specify it).");
+          "play, equalizer, spikes, octaves, or overtones. (Or not specify it).");
   }
 
   if ((mode == "record" || mode == "play") && !opts.filename.has_value())
@@ -212,17 +236,10 @@ void defaultMain()
 
 int main(int argc, char** argv)
 {
-#ifdef CLICKITONGUE_LINUX
-  if (geteuid() != 0)
-    crash("clickitongue must be run as root.");
-#endif // CLICKITONGUE_LINUX
   Pa_Initialize(); // get its annoying spam out of the way immediately
 #ifndef CLICKITONGUE_WINDOWS
   promptInfo("****clickitongue is now running.****");
 #endif // CLICKITONGUE_WINDOWS
-#ifdef CLICKITONGUE_LINUX
-  initLinuxUinput();
-#endif // CLICKITONGUE_LINUX
 
   ClickitongueCmdlineOpts opts =
       structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
@@ -247,9 +264,34 @@ int main(int argc, char** argv)
       while (audio_input.active())
         Pa_Sleep(500);
     }
+    else if (opts.mode.value() == "spikes")
+    {
+      AudioInput audio_input(spikesCallback, nullptr, kFourierBlocksize);
+      while (audio_input.active())
+        Pa_Sleep(500);
+    }
+    else if (opts.mode.value() == "octaves")
+    {
+      AudioInput audio_input(octavesCallback, nullptr, kFourierBlocksize);
+      while (audio_input.active())
+        Pa_Sleep(500);
+    }
+    else if (opts.mode.value() == "overtones")
+    {
+      AudioInput audio_input(overtonesCallback, nullptr, kFourierBlocksize);
+      while (audio_input.active())
+        Pa_Sleep(500);
+    }
   }
   else
+  {
+#ifdef CLICKITONGUE_LINUX
+    if (geteuid() != 0)
+      crash("clickitongue must be run as root.");
+    initLinuxUinput();
+#endif // CLICKITONGUE_LINUX
     defaultMain();
+  }
 
   Pa_Terminate(); // corresponds to the Pa_Initialize() at the start
   return 0;

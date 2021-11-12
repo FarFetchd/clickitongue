@@ -22,6 +22,8 @@ constexpr float kSilentSample = 0.0f;
 
 constexpr int kFourierBlocksize = 256; // must be 128, 256, 512, or 1024
 
+constexpr int kNumFourierBins = kFourierBlocksize/2 + 1;
+
 // In Hz, the difference between two adjacent bin centers.
 constexpr double kBinWidth = kNyquist / (kFourierBlocksize / 2.0 + 1.0);
 

@@ -1,11 +1,63 @@
-* get the blows and clicks to play together nicely
-****idea: keep feeding tongue examples to blow as negatives, but no longer do the reverse. instead, add logic that suppresses tongue activations when blow has recently been activated. (give tongue a few block activation delay to accommodate). eh..... tried it, seems like it's hard to get the blow detector to not trigger on tongue clicks.
 
 NEW IDEAS:
-* nose hum (works with headset, bet it wouldn't work with earbuds and especially not standalone mike) (and i THINK it's possible to filter out talking: talking will have high freq noise spikes, nose hum won't.)
-* whistle: single massive peak, low freqs should have little energy
-* blow as pink noise: every octave should have ~equal energy.
+* nose hum (works with headset, bet it wouldn't work with earbuds and especially not standalone mike)
 
+
+
+* whistle (breathing in): single massive peak, low freqs should have little energy
+interesting: when the mic is close enough to your mouth, the odd overtones show up. also a bit of the evens, but not nearly as much.
+is this just me/my mic/my environment, or more universal? sounds universal, that's cool!
+example:
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     0                     0
+          0                     00                    0
+          0                     00                    0
+          00                    00                    0
+          00                    00                    0
+          00                    00                    0
+          00                    00                    0
+          00                    00                    0
+          00                    00                    0
+          00                    00                    0
+          000                   00                    0
+          000                   00                    0
+          000                   00                    00
+          000                   00                    00
+          000                   00                    00
+          000                   000                   00
+        0 000                   000                   00
+        00000                   000                   00
+        00000                   000                   00
+        00000                   000                   00
+        00000                   000                   00
+        00000                   000                   00
+        00000                   000                   00
+        00000                   000                   00
+        00000                   000                   00
+        00000                   000                   00
+        00000                   000                   000
+        00000                   000                   000                    0
+        00000                 0 000                   000                    0
+        00000                 0 000                   000                    0
+        00000                 0 000                   000                    0
+        000000                00000                   000                    0
+       0000000       0        00000                   000                    0
+       0000000       0        00000                   000                   00
+       0000000       0        000000                  000                   00
+      000000000      0        000000                  000                   000
+      000000000      0       0000000       0        0 000                   000
+      000000000      0      000000000      0        0 0000                  000                    0
+     0000000000      0     0000000000      0        0 0000                  000                    0
+  0000000000000000 0 0   000000000000 0  0 0     000000000       0          0000                   0
 
 
 
@@ -35,23 +87,17 @@ audio profile should be "Analog Stereo Duplex"
 
 
 
-# SIM NOTES
 
-pretty good:
 
-blow_action_on: LeftDown
-blow_action_off: LeftUp
-blow_lowpass_percent: 0.0631087
-blow_highpass_percent: 0.385033
-blow_low_on_thresh: 13.8616
-blow_low_off_thresh: 5.61658
-blow_high_on_thresh: 1.18298
-blow_high_off_thresh: 0.0664113
-blow_high_spike_frac: 0.373932
-blow_high_spike_level: 0.2
-tongue_action: ClickRight
-tongue_low_hz: 1250
-tongue_high_hz: 3250
-tongue_hzenergy_high: 12250
-tongue_hzenergy_low: 1512.5
-tongue_refrac_blocks: 12
+
+
+# USABILITY NOTES
+
+We have 3 good candidates: whistling, humming, up-close blowing. Not everybody can whistle. Humming may be hard to distinguish from talking. Not everybody can have a mic close enough for blowing.
+
+Ideal (if want to be robust to talking): up-close blowing for left click, whistle for right
+Ideal (if don't need to be talking, since humming is easier): blow left, hum right
+***if only talking sometimes: whistle to pause/unpause
+
+
+looks like humming will be the least common denom here. (is fem humming much different?)

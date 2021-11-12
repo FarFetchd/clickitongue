@@ -17,7 +17,7 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
   for (int i=0; i<kFourierBlocksize; i++)
     fft_lease_.in[i] = cur_sample[i * kNumChannels];
   fft_lease_.runFFT();
-  for (int i=0; i<kFourierBlocksize / 2 + 1; i++)
+  for (int i=0; i<kNumFourierBins; i++)
   {
     fft_lease_.out[i][0] = fft_lease_.out[i][0]*fft_lease_.out[i][0] +
                            fft_lease_.out[i][1]*fft_lease_.out[i][1];

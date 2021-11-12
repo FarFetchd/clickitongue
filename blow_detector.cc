@@ -3,8 +3,6 @@
 #include <cassert>
 #include <cmath>
 
-#include "easy_fourier.h"
-
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double lowpass_percent, double highpass_percent,
                            double low_on_thresh, double low_off_thresh,
@@ -37,27 +35,26 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
 
 void BlowDetector::processFourier(const fftw_complex* freq_power)
 {
-  const int num_buckets = kFourierBlocksize / 2 + 1;
-  int last_low_bucket = round(lowpass_percent_ * num_buckets);
+  int last_low_bucket = round(lowpass_percent_ * kNumFourierBins);
   double avg_low = 0;
   for (int i = 1; i <= last_low_bucket; i++)
     avg_low += freq_power[i][0];
   avg_low /= (double)(last_low_bucket + 1);
 
-  int first_high_bucket = round(highpass_percent_ * num_buckets);
+  int first_high_bucket = round(highpass_percent_ * kNumFourierBins);
   double avg_high = 0;
   int spike_count = 0;
-  for (int i = first_high_bucket; i < num_buckets; i++)
+  for (int i = first_high_bucket; i < kNumFourierBins; i++)
   {
     double val = freq_power[i][0];
     avg_high += val;
     if (val > high_spike_level_)
       spike_count++;
   }
-  avg_high /= (double)(num_buckets - first_high_bucket);
+  avg_high /= (double)(kNumFourierBins - first_high_bucket);
 
   bool many_high_spikes = (double)spike_count /
-             (double)(num_buckets - first_high_bucket) > high_spike_frac_;
+             (double)(kNumFourierBins - first_high_bucket) > high_spike_frac_;
 
   // require all clicks to last at least two blocks (at 256 frames per block,
   // 1 block is 5.8ms, and my physical mouse clicks appear to be 50-80ms long).

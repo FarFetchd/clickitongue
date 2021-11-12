@@ -35,7 +35,7 @@ protected:
   // of the original complex number output at bin i.
   // The imaginary coefficient (array index 1) is left untouched - although
   // you're likely not at all interested in it.
-  void processFourier(const fftw_complex* freq_power);
+  void processFourier(const fftw_complex* freq_power) override;
 
 private:
   const Action action_;

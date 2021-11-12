@@ -30,9 +30,14 @@ public:
 
   // Returns the frequency center of the provided bin index.
   double freqOfBin(int index) const;
+  // Inverse (loosely) of freqOfBin
+  int binContainingFreq(double freq) const;
 
   // length of samples should be kFourierBlocksize.
   void printEqualizer(const float* samples);
+  void printTopTwoSpikes(const float* samples);
+  void printOctavePowers(const float* samples);
+  void printOvertones(const float* samples);
 
   // length of freq_buckets should be kFourierBlocksize / 2 + 1.
   // (i.e. the output of a real-to-complex FFT with length kFourierBlocksize input)

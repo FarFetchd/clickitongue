@@ -64,26 +64,26 @@ void TongueDetector::processFourier(const fftw_complex* freq_power)
   energy += (tongue_high_hz_ - (g_fourier->freqOfBin(high_bin_ind) - kBinWidth/2.0))
             * freq_power[high_bin_ind][0];
 
-  const int num_buckets = kFourierBlocksize / 2 + 1;
-  int first_high_bucket = round(tongue_min_spikes_freq_frac_ * num_buckets);
+  int first_high_bucket = round(tongue_min_spikes_freq_frac_ * kNumFourierBins);
   double avg_high = 0;
   int spike_count = 0;
-  for (int i = first_high_bucket; i < num_buckets; i++)
+  for (int i = first_high_bucket; i < kNumFourierBins; i++)
   {
     double val = freq_power[i][0];
     avg_high += val;
     if (val > tongue_high_spike_level_)
       spike_count++;
   }
-  avg_high /= (double)(num_buckets - first_high_bucket);
+  avg_high /= (double)(kNumFourierBins - first_high_bucket);
 
   bool too_many_high_spikes = (double)spike_count /
-             (double)(num_buckets - first_high_bucket) > tongue_high_spike_frac_;
+             (double)(kNumFourierBins - first_high_bucket) > tongue_high_spike_frac_;
   bool too_high = avg_high > 1;
 
-  if (too_many_high_spikes || too_high)
-    refrac_blocks_left_ = kRefracBlocks;
-  else if (refrac_blocks_left_ > 0)
+//   if (too_many_high_spikes || too_high)
+//     refrac_blocks_left_ = kRefracBlocks;
+ // else
+    if (refrac_blocks_left_ > 0)
   {
     if (energy < tongue_hzenergy_low_)
       refrac_blocks_left_--;
