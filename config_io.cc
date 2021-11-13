@@ -5,8 +5,6 @@
 #include <cstring>
 #include <sstream>
 
-#include "interaction.h"
-
 Action parseAction(std::string str)
 {
   if (str == "ClickLeft") return Action::ClickLeft;
@@ -135,13 +133,14 @@ std::optional<Config> readConfig(std::string config_name)
   return Config(reader);
 }
 
-bool writeConfig(Config config, std::string config_name)
+bool writeConfig(Config config, std::string config_name,
+                 std::string* attempted_filepath)
 {
   bool successful = true;
-  std::string config_path;
+  *attempted_filepath = getAndEnsureConfigDir() + config_name + ".clickitongue";
   try
   {
-    std::ofstream out(getAndEnsureConfigDir() + config_name + ".clickitongue");
+    std::ofstream out(*attempted_filepath);
     out << config.toString();
   }
   catch (std::exception const& e)
@@ -152,10 +151,5 @@ bool writeConfig(Config config, std::string config_name)
   std::optional<Config> test_read = readConfig(config_name);
   if (!test_read.has_value())
     successful = false;
-  if (!successful)
-  {
-    std::string m = "Attempt to write config file " + config_path + " failed.";
-    promptInfo(m.c_str());
-  }
   return successful;
 }

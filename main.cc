@@ -227,10 +227,12 @@ void firstTimeTrain()
 "running Clickitongue as admin. (But you might never encounter this problem.)");
 #endif
 
-  if (!writeConfig(config, kDefaultConfig))
+  std::string attempted_filepath;
+  if (!writeConfig(config, kDefaultConfig, &attempted_filepath))
   {
-    promptInfo("Failed to write config file. You'll have to redo this "
-               "training the next time you run Clickitongue.");
+    std::string msg = "Failed to write config file " + attempted_filepath +
+    ". You'll have to redo this training the next time you run Clickitongue.";
+    promptInfo(msg.c_str());
   }
   normalOperation(config);
 }

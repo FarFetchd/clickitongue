@@ -1,6 +1,8 @@
 #ifndef CLICKITONGUE_CONFIG_IO_H_
 #define CLICKITONGUE_CONFIG_IO_H_
 
+#include <string>
+
 #include "flatconfig.hpp"
 
 #include "constants.h"
@@ -46,8 +48,13 @@ struct Config
   HumConfig hum;
 };
 
+// Returns nullopt if it fails to read file.
 std::optional<Config> readConfig(std::string config_name);
-bool writeConfig(Config config, std::string config_name);
+// Returns true if all is well, false if it fails to write the file or if it
+// fails in its attempt to immediately read+parse what was just written.
+// attempted_filepath will be filled with the destination filepath.
+bool writeConfig(Config config, std::string config_name,
+                 std::string* attempted_filepath);
 
 std::string getAndEnsureConfigDir();
 
