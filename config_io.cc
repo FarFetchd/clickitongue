@@ -7,8 +7,6 @@
 
 Action parseAction(std::string str)
 {
-  if (str == "ClickLeft") return Action::ClickLeft;
-  if (str == "ClickRight") return Action::ClickRight;
   if (str == "LeftDown") return Action::LeftDown;
   if (str == "LeftUp") return Action::LeftUp;
   if (str == "RightDown") return Action::RightDown;
@@ -23,8 +21,6 @@ std::string actionString(Action action)
 {
   switch (action)
   {
-    case Action::ClickLeft: return "ClickLeft";
-    case Action::ClickRight: return "ClickRight";
     case Action::LeftDown: return "LeftDown";
     case Action::LeftUp: return "LeftUp";
     case Action::RightDown: return "RightDown";

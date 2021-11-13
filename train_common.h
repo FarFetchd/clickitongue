@@ -61,6 +61,7 @@ TrainParams patternSearch(TrainParamsFactory& factory, bool verbose)
   return candidates.front();
 }
 
+#ifndef CLICKITONGUE_WINDOWS
 // hacky getch
 //================================================
 #include <termios.h>
@@ -81,6 +82,7 @@ void resetTermios()
 {
   tcsetattr(0, TCSANOW, &old_termios);
 }
+#endif // ndef CLICKITONGUE_WINDOWS
 
 AudioRecording recordExampleCommon(int desired_events,
                                    std::string dont_do_any_of_this,
@@ -108,7 +110,7 @@ AudioRecording recordExampleCommon(int desired_events,
   printf("Press any key when you are ready to start."); fflush(stdout);
   make_getchar_like_getch(); getchar(); resetTermios();
   printf("Now recording..."); fflush(stdout);
-#endif
+#endif // ndef CLICKITONGUE_WINDOWS
   AudioRecording recorder(kSecondsToRecord);
   promptInfo("recording done.");
   return recorder;

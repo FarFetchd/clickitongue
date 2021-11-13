@@ -56,12 +56,6 @@ void uinputWrite(int code, int val)
     fprintf(stderr, "uinput EV_SYN SYN_REPORT write failed\n");
 }
 
-
-void ActionDispatcher::clickLeft()
-{
-  uinputWrite(BTN_LEFT, 1);
-  uinputWrite(BTN_LEFT, 0);
-}
 void ActionDispatcher::leftDown()
 {
   uinputWrite(BTN_LEFT, 1);
@@ -69,11 +63,6 @@ void ActionDispatcher::leftDown()
 void ActionDispatcher::leftUp()
 {
   uinputWrite(BTN_LEFT, 0);
-}
-void ActionDispatcher::clickRight()
-{
-  uinputWrite(BTN_RIGHT, 1);
-  uinputWrite(BTN_RIGHT, 0);
 }
 void ActionDispatcher::rightDown()
 {

@@ -20,10 +20,8 @@ public:
   void shutdown();
 
 private:
-  void clickLeft();
   void leftDown();
   void leftUp();
-  void clickRight();
   void rightDown();
   void rightUp();
   void scrollUp();

@@ -31,7 +31,7 @@ using Sample = float;
 
 enum class Action
 {
-  ClickLeft, ClickRight, LeftDown, LeftUp, RightDown, RightUp, ScrollDown, ScrollUp,
+  LeftDown, LeftUp, RightDown, RightUp, ScrollDown, ScrollUp,
   RecordCurFrame, // for training only; requires having called setCurFrameDest() and setCurFrameSource().
   NoAction
 };

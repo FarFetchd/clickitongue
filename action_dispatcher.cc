@@ -20,17 +20,11 @@ bool ActionDispatcher::dispatchNextAction()
     return false;
   switch (action.value())
   {
-  case Action::ClickLeft:
-    clickLeft();
-    break;
   case Action::LeftDown:
     leftDown();
     break;
   case Action::LeftUp:
     leftUp();
-    break;
-  case Action::ClickRight:
-    clickRight();
     break;
   case Action::RightDown:
     rightDown();

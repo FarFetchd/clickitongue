@@ -12,12 +12,6 @@ void mouseButtonEvent(DWORD mouse_event_flag)
   SendInput(1, &input, sizeof(INPUT));
 }
 
-// 1 is left, 2 is middle, 3 is right, 4 is wheel up, 5 is wheel down.
-void ActionDispatcher::clickLeft()
-{
-  leftDown();
-  leftUp();
-}
 void ActionDispatcher::leftDown()
 {
   mouseButtonEvent(MOUSEEVENTF_LEFTDOWN);
@@ -26,9 +20,13 @@ void ActionDispatcher::leftUp()
 {
   mouseButtonEvent(MOUSEEVENTF_LEFTUP);
 }
-void ActionDispatcher::clickRight()
+void ActionDispatcher::rightDown()
 {
-  MessageBox(NULL, "clickRight", "clickRight", MB_OK);
+  mouseButtonEvent(MOUSEEVENTF_RIGHTDOWN);
+}
+void ActionDispatcher::rightUp()
+{
+  mouseButtonEvent(MOUSEEVENTF_RIGHTUP);
 }
 void ActionDispatcher::scrollUp()
 {
