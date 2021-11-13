@@ -3,10 +3,11 @@ NEW IDEAS:
 
 NICE!!!! hum works! blow should inhibit hum, both during, and also set hum's refrac when ending.
 
-* introduce preferences to the optimization. all else equal, we should prefer to make "on" thresholds lower (without
-adding false positives) and "off" thresholds higher... well... we don't have a great way to check that they're being done
-properly, though.
-     * allow testing to record two sets of frame indices: one for on events, one for off.
+
+* "tuning": after training, push a param in the desirable way with binary search, finding how far you can push before the score gets worse. then, set the param to (say) halfway between orig and the breaking point.
+    * definitely good for making the EWMA alpha as responsive as possible.
+    * probably also good for on/off thresholds? on being pushed lower, off being pushed higher.
+
 
 
 * whistle (breathing in): single massive peak, low freqs should have little energy

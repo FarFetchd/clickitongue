@@ -1,13 +1,37 @@
 #include "detector.h"
 
-Detector::Detector(BlockingQueue<Action>* action_queue,
+Detector::Detector(Action action_on, Action action_off,
+                   BlockingQueue<Action>* action_queue,
                    std::vector<int>* cur_frame_dest)
-  : action_queue_(action_queue), cur_frame_dest_(cur_frame_dest) {}
+  : action_on_(action_on), action_off_(action_off),
+    action_queue_(action_queue), cur_frame_dest_(cur_frame_dest) {}
 
-void Detector::markFrameAndProcessFourier(const fftw_complex* freq_power)
+void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
 {
   cur_frame_ += kFourierBlocksize;
-  processFourier(freq_power);
+  updateState(freq_power);
+
+  if (on_)
+  {
+    if (shouldTransitionOff())
+    {
+      on_ = false;
+      kickoffAction(action_off_);
+    }
+// TODO     for (Detector* target : inhibition_targets_)
+//       target->beginRefractoryPeriod();
+  }
+  else // off
+  {
+    if (refrac_blocks_left_ > 0)
+      refrac_blocks_left_--;
+    else if (shouldTransitionOn())
+    {
+      on_ = true;
+      kickoffAction(action_on_);
+      beginRefractoryPeriod();
+    }
+  }
 }
 
 void Detector::kickoffAction(Action action)
@@ -17,3 +41,5 @@ void Detector::kickoffAction(Action action)
   else if (action != Action::NoAction)
     action_queue_->enqueue(action);
 }
+
+void Detector::beginRefractoryPeriod() { refrac_blocks_left_ = kRefracBlocks; }

@@ -8,8 +8,7 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
                            double ewma_alpha, std::vector<int>* cur_frame_dest)
-  : Detector(action_queue, cur_frame_dest),
-    action_on_(Action::RecordCurFrame), action_off_(Action::NoAction),
+  : Detector(Action::RecordCurFrame, Action::NoAction, action_queue, cur_frame_dest),
     o5_on_thresh_(o5_on_thresh), o5_off_thresh_(o5_off_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
@@ -22,17 +21,14 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
                            double ewma_alpha)
-  : Detector(action_queue), action_on_(action_on), action_off_(action_off),
+  : Detector(action_on, action_off, action_queue),
     o5_on_thresh_(o5_on_thresh), o5_off_thresh_(o5_off_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_)
-{
-  assert(action_on_ != Action::RecordCurFrame);
-  assert(action_off_ != Action::RecordCurFrame);
-}
+{}
 
-void BlowDetector::processFourier(const fftw_complex* freq_power)
+void BlowDetector::updateState(const fftw_complex* freq_power)
 {
   double cur_o5 = 0;
   for (int i=16; i<32; i++)
@@ -48,24 +44,18 @@ void BlowDetector::processFourier(const fftw_complex* freq_power)
   for (int i=64; i<128; i++)
     cur_o7 += freq_power[i][0];
   o7_ewma_ = o7_ewma_ * one_minus_ewma_alpha_ + cur_o7 * ewma_alpha_;
+}
 
-  if (on_)
-  {
-    if (o5_ewma_ < o5_off_thresh_ && o6_ewma_ < o6_off_thresh_ && o7_ewma_ < o7_off_thresh_)
-    {
-      on_ = false;
-      kickoffAction(action_off_);
-    }
-  }
-  else
-  {
-    if (refrac_blocks_left_ > 0)
-      refrac_blocks_left_--;
-    else if (o5_ewma_ > o5_on_thresh_ && o6_ewma_ > o6_on_thresh_ && o7_ewma_ > o7_on_thresh_)
-    {
-      on_ = true;
-      kickoffAction(action_on_);
-      refrac_blocks_left_ = kRefracBlocks;
-    }
-  }
+bool BlowDetector::shouldTransitionOn() const
+{
+  return o5_ewma_ > o5_on_thresh_ &&
+         o6_ewma_ > o6_on_thresh_ &&
+         o7_ewma_ > o7_on_thresh_;
+}
+
+bool BlowDetector::shouldTransitionOff() const
+{
+  return o5_ewma_ < o5_off_thresh_ &&
+         o6_ewma_ < o6_off_thresh_ &&
+         o7_ewma_ < o7_off_thresh_;
 }

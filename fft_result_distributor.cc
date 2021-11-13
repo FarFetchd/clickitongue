@@ -23,7 +23,7 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
                            fft_lease_.out[i][1]*fft_lease_.out[i][1];
   }
   for (auto& detector : detectors_)
-    detector->markFrameAndProcessFourier(fft_lease_.out);
+    detector->processFourierOutputBlock(fft_lease_.out);
 }
 
 

@@ -26,13 +26,12 @@ protected:
   // of the original complex number output at bin i.
   // The imaginary coefficient (array index 1) is left untouched - although
   // you're likely not at all interested in it.
-  void processFourier(const fftw_complex* freq_power) override;
+  void updateState(const fftw_complex* freq_power) override;
+
+  bool shouldTransitionOn() const override;
+  bool shouldTransitionOff() const override;
 
 private:
-  // action to be done when detector decides a blow has started...
-  const Action action_on_;
-  // ...or stopped.
-  const Action action_off_;
 
   // o5,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
   // ...o5 is bins 16+17+...+31, o6 is 32+...+63, o7 is 64+...+127.
@@ -48,8 +47,6 @@ private:
   double o5_ewma_ = 0;
   double o6_ewma_ = 0;
   double o7_ewma_ = 0;
-  bool on_ = false;
-  int refrac_blocks_left_ = 0;
 };
 
 #endif // CLICKITONGUE_BLOW_DETECTOR_H_

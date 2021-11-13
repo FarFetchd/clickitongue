@@ -27,10 +27,6 @@ constexpr int kNumFourierBins = kFourierBlocksize/2 + 1;
 // In Hz, the difference between two adjacent bin centers.
 constexpr double kBinWidth = kNyquist / (kFourierBlocksize / 2.0 + 1.0);
 
-// How long (in units of kFourierBlocksize; 2 means 2*kFourierBlocksize) we must
-// observe low energy after an event before being willing to declare a second event.
-constexpr int kRefracBlocks = 12;
-
 using Sample = float;
 
 enum class Action
