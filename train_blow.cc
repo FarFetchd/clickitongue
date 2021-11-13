@@ -1,4 +1,4 @@
-#include "train_pink.h"
+#include "train_blow.h"
 
 #include <cassert>
 #include <random>
@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "audio_recording.h"
-#include "pink_detector.h"
+#include "blow_detector.h"
 #include "fft_result_distributor.h"
 #include "interaction.h"
 
@@ -58,7 +58,7 @@ public:
   {
     std::vector<int> event_frames;
     std::vector<std::unique_ptr<Detector>> just_one_detector;
-    just_one_detector.emplace_back(std::make_unique<PinkDetector>(
+    just_one_detector.emplace_back(std::make_unique<BlowDetector>(
         nullptr, o5_on_thresh, o5_off_thresh, o6_on_thresh, o6_off_thresh,
         o7_on_thresh, o7_off_thresh, ewma_alpha, &event_frames));
 
@@ -408,12 +408,12 @@ private:
 
 } // namespace
 
-AudioRecording recordExamplePink(int desired_events)
+AudioRecording recordExampleBlow(int desired_events)
 {
   return recordExampleCommon(desired_events, "blowing", "blow on the mic");
 }
 
-PinkConfig trainPink(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
+BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
                      bool verbose)
 {
   std::vector<std::string> noise_fnames =
@@ -422,7 +422,7 @@ PinkConfig trainPink(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   TrainParamsFactory factory(audio_examples, noise_fnames);
   TrainParams best = patternSearch(factory, verbose);
 
-  PinkConfig ret;
+  BlowConfig ret;
   ret.action_on = Action::LeftDown;
   ret.action_off = Action::LeftUp;
   ret.o5_on_thresh = best.o5_on_thresh;

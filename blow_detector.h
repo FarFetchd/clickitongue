@@ -1,20 +1,20 @@
-#ifndef CLICKITONGUE_PINK_DETECTOR_H_
-#define CLICKITONGUE_PINK_DETECTOR_H_
+#ifndef CLICKITONGUE_BLOW_DETECTOR_H_
+#define CLICKITONGUE_BLOW_DETECTOR_H_
 
 #include "detector.h"
 
-class PinkDetector : public Detector
+class BlowDetector : public Detector
 {
 public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
-  PinkDetector(BlockingQueue<Action>* action_queue,
+  BlowDetector(BlockingQueue<Action>* action_queue,
                double o5_on_thresh, double o5_off_thresh, double o6_on_thresh,
                double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
                double ewma_alpha, std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
-  PinkDetector(BlockingQueue<Action>* action_queue,
+  BlowDetector(BlockingQueue<Action>* action_queue,
                Action action_on, Action action_off,
                double o5_on_thresh, double o5_off_thresh, double o6_on_thresh,
                double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
@@ -52,4 +52,4 @@ private:
   int refrac_blocks_left_ = 0;
 };
 
-#endif // CLICKITONGUE_PINK_DETECTOR_H_
+#endif // CLICKITONGUE_BLOW_DETECTOR_H_

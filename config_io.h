@@ -5,10 +5,10 @@
 
 #include "constants.h"
 
-struct PinkConfig
+struct BlowConfig
 {
-  PinkConfig() : enabled(false) {}
-  PinkConfig(farfetchd::ConfigReader const& cfg);
+  BlowConfig() : enabled(false) {}
+  BlowConfig(farfetchd::ConfigReader const& cfg);
 
   bool enabled;
   Action action_on;
@@ -39,10 +39,10 @@ struct HumConfig
 struct Config
 {
   Config() {}
-  Config(farfetchd::ConfigReader const& cfg) : pink(cfg), hum(cfg) {}
+  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), hum(cfg) {}
   std::string toString() const;
 
-  PinkConfig pink;
+  BlowConfig blow;
   HumConfig hum;
 };
 

@@ -42,17 +42,17 @@ std::string actionString(Action action)
 std::string Config::toString() const
 {
   std::stringstream sts;
-  if (pink.enabled)
+  if (blow.enabled)
   {
-    sts << "pink_action_on: " << actionString(pink.action_on) << "\n"
-        << "pink_action_off: " << actionString(pink.action_off) << "\n"
-        << "pink_o5_on_thresh: " << pink.o5_on_thresh << "\n"
-        << "pink_o5_off_thresh: " << pink.o5_off_thresh << "\n"
-        << "pink_o6_on_thresh: " << pink.o6_on_thresh << "\n"
-        << "pink_o6_off_thresh: " << pink.o6_off_thresh << "\n"
-        << "pink_o7_on_thresh: " << pink.o7_on_thresh << "\n"
-        << "pink_o7_off_thresh: " << pink.o7_off_thresh << "\n"
-        << "pink_ewma_alpha: " << pink.ewma_alpha << "\n";
+    sts << "blow_action_on: " << actionString(blow.action_on) << "\n"
+        << "blow_action_off: " << actionString(blow.action_off) << "\n"
+        << "blow_o5_on_thresh: " << blow.o5_on_thresh << "\n"
+        << "blow_o5_off_thresh: " << blow.o5_off_thresh << "\n"
+        << "blow_o6_on_thresh: " << blow.o6_on_thresh << "\n"
+        << "blow_o6_off_thresh: " << blow.o6_off_thresh << "\n"
+        << "blow_o7_on_thresh: " << blow.o7_on_thresh << "\n"
+        << "blow_o7_off_thresh: " << blow.o7_off_thresh << "\n"
+        << "blow_ewma_alpha: " << blow.ewma_alpha << "\n";
   }
   if (hum.enabled)
   {
@@ -66,17 +66,17 @@ std::string Config::toString() const
   return sts.str();
 }
 
-PinkConfig::PinkConfig(farfetchd::ConfigReader const& cfg)
+BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
 {
-  action_on = parseAction(cfg.getString("pink_action_on").value_or("x"));
-  action_off = parseAction(cfg.getString("pink_action_off").value_or("x"));
-  o5_on_thresh = cfg.getDouble("pink_o5_on_thresh").value_or(-1);
-  o5_off_thresh = cfg.getDouble("pink_o5_off_thresh").value_or(-1);
-  o6_on_thresh = cfg.getDouble("pink_o6_on_thresh").value_or(-1);
-  o6_off_thresh = cfg.getDouble("pink_o6_off_thresh").value_or(-1);
-  o7_on_thresh = cfg.getDouble("pink_o7_on_thresh").value_or(-1);
-  o7_off_thresh = cfg.getDouble("pink_o7_off_thresh").value_or(-1);
-  ewma_alpha = cfg.getDouble("pink_ewma_alpha").value_or(-1);
+  action_on = parseAction(cfg.getString("blow_action_on").value_or("x"));
+  action_off = parseAction(cfg.getString("blow_action_off").value_or("x"));
+  o5_on_thresh = cfg.getDouble("blow_o5_on_thresh").value_or(-1);
+  o5_off_thresh = cfg.getDouble("blow_o5_off_thresh").value_or(-1);
+  o6_on_thresh = cfg.getDouble("blow_o6_on_thresh").value_or(-1);
+  o6_off_thresh = cfg.getDouble("blow_o6_off_thresh").value_or(-1);
+  o7_on_thresh = cfg.getDouble("blow_o7_on_thresh").value_or(-1);
+  o7_off_thresh = cfg.getDouble("blow_o7_off_thresh").value_or(-1);
+  ewma_alpha = cfg.getDouble("blow_ewma_alpha").value_or(-1);
 
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
              o5_on_thresh >= 0 && o5_off_thresh >= 0 && o6_on_thresh >= 0 &&

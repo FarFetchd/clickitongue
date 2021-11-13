@@ -1,9 +1,9 @@
-#include "pink_detector.h"
+#include "blow_detector.h"
 
 #include <cassert>
 #include <cmath>
 
-PinkDetector::PinkDetector(BlockingQueue<Action>* action_queue,
+BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double o5_on_thresh, double o5_off_thresh,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
@@ -16,7 +16,7 @@ PinkDetector::PinkDetector(BlockingQueue<Action>* action_queue,
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_)
 {}
 
-PinkDetector::PinkDetector(BlockingQueue<Action>* action_queue,
+BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            Action action_on, Action action_off,
                            double o5_on_thresh, double o5_off_thresh,
                            double o6_on_thresh, double o6_off_thresh,
@@ -32,7 +32,7 @@ PinkDetector::PinkDetector(BlockingQueue<Action>* action_queue,
   assert(action_off_ != Action::RecordCurFrame);
 }
 
-void PinkDetector::processFourier(const fftw_complex* freq_power)
+void BlowDetector::processFourier(const fftw_complex* freq_power)
 {
   double cur_o5 = 0;
   for (int i=16; i<32; i++)

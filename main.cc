@@ -10,9 +10,9 @@
 #include "fft_result_distributor.h"
 #include "hum_detector.h"
 #include "interaction.h"
-#include "pink_detector.h"
+#include "blow_detector.h"
 #include "train_hum.h"
-#include "train_pink.h"
+#include "train_blow.h"
 
 #include "config_io.h"
 
@@ -76,7 +76,7 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 
 void normalOperation(Config config)
 {
-  if (!config.pink.enabled && !config.hum.enabled)
+  if (!config.blow.enabled && !config.hum.enabled)
   {
     promptInfo("Neither hum nor blow is enabled. Exiting.");
     return;
@@ -86,7 +86,7 @@ void normalOperation(Config config)
   ActionDispatcher action_dispatcher(&action_queue);
   std::thread action_dispatch(actionDispatch, &action_dispatcher);
 
-  if (config.pink.enabled)
+  if (config.blow.enabled)
     printf("spawning blow detector for left clicks\n");
   if (config.hum.enabled)
   {
@@ -96,13 +96,13 @@ void normalOperation(Config config)
   printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
   std::vector<std::unique_ptr<Detector>> detectors;
-  if (config.pink.enabled)
+  if (config.blow.enabled)
   {
-    detectors.emplace_back(std::make_unique<PinkDetector>(
-        &action_queue, config.pink.action_on, config.pink.action_off,
-        config.pink.o5_on_thresh, config.pink.o5_off_thresh, config.pink.o6_on_thresh,
-        config.pink.o6_off_thresh, config.pink.o7_on_thresh, config.pink.o7_off_thresh,
-        config.pink.ewma_alpha));
+    detectors.emplace_back(std::make_unique<BlowDetector>(
+        &action_queue, config.blow.action_on, config.blow.action_off,
+        config.blow.o5_on_thresh, config.blow.o5_off_thresh, config.blow.o6_on_thresh,
+        config.blow.o6_off_thresh, config.blow.o7_on_thresh, config.blow.o7_off_thresh,
+        config.blow.ewma_alpha));
   }
   if (config.hum.enabled)
   {
@@ -151,7 +151,7 @@ void firstTimeTrain()
     }
     else // for actual use
       for (int i = 0; i < 6; i++)
-        blow_examples.emplace_back(recordExamplePink(i), i);
+        blow_examples.emplace_back(recordExampleBlow(i), i);
   }
   std::vector<std::pair<AudioRecording, int>> hum_examples;
   if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
@@ -181,15 +181,15 @@ void firstTimeTrain()
 
   Config config;
   if (try_blows)
-    config.pink = trainPink(blow_examples_plus_neg, true);
+    config.blow = trainBlow(blow_examples_plus_neg, true);
 
-  Action hum_on_action = config.pink.enabled ? Action::RightDown
+  Action hum_on_action = config.blow.enabled ? Action::RightDown
                                              : Action::LeftDown;
-  Action hum_off_action = config.pink.enabled ? Action::RightUp
+  Action hum_off_action = config.blow.enabled ? Action::RightUp
                                               : Action::LeftUp;
   config.hum = trainHum(hum_examples_plus_neg, hum_on_action, hum_off_action, true);
 
-  if (config.pink.enabled && config.hum.enabled)
+  if (config.blow.enabled && config.hum.enabled)
   {
     promptInfo(
 "Clickitongue should now be configured. Blow on the mic to left click, keep "
