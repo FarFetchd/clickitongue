@@ -5,24 +5,6 @@
 
 #include "constants.h"
 
-struct BlowConfig
-{
-  BlowConfig() : enabled(false) {}
-  BlowConfig(farfetchd::ConfigReader const& cfg);
-
-  bool enabled;
-  Action action_on;
-  Action action_off;
-  double lowpass_percent;
-  double highpass_percent;
-  double low_on_thresh;
-  double low_off_thresh;
-  double high_on_thresh;
-  double high_off_thresh;
-  double high_spike_frac;
-  double high_spike_level;
-};
-
 struct PinkConfig
 {
   PinkConfig() : enabled(false) {}
@@ -57,10 +39,9 @@ struct HumConfig
 struct Config
 {
   Config() {}
-  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), pink(cfg), hum(cfg) {}
+  Config(farfetchd::ConfigReader const& cfg) : pink(cfg), hum(cfg) {}
   std::string toString() const;
 
-  BlowConfig blow;
   PinkConfig pink;
   HumConfig hum;
 };

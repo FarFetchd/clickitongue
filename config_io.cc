@@ -42,19 +42,6 @@ std::string actionString(Action action)
 std::string Config::toString() const
 {
   std::stringstream sts;
-  if (blow.enabled)
-  {
-    sts << "blow_action_on: " << actionString(blow.action_on) << "\n"
-        << "blow_action_off: " << actionString(blow.action_off) << "\n"
-        << "blow_lowpass_percent: " << blow.lowpass_percent << "\n"
-        << "blow_highpass_percent: " << blow.highpass_percent << "\n"
-        << "blow_low_on_thresh: " << blow.low_on_thresh << "\n"
-        << "blow_low_off_thresh: " << blow.low_off_thresh << "\n"
-        << "blow_high_on_thresh: " << blow.high_on_thresh << "\n"
-        << "blow_high_off_thresh: " << blow.high_off_thresh << "\n"
-        << "blow_high_spike_frac: " << blow.high_spike_frac << "\n"
-        << "blow_high_spike_level: " << blow.high_spike_level << "\n";
-  }
   if (pink.enabled)
   {
     sts << "pink_action_on: " << actionString(pink.action_on) << "\n"
@@ -77,26 +64,6 @@ std::string Config::toString() const
         << "hum_ewma_alpha: " << hum.ewma_alpha << "\n";
   }
   return sts.str();
-}
-
-BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
-{
-  action_on = parseAction(cfg.getString("blow_action_on").value_or("x"));
-  action_off = parseAction(cfg.getString("blow_action_off").value_or("x"));
-  lowpass_percent = cfg.getDouble("blow_lowpass_percent").value_or(-1);
-  highpass_percent = cfg.getDouble("blow_highpass_percent").value_or(-1);
-  low_on_thresh = cfg.getDouble("blow_low_on_thresh").value_or(-1);
-  low_off_thresh = cfg.getDouble("blow_low_off_thresh").value_or(-1);
-  high_on_thresh = cfg.getDouble("blow_high_on_thresh").value_or(-1);
-  high_off_thresh = cfg.getDouble("blow_high_off_thresh").value_or(-1);
-  high_spike_frac = cfg.getDouble("blow_high_spike_frac").value_or(-1);
-  high_spike_level = cfg.getDouble("blow_high_spike_level").value_or(-1);
-
-  enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
-              lowpass_percent >= 0 && highpass_percent >= 0 &&
-              low_on_thresh >= 0 && low_off_thresh >= 0 &&
-              high_on_thresh >= 0 && high_off_thresh >= 0 &&
-              high_spike_frac >= 0 && high_spike_level >= 0);
 }
 
 PinkConfig::PinkConfig(farfetchd::ConfigReader const& cfg)

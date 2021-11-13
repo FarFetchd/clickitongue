@@ -4,7 +4,6 @@
 #include "action_dispatcher.h"
 #include "audio_input.h"
 #include "audio_recording.h"
-#include "blow_detector.h"
 #include "cmdline_options.h"
 #include "constants.h"
 #include "easy_fourier.h"
