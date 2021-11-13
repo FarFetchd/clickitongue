@@ -124,11 +124,11 @@ private:
 };
 
 const double kMinO1On = 500;
-const double kMaxO1On = 10000;
+const double kMaxO1On = 12000;
 const double kMinO1Off = 100;
 const double kMaxO1Off = 2000;
-const double kMinO6Limit = 50;
-const double kMaxO6Limit = 1000;
+const double kMinO6Limit = 20;
+const double kMaxO6Limit = 400;
 const double kMinAlpha = 0.05;
 const double kMaxAlpha = 0.5;
 
