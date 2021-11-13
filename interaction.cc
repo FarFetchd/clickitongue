@@ -18,7 +18,8 @@ bool promptYesNo(const char* prompt)
 void promptInfo(const char* prompt)
 {
   // TODO support multiple OSes
-  printf("\e[1;1H\e[2J");
+  if (!DOING_DEVELOPMENT_TESTING)
+    printf("\e[1;1H\e[2J");
   printf("\n-------------------------------------------------------------------\n"
          "%s\n-------------------------------------------------------------------\n\n\n",
          prompt);

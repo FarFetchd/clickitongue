@@ -19,6 +19,10 @@ public:
   // you're likely not at all interested in it.
   void processFourierOutputBlock(const fftw_complex* freq_power);
 
+  // After calling foo.addInhibitionTarget(bar), foo will keep bar's refractory
+  // countdown maxed out for as long as foo is in the on state.
+  void addInhibitionTarget(Detector* target);
+
   Detector() = delete;
 
 protected:

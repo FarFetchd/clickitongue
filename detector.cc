@@ -18,8 +18,6 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
       on_ = false;
       kickoffAction(action_off_);
     }
-// TODO     for (Detector* target : inhibition_targets_)
-//       target->beginRefractoryPeriod();
   }
   else // off
   {
@@ -29,8 +27,14 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
     {
       on_ = true;
       kickoffAction(action_on_);
-      beginRefractoryPeriod();
     }
+  }
+
+  if (on_)
+  {
+    beginRefractoryPeriod();
+    for (Detector* target : inhibition_targets_)
+      target->beginRefractoryPeriod();
   }
 }
 
@@ -43,3 +47,8 @@ void Detector::kickoffAction(Action action)
 }
 
 void Detector::beginRefractoryPeriod() { refrac_blocks_left_ = kRefracBlocks; }
+
+void Detector::addInhibitionTarget(Detector* target)
+{
+  inhibition_targets_.push_back(target);
+}

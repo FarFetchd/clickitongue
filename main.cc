@@ -95,22 +95,32 @@ void normalOperation(Config config)
   }
   printf("\ndetection parameters:\n%s\n", config.toString().c_str());
 
-  std::vector<std::unique_ptr<Detector>> detectors;
+  std::unique_ptr<Detector> blow_detector;
   if (config.blow.enabled)
   {
-    detectors.emplace_back(std::make_unique<BlowDetector>(
+    blow_detector = std::make_unique<BlowDetector>(
         &action_queue, config.blow.action_on, config.blow.action_off,
         config.blow.o5_on_thresh, config.blow.o5_off_thresh, config.blow.o6_on_thresh,
         config.blow.o6_off_thresh, config.blow.o7_on_thresh, config.blow.o7_off_thresh,
-        config.blow.ewma_alpha));
+        config.blow.ewma_alpha);
   }
+  std::unique_ptr<Detector> hum_detector;
   if (config.hum.enabled)
   {
-    detectors.emplace_back(std::make_unique<HumDetector>(
+    hum_detector = std::make_unique<HumDetector>(
         &action_queue, config.hum.action_on, config.hum.action_off,
         config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o6_limit,
-        config.hum.ewma_alpha));
+        config.hum.ewma_alpha);
+    if (blow_detector)
+      blow_detector->addInhibitionTarget(hum_detector.get());
   }
+
+  std::vector<std::unique_ptr<Detector>> detectors;
+  if (config.blow.enabled)
+    detectors.push_back(std::move(blow_detector));
+  if (config.hum.enabled)
+    detectors.push_back(std::move(hum_detector));
+
   FFTResultDistributor fft_distributor(std::move(detectors));
 
   AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
@@ -121,7 +131,6 @@ void normalOperation(Config config)
   action_dispatch.join();
 }
 
-constexpr bool DOING_DEVELOPMENT_TESTING = true;
 constexpr char kDefaultConfig[] = "default";
 void firstTimeTrain()
 {
