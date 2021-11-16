@@ -187,6 +187,6 @@ void ActionDispatcher::scrollDown()
 
 // ================================OSX========================================
 #ifdef CLICKITONGUE_OSX
-#include "action_dispatcher_osx.h"
+#error "OSX not supported yet"
 #endif // CLICKITONGUE_OSX
 // ==============================End OSX======================================
