@@ -7,13 +7,14 @@
 
 Action parseAction(std::string str)
 {
-  if (str == "LeftDown") return Action::LeftDown;
-  if (str == "LeftUp") return Action::LeftUp;
-  if (str == "RightDown") return Action::RightDown;
-  if (str == "RightUp") return Action::RightUp;
-  if (str == "ScrollDown") return Action::ScrollDown;
-  if (str == "ScrollUp") return Action::ScrollUp;
-  if (str == "RecordCurFrame") return Action::RecordCurFrame;
+  if (str.find("LeftDown") != std::string::npos) return Action::LeftDown;
+  if (str.find("LeftUp") != std::string::npos) return Action::LeftUp;
+  if (str.find("RightDown") != std::string::npos) return Action::RightDown;
+  if (str.find("RightUp") != std::string::npos) return Action::RightUp;
+  if (str.find("ScrollDown") != std::string::npos) return Action::ScrollDown;
+  if (str.find("ScrollUp") != std::string::npos) return Action::ScrollUp;
+  if (str.find("RecordCurFrame") != std::string::npos) return Action::RecordCurFrame;
+
   return Action::NoAction;
 }
 
