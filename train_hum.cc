@@ -1,5 +1,6 @@
 #include "train_hum.h"
 
+#include <algorithm>
 #include <cassert>
 #include <random>
 #include <thread>
@@ -299,6 +300,52 @@ private:
   double pattern_divisor_ = 4.0;
 };
 
+double pickScalingFactor(AudioRecording const& rec)
+{
+  FourierLease lease = g_fourier->borrowWorker();
+
+  std::vector<double> o1;
+  std::vector<float> const& samples = rec.samples();
+  for (int i = 0; i < samples.size(); i += kFourierBlocksize * kNumChannels)
+  {
+    for (int j=0; j<kFourierBlocksize; j++)
+      lease.in[j] = samples[i + j * kNumChannels];
+    lease.runFFT();
+
+    o1.push_back(lease.out[1][0]*lease.out[1][0] + lease.out[1][1]*lease.out[1][1]);
+  }
+
+  std::sort(o1.begin(), o1.end());
+
+  double max_gap = 0;
+  int ind_before_gap = 0;
+  for (int j = (int)(0.1*o1.size()); j < (int)(0.95*o1.size()); j+=10)
+  {
+    if (o1[j+10] - o1[j] > max_gap)
+    {
+      max_gap = o1[j+10] - o1[j];
+      ind_before_gap = j;
+    }
+  }
+  double median_loud = o1[ind_before_gap+10+(o1.size()-(ind_before_gap+10))/2];
+
+  const std::array<double, 22> kScales = {0.001, 0.002, 0.005, 0.01, 0.02, 0.05,
+    0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000};
+  const double kCanonicalHumO1 = 14689;
+  double best_scale = 1;
+  double best_gap = 999999999;
+  for (double scale : kScales)
+  {
+    double gap = fabs(median_loud * scale - kCanonicalHumO1);
+    if (gap < best_gap)
+    {
+      best_gap = gap;
+      best_scale = scale;
+    }
+  }
+  return best_scale;
+}
+
 // the following is actual code, not just a header:
 #include "train_common.h"
 
@@ -312,6 +359,13 @@ AudioRecording recordExampleHum(int desired_events)
 HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
                    Action hum_on_action, Action hum_off_action, bool verbose)
 {
+  int most_examples_ind = 0;
+  for (int i = 0; i < audio_examples.size(); i++)
+    if (audio_examples[i].second > audio_examples[most_examples_ind].second)
+      most_examples_ind = i;
+  double scale = pickScalingFactor(audio_examples[most_examples_ind].first);
+  printf("hum scale: %g\n", scale);
+
   std::vector<std::string> noise_fnames =
       {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
 

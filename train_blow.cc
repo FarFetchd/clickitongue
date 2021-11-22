@@ -1,5 +1,6 @@
 #include "train_blow.h"
 
+#include <algorithm>
 #include <cassert>
 #include <random>
 #include <thread>
@@ -403,6 +404,71 @@ private:
   double pattern_divisor_ = 4.0;
 };
 
+double pickScalingFactor(AudioRecording const& rec)
+{
+  std::vector<double> o[8];
+
+  FourierLease lease = g_fourier->borrowWorker();
+
+  std::vector<float> const& samples = rec.samples();
+  for (int i = 0; i < samples.size(); i += kFourierBlocksize * kNumChannels)
+  {
+    for (int j=0; j<kFourierBlocksize; j++)
+      lease.in[j] = samples[i + j * kNumChannels];
+    lease.runFFT();
+    for (int x = 0; x < kNumFourierBins; x++)
+      lease.out[x][0]=lease.out[x][0]*lease.out[x][0] + lease.out[x][1]*lease.out[x][1];
+
+    double sixteen = 0; for (int j=0;j<16;j++) sixteen+=lease.out[16+j][0];
+    o[5].push_back(sixteen);
+    double t2 = 0; for (int j=0;j<32;j++) t2+=lease.out[32+j][0];
+    o[6].push_back(t2);
+    double s4 = 0; for (int j=0;j<64;j++) s4+=lease.out[64+j][0];
+    o[7].push_back(s4);
+  }
+  std::sort(o[5].begin(), o[5].end());
+  std::sort(o[6].begin(), o[6].end());
+  std::sort(o[7].begin(), o[7].end());
+
+  std::vector<double> medians;
+  for (int i = 5; i < 8; i++)
+  {
+    double max_gap = 0;
+    int ind_before_gap = 0;
+    for (int j = (int)(0.1*o[i].size()); j < (int)(0.95*o[i].size()); j+=10)
+    {
+      if (o[i][j+10] - o[i][j] > max_gap)
+      {
+        max_gap = o[i][j+10] - o[i][j];
+        ind_before_gap = j;
+      }
+    }
+    medians.push_back(o[i][ind_before_gap+10+(o[i].size()-(ind_before_gap+10))/2]);
+  }
+
+  const std::array<double, 22> kScales = {0.001, 0.002, 0.005, 0.01, 0.02, 0.05,
+    0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000};
+  const std::array<double, 3> kCanonicalBlowO567 = {883,412,174};
+  double best_scale = 1;
+  double best_squerr = 999999999999;
+  for (double scale : kScales)
+  {
+    double squerr = 0;
+    assert(medians.size() == kCanonicalBlowO567.size());
+    for (int i = 0; i < medians.size(); i++)
+    {
+      squerr += (medians[i] * scale - kCanonicalBlowO567[i]) *
+                (medians[i] * scale - kCanonicalBlowO567[i]);
+    }
+    if (squerr < best_squerr)
+    {
+      best_squerr = squerr;
+      best_scale = scale;
+    }
+  }
+  return best_scale;
+}
+
 // the following is actual code, not just a header:
 #include "train_common.h"
 
@@ -416,6 +482,13 @@ AudioRecording recordExampleBlow(int desired_events)
 BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
                      bool verbose)
 {
+  int most_examples_ind = 0;
+  for (int i = 0; i < audio_examples.size(); i++)
+    if (audio_examples[i].second > audio_examples[most_examples_ind].second)
+      most_examples_ind = i;
+  double scale = pickScalingFactor(audio_examples[most_examples_ind].first);
+  printf("blow scale: %g\n", scale);
+
   std::vector<std::string> noise_fnames =
       {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
 
