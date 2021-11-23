@@ -121,7 +121,34 @@ void normalOperation(Config config)
   if (config.hum.enabled)
     detectors.push_back(std::move(hum_detector));
 
-  FFTResultDistributor fft_distributor(std::move(detectors));
+  double scale = 1;
+  if (config.blow.enabled)
+    scale = config.blow.scale;
+  else if (config.hum.enabled)
+    scale = config.hum.scale;
+//   else if (config.whistle.enabled) TODO
+//     scale = config.whistle.scale;
+
+  if (config.blow.enabled && config.hum.enabled &&
+      config.hum.scale != config.blow.scale)
+  {
+    promptInfo("Error! Blow and hum both enabled with different scaling factors.");
+    exit(1);
+  }
+//   if (config.whistle.enabled && config.hum.enabled && TODO
+//       config.hum.scale != config.whistle.scale)
+//   {
+//     promptInfo("Error! Whistle and hum both enabled with different scaling factors.");
+//     exit(1);
+//   }
+//   if (config.blow.enabled && config.whistle.enabled &&
+//       config.whistle.scale != config.blow.scale)
+//   {
+//     promptInfo("Error! Blow and whistle both enabled with different scaling factors.");
+//     exit(1);
+//   }
+
+  FFTResultDistributor fft_distributor(std::move(detectors), scale);
 
   AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
   while (audio_input.active())
@@ -188,15 +215,26 @@ void firstTimeTrain()
   for (auto const& ex_pair : hum_examples)
     blow_examples_plus_neg.emplace_back(ex_pair.first, 0);
 
+  // TODO if one of hum/blow/whistle has less variance/noise than the others,
+  //      then it's probably best to just use that one, rather than trying to
+  //      vote or combine or anything.
+  // TODO scale whistle
+  double scale = 1.0;
+  if (try_blows)
+    scale = pickBlowScalingFactor(blow_examples_plus_neg);
+  else
+    scale = pickHumScalingFactor(hum_examples_plus_neg);
+
   Config config;
   if (try_blows)
-    config.blow = trainBlow(blow_examples_plus_neg, true);
+    config.blow = trainBlow(blow_examples_plus_neg, scale, true);
 
   Action hum_on_action = config.blow.enabled ? Action::RightDown
                                              : Action::LeftDown;
   Action hum_off_action = config.blow.enabled ? Action::RightUp
                                               : Action::LeftUp;
-  config.hum = trainHum(hum_examples_plus_neg, hum_on_action, hum_off_action, true);
+  config.hum = trainHum(hum_examples_plus_neg, hum_on_action, hum_off_action,
+                        scale, true);
 
   if (config.blow.enabled && config.hum.enabled)
   {

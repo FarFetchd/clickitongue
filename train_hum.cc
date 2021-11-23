@@ -16,9 +16,9 @@ namespace {
 class TrainParams
 {
 public:
-  TrainParams(double o1on, double o1off, double o6lim, double alpha)
+  TrainParams(double o1on, double o1off, double o6lim, double alpha, double scl)
   : o1_on_thresh(o1on), o1_off_thresh(o1off), o6_limit(o6lim),
-    ewma_alpha(alpha) {}
+    ewma_alpha(alpha), scale(scl) {}
 
   bool operator==(TrainParams const& other) const
   {
@@ -57,7 +57,7 @@ public:
     just_one_detector.emplace_back(std::make_unique<HumDetector>(
         nullptr, o1_on_thresh, o1_off_thresh, o6_limit, ewma_alpha, &event_frames));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector));
+    FFTResultDistributor wrapper(std::move(just_one_detector), scale);
 
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * kNumChannels < samples.size();
@@ -102,6 +102,7 @@ public:
   double o1_off_thresh;
   double o6_limit;
   double ewma_alpha;
+  double scale;
 
   std::vector<int> score;
 };
@@ -166,9 +167,12 @@ class TrainParamsCocoon
 public:
   TrainParamsCocoon(
       double o1_on_thresh, double o1_off_thresh, double o6_limit, double ewma_alpha,
+      double scale,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
-  : pupa_(std::make_unique<TrainParams>(o1_on_thresh, o1_off_thresh, o6_limit, ewma_alpha)),
-    score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(), example_sets)) {}
+  : pupa_(std::make_unique<TrainParams>(o1_on_thresh, o1_off_thresh, o6_limit,
+                                        ewma_alpha, scale)),
+    score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
+                                                  example_sets)) {}
 
   TrainParams awaitHatch() { score_computer_->join(); return *pupa_; }
 
@@ -183,7 +187,8 @@ class TrainParamsFactory
 {
 public:
   TrainParamsFactory(std::vector<std::pair<AudioRecording, int>> const& raw_examples,
-                     std::vector<std::string> const& noise_fnames)
+                     std::vector<std::string> const& noise_fnames, double scale)
+    : scale_(scale)
   {
     std::vector<AudioRecording> noises;
     for (auto name : noise_fnames)
@@ -213,7 +218,7 @@ public:
     if (o1_off_thresh < o1_on_thresh)
     {
       ret.emplace_back(o1_on_thresh, o1_off_thresh, o6_limit,
-                       ewma_alpha, examples_sets_);
+                       ewma_alpha, scale_, examples_sets_);
       return true;
     }
     return false;
@@ -249,7 +254,7 @@ public:
                      0.5*(kMaxO1Off-kMinO1Off),
                      0.5*(kMaxO6Limit-kMinO6Limit),
                      0.5*(kMaxAlpha-kMinAlpha),
-                     examples_sets_);
+                     scale_, examples_sets_);
     for (int i = 0; i < 15; i++)
       emplaceRandomParams(ret);
     return ret;
@@ -293,6 +298,8 @@ public:
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
 private:
+  // The factor that all Fourier power outputs will be multiplied by.
+  const double scale_;
   // A vector of example-sets. Each example-set is a vector of samples of audio,
   // paired with how many events are expected to be in that audio.
   std::vector<std::vector<std::pair<AudioRecording, int>>> examples_sets_;
@@ -300,8 +307,20 @@ private:
   double pattern_divisor_ = 4.0;
 };
 
-double pickScalingFactor(AudioRecording const& rec)
+// the following is actual code, not just a header:
+#include "train_common.h"
+
+} // namespace
+
+double pickHumScalingFactor(std::vector<std::pair<AudioRecording, int>>
+                            const& audio_examples)
 {
+  int most_examples_ind = 0;
+  for (int i = 0; i < audio_examples.size(); i++)
+    if (audio_examples[i].second > audio_examples[most_examples_ind].second)
+      most_examples_ind = i;
+  AudioRecording const& rec = audio_examples[most_examples_ind].first;
+
   FourierLease lease = g_fourier->borrowWorker();
 
   std::vector<double> o1;
@@ -346,33 +365,23 @@ double pickScalingFactor(AudioRecording const& rec)
   return best_scale;
 }
 
-// the following is actual code, not just a header:
-#include "train_common.h"
-
-} // namespace
-
 AudioRecording recordExampleHum(int desired_events)
 {
   return recordExampleCommon(desired_events, "humming", "hum");
 }
 
 HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
-                   Action hum_on_action, Action hum_off_action, bool verbose)
+                   Action hum_on_action, Action hum_off_action, double scale,
+                   bool verbose)
 {
-  int most_examples_ind = 0;
-  for (int i = 0; i < audio_examples.size(); i++)
-    if (audio_examples[i].second > audio_examples[most_examples_ind].second)
-      most_examples_ind = i;
-  double scale = pickScalingFactor(audio_examples[most_examples_ind].first);
-  printf("hum scale: %g\n", scale);
-
   std::vector<std::string> noise_fnames =
       {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
 
-  TrainParamsFactory factory(audio_examples, noise_fnames);
+  TrainParamsFactory factory(audio_examples, noise_fnames, scale);
   TrainParams best = patternSearch(factory, verbose);
 
   HumConfig ret;
+  ret.scale = scale;
   ret.action_on = hum_on_action;
   ret.action_off = hum_off_action;
   ret.o1_on_thresh = best.o1_on_thresh;

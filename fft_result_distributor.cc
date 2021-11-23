@@ -2,9 +2,12 @@
 
 #include <cstdio>
 
-FFTResultDistributor::FFTResultDistributor(std::vector<std::unique_ptr<Detector>>&& detectors)
-  : detectors_(std::move(detectors)),
-    fft_lease_(g_fourier->borrowWorker())
+FFTResultDistributor::FFTResultDistributor(
+    std::vector<std::unique_ptr<Detector>>&& detectors,
+    double scale)
+: detectors_(std::move(detectors)),
+  fft_lease_(g_fourier->borrowWorker()),
+  scale_(scale)
 {}
 
 void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames)
@@ -19,8 +22,8 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
   fft_lease_.runFFT();
   for (int i=0; i<kNumFourierBins; i++)
   {
-    fft_lease_.out[i][0] = fft_lease_.out[i][0]*fft_lease_.out[i][0] +
-                           fft_lease_.out[i][1]*fft_lease_.out[i][1];
+    fft_lease_.out[i][0] = scale_ * (fft_lease_.out[i][0]*fft_lease_.out[i][0] +
+                                     fft_lease_.out[i][1]*fft_lease_.out[i][1]);
   }
   for (auto& detector : detectors_)
     detector->processFourierOutputBlock(fft_lease_.out);

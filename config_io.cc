@@ -47,7 +47,8 @@ std::string Config::toString() const
         << "blow_o6_off_thresh: " << blow.o6_off_thresh << "\n"
         << "blow_o7_on_thresh: " << blow.o7_on_thresh << "\n"
         << "blow_o7_off_thresh: " << blow.o7_off_thresh << "\n"
-        << "blow_ewma_alpha: " << blow.ewma_alpha << "\n";
+        << "blow_ewma_alpha: " << blow.ewma_alpha << "\n"
+        << "blow_scale: " << blow.scale << "\n";
   }
   if (hum.enabled)
   {
@@ -56,7 +57,8 @@ std::string Config::toString() const
         << "hum_o1_on_thresh: " << hum.o1_on_thresh << "\n"
         << "hum_o1_off_thresh: " << hum.o1_off_thresh << "\n"
         << "hum_o6_limit: " << hum.o6_limit << "\n"
-        << "hum_ewma_alpha: " << hum.ewma_alpha << "\n";
+        << "hum_ewma_alpha: " << hum.ewma_alpha << "\n"
+        << "hum_scale: " << hum.scale << "\n";
   }
   return sts.str();
 }
@@ -72,11 +74,12 @@ BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
   o7_on_thresh = cfg.getDouble("blow_o7_on_thresh").value_or(-1);
   o7_off_thresh = cfg.getDouble("blow_o7_off_thresh").value_or(-1);
   ewma_alpha = cfg.getDouble("blow_ewma_alpha").value_or(-1);
+  scale = cfg.getDouble("blow_scale").value_or(-1);
 
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
              o5_on_thresh >= 0 && o5_off_thresh >= 0 && o6_on_thresh >= 0 &&
              o6_off_thresh >= 0 && o7_on_thresh >= 0 && o7_off_thresh >= 0 &&
-             ewma_alpha >= 0);
+             ewma_alpha >= 0 && scale >= 0);
 }
 
 HumConfig::HumConfig(farfetchd::ConfigReader const& cfg)
@@ -87,10 +90,11 @@ HumConfig::HumConfig(farfetchd::ConfigReader const& cfg)
   o1_off_thresh = cfg.getDouble("hum_o1_off_thresh").value_or(-1);
   o6_limit = cfg.getDouble("hum_o6_limit").value_or(-1);
   ewma_alpha = cfg.getDouble("hum_ewma_alpha").value_or(-1);
+  scale = cfg.getDouble("hum_scale").value_or(-1);
 
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
              o1_on_thresh >= 0 && o1_off_thresh >= 0 && o6_limit >= 0 &&
-             ewma_alpha >= 0);
+             ewma_alpha >= 0 && scale >= 0);
 }
 
 #ifdef CLICKITONGUE_LINUX

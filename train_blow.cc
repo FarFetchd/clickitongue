@@ -17,10 +17,10 @@ class TrainParams
 {
 public:
   TrainParams(double o5on, double o5off, double o6on, double o6off,
-              double o7on, double o7off, double alpha)
+              double o7on, double o7off, double alpha, double scl)
   : o5_on_thresh(o5on), o5_off_thresh(o5off), o6_on_thresh(o6on),
     o6_off_thresh(o6off), o7_on_thresh(o7on), o7_off_thresh(o7off),
-    ewma_alpha(alpha) {}
+    ewma_alpha(alpha), scale(scl) {}
 
   bool operator==(TrainParams const& other) const
   {
@@ -63,7 +63,7 @@ public:
         nullptr, o5_on_thresh, o5_off_thresh, o6_on_thresh, o6_off_thresh,
         o7_on_thresh, o7_off_thresh, ewma_alpha, &event_frames));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector));
+    FFTResultDistributor wrapper(std::move(just_one_detector), scale);
 
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * kNumChannels < samples.size();
@@ -74,9 +74,11 @@ public:
     return event_frames.size();
   }
 
-  // for each example-set, detectEvents on each example, and sum up that sets'
-  // total violations. the score is a vector of those violations, one count per example-set.
-  void computeScore(std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
+  // For each example-set, detectEvents on each example, and sum up that sets'
+  // total violations. The score is a vector of those violations, one count per
+  // example-set.
+  void computeScore(std::vector<std::vector<std::pair<AudioRecording, int>>>
+                    const& example_sets)
   {
     score.clear();
     for (auto const& examples : example_sets)
@@ -114,6 +116,7 @@ public:
   double o7_on_thresh;
   double o7_off_thresh;
   double ewma_alpha;
+  double scale;
 
   std::vector<int> score;
 };
@@ -200,11 +203,13 @@ public:
   TrainParamsCocoon(
       double o5_on_thresh, double o5_off_thresh, double o6_on_thresh,
       double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
-      double ewma_alpha,
+      double ewma_alpha, double scale,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
   : pupa_(std::make_unique<TrainParams>(o5_on_thresh, o5_off_thresh, o6_on_thresh,
-                                        o6_off_thresh, o7_on_thresh, o7_off_thresh, ewma_alpha)),
-    score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(), example_sets)) {}
+                                        o6_off_thresh, o7_on_thresh, o7_off_thresh,
+                                        ewma_alpha, scale)),
+    score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
+                                                  example_sets)) {}
 
   TrainParams awaitHatch() { score_computer_->join(); return *pupa_; }
 
@@ -219,7 +224,8 @@ class TrainParamsFactory
 {
 public:
   TrainParamsFactory(std::vector<std::pair<AudioRecording, int>> const& raw_examples,
-                     std::vector<std::string> const& noise_fnames)
+                     std::vector<std::string> const& noise_fnames, double scale)
+    : scale_(scale)
   {
     std::vector<AudioRecording> noises;
     for (auto name : noise_fnames)
@@ -252,7 +258,8 @@ public:
         o7_off_thresh < o7_on_thresh)
     {
       ret.emplace_back(o5_on_thresh, o5_off_thresh, o6_on_thresh, o6_off_thresh,
-                       o7_on_thresh, o7_off_thresh, ewma_alpha, examples_sets_);
+                       o7_on_thresh, o7_off_thresh, ewma_alpha, scale_,
+                       examples_sets_);
       return true;
     }
     return false;
@@ -301,7 +308,7 @@ public:
                      0.5*(kMaxO7On-kMinO7On),
                      0.5*(kMaxO7Off-kMinO7Off),
                      0.5*(kMaxAlpha-kMinAlpha),
-                     examples_sets_);
+                     scale_, examples_sets_);
     for (int i = 0; i < 15; i++)
       emplaceRandomParams(ret);
     return ret;
@@ -397,6 +404,8 @@ public:
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
 private:
+  // The factor that all Fourier power outputs will be multiplied by.
+  const double scale_;
   // A vector of example-sets. Each example-set is a vector of samples of audio,
   // paired with how many events are expected to be in that audio.
   std::vector<std::vector<std::pair<AudioRecording, int>>> examples_sets_;
@@ -404,8 +413,20 @@ private:
   double pattern_divisor_ = 4.0;
 };
 
-double pickScalingFactor(AudioRecording const& rec)
+// the following is actual code, not just a header:
+#include "train_common.h"
+
+} // namespace
+
+double pickBlowScalingFactor(std::vector<std::pair<AudioRecording, int>>
+                             const& audio_examples)
 {
+  int most_examples_ind = 0;
+  for (int i = 0; i < audio_examples.size(); i++)
+    if (audio_examples[i].second > audio_examples[most_examples_ind].second)
+      most_examples_ind = i;
+  AudioRecording const& rec = audio_examples[most_examples_ind].first;
+
   std::vector<double> o[8];
 
   FourierLease lease = g_fourier->borrowWorker();
@@ -469,33 +490,22 @@ double pickScalingFactor(AudioRecording const& rec)
   return best_scale;
 }
 
-// the following is actual code, not just a header:
-#include "train_common.h"
-
-} // namespace
-
 AudioRecording recordExampleBlow(int desired_events)
 {
   return recordExampleCommon(desired_events, "blowing", "blow on the mic");
 }
 
 BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
-                     bool verbose)
+                     double scale, bool verbose)
 {
-  int most_examples_ind = 0;
-  for (int i = 0; i < audio_examples.size(); i++)
-    if (audio_examples[i].second > audio_examples[most_examples_ind].second)
-      most_examples_ind = i;
-  double scale = pickScalingFactor(audio_examples[most_examples_ind].first);
-  printf("blow scale: %g\n", scale);
-
   std::vector<std::string> noise_fnames =
       {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
 
-  TrainParamsFactory factory(audio_examples, noise_fnames);
+  TrainParamsFactory factory(audio_examples, noise_fnames, scale);
   TrainParams best = patternSearch(factory, verbose);
 
   BlowConfig ret;
+  ret.scale = scale;
   ret.action_on = Action::LeftDown;
   ret.action_off = Action::LeftUp;
   ret.o5_on_thresh = best.o5_on_thresh;

@@ -22,6 +22,7 @@ struct BlowConfig
   double o7_on_thresh;
   double o7_off_thresh;
   double ewma_alpha;
+  double scale;
 };
 
 struct HumConfig
@@ -36,6 +37,7 @@ struct HumConfig
   double o1_off_thresh;
   double o6_limit;
   double ewma_alpha;
+  double scale;
 };
 
 struct Config
