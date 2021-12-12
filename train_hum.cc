@@ -124,6 +124,7 @@ private:
   std::mt19937 mt_;
   std::uniform_real_distribution<double> dist_;
 };
+double randomBetween(double a, double b) { return RandomStuff(a, b).random(); }
 
 const double kMinO1On = 500;
 const double kMaxO1On = 12000;
@@ -291,6 +292,18 @@ public:
     double rite_ewma_alpha = x.ewma_alpha + (kMaxAlpha-kMinAlpha)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinAlpha, rite_ewma_alpha, kMaxAlpha);
     emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_limit, rite_ewma_alpha);
+
+    // and some random points within the pattern grid, the idea being that if
+    // there are two params that only improve when changed together, pattern
+    // search would miss it.
+    for (int i=0; i<10; i++)
+    {
+      double o1on = randomBetween(left_o1_on_thresh, rite_o1_on_thresh);
+      double o1off = randomBetween(left_o1_off_thresh, rite_o1_off_thresh);
+      double o6lim = randomBetween(left_o6_limit, rite_o6_limit);
+      double alpha = randomBetween(left_ewma_alpha, rite_ewma_alpha);
+      emplaceIfValid(ret, o1on, o1off, o6lim, alpha);
+    }
 
     return ret;
   }

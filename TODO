@@ -1,6 +1,8 @@
 
 NEW IDEAS:
 
+different EWMA alpha for going off->on and on->off?
+
 compound training: train hum with an already-trained blow detector inhibiting it
 
 * "tuning": after training, push a param in the desirable way with binary search, finding how far you can push before the score gets worse. then, set the param to (say) halfway between orig and the breaking point.

@@ -138,6 +138,7 @@ private:
   std::mt19937 mt_;
   std::uniform_real_distribution<double> dist_;
 };
+double randomBetween(double a, double b) { return RandomStuff(a, b).random(); }
 
 const double kMinO5On = 100;
 const double kMaxO5On = 1000;
@@ -383,20 +384,18 @@ public:
 
     // and some random points within the pattern grid, the idea being that if
     // there are two params that only improve when changed together, pattern
-    // search would miss it. TODO trim? or use?
-//     for (int i=0; i<10; i++)
-//     {
-//       double lowpass_percent = randomBetween(left_lowpass_percent, rite_lowpass_percent);
-//       double highpass_percent = randomBetween(left_highpass_percent, rite_highpass_percent);
-//       double low_off_thresh = randomBetween(left_low_off_thresh, rite_low_off_thresh);
-//       double low_on_thresh = randomBetween(left_low_on_thresh, rite_low_on_thresh);
-//       double high_off_thresh = randomBetween(left_high_off_thresh, rite_high_off_thresh);
-//       double high_on_thresh = randomBetween(left_high_on_thresh, rite_high_on_thresh);
-//       double high_spike_frac = randomBetween(left_high_spike_frac, rite_high_spike_frac);
-//       double high_spike_level = randomBetween(left_high_spike_level, rite_high_spike_level);
-//       ret.emplace_back(lowpass_percent, highpass_percent, low_off_thresh, low_on_thresh,
-//                        high_off_thresh, high_on_thresh, high_spike_frac, high_spike_level, examples_sets_);
-//     }
+    // search would miss it.
+    for (int i=0; i<10; i++)
+    {
+      double o5on = randomBetween(left_o5_on_thresh, rite_o5_on_thresh);
+      double o5off = randomBetween(left_o5_off_thresh, rite_o5_off_thresh);
+      double o6on = randomBetween(left_o6_on_thresh, rite_o6_on_thresh);
+      double o6off = randomBetween(left_o6_off_thresh, rite_o6_off_thresh);
+      double o7on = randomBetween(left_o7_on_thresh, rite_o7_on_thresh);
+      double o7off = randomBetween(left_o7_off_thresh, rite_o7_off_thresh);
+      double alpha = randomBetween(left_ewma_alpha, rite_ewma_alpha);
+      emplaceIfValid(ret, o5on, o5off, o6on, o6off, o7on, o7off, alpha);
+    }
 
     return ret;
   }
