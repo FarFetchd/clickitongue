@@ -16,14 +16,11 @@ class BlockingQueue
 public:
   void enqueue(T obj)
   {
-    bool enqueued = false;
     {
       const std::lock_guard<std::mutex> lock(mu_);
       q_.push(obj);
-      enqueued = true;
     }
-    if (enqueued)
-      pokes_.poke();
+    pokes_.poke();
   }
   // returns nullopt if the queue has shut down and the consumer should go away.
   std::optional<T> deque()

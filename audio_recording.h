@@ -24,8 +24,7 @@ public:
 
   // Overlays rhs onto our own data. We ignore its end if it's longer than we are.
   AudioRecording& operator+=(AudioRecording const& rhs);
-  // Scale up or down by this factor. TODO There is probably some decibel thing
-  // that is the more correct way to do this.
+  // Scale up or down by this factor.
   void scale(double factor);
 
 private:

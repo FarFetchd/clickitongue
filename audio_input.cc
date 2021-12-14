@@ -92,7 +92,6 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
     Pa_GetDeviceInfo(input_param.device)->defaultLowInputLatency;
   input_param.hostApiSpecificStreamInfo = NULL;
 
-  // TODO explore what adding paDitherOff to the flags here would do.
   err = Pa_OpenStream(&stream_, &input_param, NULL, kFramesPerSec,
                       frames_per_cb,//.value_or(paFramesPerBufferUnspecified),
                       paClipOff, record_cb, opaque);
