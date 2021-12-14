@@ -14,7 +14,6 @@ void promptInfo(const char* prompt)
 
 bool promptYesNo(const char* prompt)
 {
-  // TODO support multiple OSes
   int input = 'x';
   while (input != 'y' && input != 'Y' && input != 'n' && input != 'N')
   {
@@ -46,5 +45,11 @@ bool promptYesNo(const char* prompt)
 // ================================OSX========================================
 #ifdef CLICKITONGUE_OSX
 #error "OSX not supported yet"
+void promptInfo(const char* prompt)
+{
+}
+bool promptYesNo(const char* prompt)
+{
+}
 #endif // CLICKITONGUE_OSX
 // ==============================End OSX======================================
