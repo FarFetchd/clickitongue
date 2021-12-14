@@ -74,32 +74,34 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
     crash("Must specify a --filename=");
 }
 
-void normalOperation(Config config)
+void describeLoadedParams(Config config)
 {
-  if (!config.blow.enabled && !config.hum.enabled)
-  {
-    promptInfo("Neither hum nor blow is enabled. Exiting.");
-    return;
-  }
-
-  BlockingQueue<Action> action_queue;
-  ActionDispatcher action_dispatcher(&action_queue);
-  std::thread action_dispatch(actionDispatch, &action_dispatcher);
-
+  std::string msg = "Clickitongue started!\n";
   if (config.blow.enabled)
-    printf("spawning blow detector for left clicks\n");
+  {
+    msg += std::string("Blow to ") +
+           (config.blow.action_on == Action::RightDown ? "right" : "left") +
+           " click.\n";
+  }
   if (config.hum.enabled)
   {
-    printf("spawning hum detector for %s clicks\n",
-           config.hum.action_on == Action::RightDown ? "right" : "left");
+    msg += std::string("Hum to ") +
+           (config.blow.action_on == Action::RightDown ? "right" : "left") +
+           " click.\n";
   }
-  printf("\ndetection parameters:\n%s\n", config.toString().c_str());
+  // TODO whistle
+  promptInfo(msg.c_str());
+  //printf("\ndetection parameters:\n%s\n", config.toString().c_str());
+}
 
+std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
+    Config config, BlockingQueue<Action>* action_queue)
+{
   std::unique_ptr<Detector> blow_detector;
   if (config.blow.enabled)
   {
     blow_detector = std::make_unique<BlowDetector>(
-        &action_queue, config.blow.action_on, config.blow.action_off,
+        action_queue, config.blow.action_on, config.blow.action_off,
         config.blow.o5_on_thresh, config.blow.o5_off_thresh, config.blow.o6_on_thresh,
         config.blow.o6_off_thresh, config.blow.o7_on_thresh, config.blow.o7_off_thresh,
         config.blow.ewma_alpha);
@@ -108,7 +110,7 @@ void normalOperation(Config config)
   if (config.hum.enabled)
   {
     hum_detector = std::make_unique<HumDetector>(
-        &action_queue, config.hum.action_on, config.hum.action_off,
+        action_queue, config.hum.action_on, config.hum.action_off,
         config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o6_limit,
         config.hum.ewma_alpha);
     if (blow_detector)
@@ -120,7 +122,11 @@ void normalOperation(Config config)
     detectors.push_back(std::move(blow_detector));
   if (config.hum.enabled)
     detectors.push_back(std::move(hum_detector));
+  return detectors;
+}
 
+double loadScaleFromConfig(Config config)
+{
   double scale = 1;
   if (config.blow.enabled)
     scale = config.blow.scale;
@@ -147,10 +153,26 @@ void normalOperation(Config config)
 //     promptInfo("Error! Blow and whistle both enabled with different scaling factors.");
 //     exit(1);
 //   }
+  return scale;
+}
 
-  FFTResultDistributor fft_distributor(std::move(detectors), scale);
+void normalOperation(Config config)
+{
+  if (!config.blow.enabled && !config.hum.enabled)
+  {
+    promptInfo("Neither hum nor blow is enabled. Exiting.");
+    return;
+  }
 
+  BlockingQueue<Action> action_queue;
+  ActionDispatcher action_dispatcher(&action_queue);
+  std::thread action_dispatch(actionDispatch, &action_dispatcher);
+
+  FFTResultDistributor fft_distributor(makeDetectorsFromConfig(config, &action_queue),
+                                       loadScaleFromConfig(config));
   AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
+  describeLoadedParams(config);
+
   while (audio_input.active())
     Pa_Sleep(500);
 
