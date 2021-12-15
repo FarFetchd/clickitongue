@@ -158,7 +158,7 @@ double loadScaleFromConfig(Config config)
 
 void normalOperation(Config config)
 {
-  if (!config.blow.enabled && !config.hum.enabled)
+  if (!config.blow.enabled && !config.hum.enabled) // TODO whistle
   {
     promptInfo("Neither hum nor blow is enabled. Exiting.");
     return;
@@ -180,6 +180,18 @@ void normalOperation(Config config)
   action_dispatch.join();
 }
 
+void displayAndReset(std::string* msg)
+{
+  promptInfo(msg->c_str());
+  *msg = "";
+
+// TODO OSX
+#ifdef CLICKITONGUE_LINUX
+  printf("Press any key to continue to the training prompt.\n\n");
+  make_getchar_like_getch(); getchar(); resetTermios();
+#endif
+}
+
 constexpr char kDefaultConfig[] = "default";
 void firstTimeTrain()
 {
@@ -193,10 +205,26 @@ void firstTimeTrain()
 
   // TODO needed for OSX too?
 #ifdef CLICKITONGUE_LINUX
-  printf("press any key if this message doesn't disappear on its own\n");
+  printf("press any key if this message isn't automatically advanced beyond...");
+  fflush(stdout);
   make_getchar_like_getch(); getchar(); resetTermios();
+  printf("(ok, now advanced beyond that message)\n");
   promptInfo("About to start training...");
 #endif
+
+  std::string intro_message;
+  if (try_blows)
+  {
+    intro_message +=
+"Great! You'll be able to do both left- and right-clicks, using blowing and\n"
+"humming. Ensure your mic is in position ~1cm from your mouth. If your mic has\n"
+"a foamy/fuzzy windscreen, remove it for best results.\n\n";
+  }
+  else
+  {
+    intro_message +=
+"Ok, we will fall back to left-clicks only, controlled by humming.\n\n";
+  }
 
   std::vector<std::pair<AudioRecording, int>> blow_examples;
   if (try_blows)
@@ -211,8 +239,20 @@ void firstTimeTrain()
       blow_examples.emplace_back(AudioRecording("data/blows_5.pcm"), 5);
     }
     else // for actual use
+    {
+      intro_message +=
+"We will first train Clickitongue on your blowing. These should be extremely\n"
+"gentle puffs of air, blown directly onto the mic. Don't try too hard to make\n"
+"these training examples strong and clear, or else Clickitongue will expect\n"
+"that much strength every time. These puffs should be more focused than simply\n"
+"exhaling through an open mouth, but weaker than just about any other blow.\n"
+"Think of trying to propel an eyelash over a hand's width.\n\n"
+"The training will record several 4-second snippets, during each of which you\n"
+"will be asked to do a specific number of blows.\n\n";
+      displayAndReset(&intro_message);
       for (int i = 0; i < 6; i++)
         blow_examples.emplace_back(recordExampleBlow(i), i);
+    }
   }
   std::vector<std::pair<AudioRecording, int>> hum_examples;
   if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
@@ -225,8 +265,17 @@ void firstTimeTrain()
     hum_examples.emplace_back(AudioRecording("data/hums_5.pcm"), 5);
   }
   else // for actual use
+  {
+    intro_message +=
+"We will now train Clickitongue on your humming. These hums should be simple,\n"
+"relatively quiet closed-mouth hums, like saying 'hm' in reaction to something\n"
+"just a tiny bit interesting.\n\n"
+"The training will record several 4-second snippets, during each of which you\n"
+"will be asked to do a specific number of hums.\n\n";
+    displayAndReset(&intro_message);
     for (int i = 0; i < 6; i++)
       hum_examples.emplace_back(recordExampleHum(i), i);
+  }
 
   // all examples of one are negative examples for the other
   std::vector<std::pair<AudioRecording, int>> hum_examples_plus_neg;
@@ -240,9 +289,6 @@ void firstTimeTrain()
   for (auto const& ex_pair : hum_examples)
     blow_examples_plus_neg.emplace_back(ex_pair.first, 0);
 
-  // TODO if one of hum/blow/whistle has less variance/noise than the others,
-  //      then it's probably best to just use that one, rather than trying to
-  //      vote or combine or anything.
   // TODO scale whistle
   double scale = 1.0;
   if (try_blows)

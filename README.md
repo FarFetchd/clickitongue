@@ -28,7 +28,7 @@ have to run clickitongue.exe as admin.
 
 # Usage
 
-If you have a microphone that you can position like 2cm in front of your mouth,
+If you have a microphone that you can position like 1cm in front of your mouth,
 you'll be able to use blowing in addition to tongue clicks, allowing both left
 and right clicks. If you can't keep the mic nearby, tongue clicks will still
 work. Don't worry about mic quality - even the built-in mic of an X1 Carbon
