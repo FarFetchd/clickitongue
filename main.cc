@@ -86,7 +86,7 @@ void describeLoadedParams(Config config)
   if (config.hum.enabled)
   {
     msg += std::string("Hum to ") +
-           (config.blow.action_on == Action::RightDown ? "right" : "left") +
+           (config.hum.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
   // TODO whistle
