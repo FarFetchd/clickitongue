@@ -7,4 +7,11 @@ void promptInfo(const char* prompt);
 
 constexpr bool DOING_DEVELOPMENT_TESTING = false;
 
+#ifdef CLICKITONGUE_LINUX
+void make_getchar_like_getch();
+// can now do:    char ch = getchar();
+// once you're done, restore normality with:
+void resetTermios();
+#endif // CLICKITONGUE_LINUX
+
 #endif // CLICKITONGUE_INTERACTION_H_

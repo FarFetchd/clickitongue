@@ -189,11 +189,14 @@ void firstTimeTrain()
 "and typical background noise of your particular enivornment.");
 
   bool try_blows = promptYesNo(
-"Will you be able to keep your mic positioned no more than a few centimeters\n"
-"from your mouth for long-term usage? If so, Clickitongue will be able to \n"
-"recognize blowing in addition to humming, allowing both left and \n"
-"right clicking. Otherwise, Clickitongue will only be able to left click.\n\n"
-"So: will your mic be close enough to directly blow on?");
+"Can you keep your mic positioned ~1cm from your mouth for long-term usage? ");
+
+  // TODO needed for OSX too?
+#ifdef CLICKITONGUE_LINUX
+  printf("press any key if this message doesn't disappear on its own\n");
+  make_getchar_like_getch(); getchar(); resetTermios();
+  promptInfo("About to start training...");
+#endif
 
   std::vector<std::pair<AudioRecording, int>> blow_examples;
   if (try_blows)
