@@ -28,8 +28,8 @@ protected:
   // you're likely not at all interested in it.
   void updateState(const fftw_complex* freq_power) override;
 
-  bool shouldTransitionOn() const override;
-  bool shouldTransitionOff() const override;
+  bool shouldTransitionOn() override;
+  bool shouldTransitionOff() override;
 
 private:
 

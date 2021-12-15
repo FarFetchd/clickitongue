@@ -27,14 +27,24 @@ void HumDetector::updateState(const fftw_complex* freq_power)
   for (int i=32; i<64; i++)
     cur_o6 += freq_power[i][0];
   o6_ewma_ = o6_ewma_ * one_minus_ewma_alpha_ + cur_o6 * ewma_alpha_;
+
+  if (on_)
+    warmup_blocks_left_ = kHumWarmupBlocks;
 }
 
-bool HumDetector::shouldTransitionOn() const
+bool HumDetector::shouldTransitionOn()
 {
-  return o1_ewma_ > o1_on_thresh_ && o6_ewma_ < o6_limit_;
+  if (!(o1_ewma_ > o1_on_thresh_ && o6_ewma_ < o6_limit_))
+  {
+    warmup_blocks_left_ = kHumWarmupBlocks;
+    return false;
+  }
+  if (--warmup_blocks_left_ >= 0)
+    return false;
+  return true;
 }
 
-bool HumDetector::shouldTransitionOff() const
+bool HumDetector::shouldTransitionOff()
 {
   return o1_ewma_ < o1_off_thresh_;
 }

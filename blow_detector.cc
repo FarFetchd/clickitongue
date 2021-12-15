@@ -46,14 +46,14 @@ void BlowDetector::updateState(const fftw_complex* freq_power)
   o7_ewma_ = o7_ewma_ * one_minus_ewma_alpha_ + cur_o7 * ewma_alpha_;
 }
 
-bool BlowDetector::shouldTransitionOn() const
+bool BlowDetector::shouldTransitionOn()
 {
   return o5_ewma_ > o5_on_thresh_ &&
          o6_ewma_ > o6_on_thresh_ &&
          o7_ewma_ > o7_on_thresh_;
 }
 
-bool BlowDetector::shouldTransitionOff() const
+bool BlowDetector::shouldTransitionOff()
 {
   return o5_ewma_ < o5_off_thresh_ &&
          o6_ewma_ < o6_off_thresh_ &&

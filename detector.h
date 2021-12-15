@@ -37,8 +37,10 @@ protected:
   // you're likely not at all interested in it.
   virtual void updateState(const fftw_complex* freq_power) = 0;
 
-  virtual bool shouldTransitionOn() const = 0;
-  virtual bool shouldTransitionOff() const = 0;
+  virtual bool shouldTransitionOn() = 0;
+  virtual bool shouldTransitionOff() = 0;
+
+  bool on_ = false;
 
 private:
   void kickoffAction(Action action);
@@ -54,7 +56,6 @@ private:
   std::vector<int>* cur_frame_dest_ = nullptr;
   std::vector<Detector*> inhibition_targets_;
 
-  bool on_ = false;
   int refrac_blocks_left_ = 0;
 };
 

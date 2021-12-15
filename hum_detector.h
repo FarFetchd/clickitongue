@@ -3,6 +3,8 @@
 
 #include "detector.h"
 
+constexpr int kHumWarmupBlocks = 3;
+
 class HumDetector : public Detector
 {
 public:
@@ -26,8 +28,8 @@ protected:
   // you're likely not at all interested in it.
   void updateState(const fftw_complex* freq_power) override;
 
-  bool shouldTransitionOn() const override;
-  bool shouldTransitionOff() const override;
+  bool shouldTransitionOn() override;
+  bool shouldTransitionOff() override;
 
 private:
   // o5,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
@@ -44,6 +46,12 @@ private:
 
   double o1_ewma_ = 0;
   double o6_ewma_ = 0;
+
+  // Require consistently exceeding the activation threshold for a little while
+  // before actually transitioning to 'on'. This gives the blow detector a
+  // chance to inhibit us in the case where the first instant of what will
+  // become a blow temporarily looks like a hum.
+  int warmup_blocks_left_ = kHumWarmupBlocks;
 };
 
 #endif // CLICKITONGUE_HUM_DETECTOR_H_
