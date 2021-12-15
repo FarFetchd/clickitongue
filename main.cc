@@ -112,7 +112,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
     hum_detector = std::make_unique<HumDetector>(
         action_queue, config.hum.action_on, config.hum.action_off,
         config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o6_limit,
-        config.hum.ewma_alpha);
+        config.hum.ewma_alpha, /*require_warmup=*/config.blow.enabled);
     if (blow_detector)
       blow_detector->addInhibitionTarget(hum_detector.get());
   }

@@ -55,7 +55,8 @@ public:
     std::vector<int> event_frames;
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<HumDetector>(
-        nullptr, o1_on_thresh, o1_off_thresh, o6_limit, ewma_alpha, &event_frames));
+        nullptr, o1_on_thresh, o1_off_thresh, o6_limit, ewma_alpha,
+        /*require_warmup=*/false, &event_frames));
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale);
 

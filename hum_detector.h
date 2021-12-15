@@ -12,13 +12,14 @@ public:
   // cur_frame_dest, and does nothing else.
   HumDetector(BlockingQueue<Action>* action_queue,
               double o1_on_thresh, double o1_off_thresh, double o6_limit,
-              double ewma_alpha, std::vector<int>* cur_frame_dest);
+              double ewma_alpha, bool require_warmup,
+              std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   HumDetector(BlockingQueue<Action>* action_queue,
               Action action_on, Action action_off,
               double o1_on_thresh, double o1_off_thresh, double o6_limit,
-              double ewma_alpha);
+              double ewma_alpha, bool require_warmup);
 
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
@@ -52,6 +53,8 @@ private:
   // chance to inhibit us in the case where the first instant of what will
   // become a blow temporarily looks like a hum.
   int warmup_blocks_left_ = kHumWarmupBlocks;
+  // Whether the warmup_blocks_left_ logic is actually used.
+  const bool require_warmup_ = false;
 };
 
 #endif // CLICKITONGUE_HUM_DETECTOR_H_
