@@ -379,9 +379,9 @@ double pickHumScalingFactor(std::vector<std::pair<AudioRecording, int>>
   return best_scale;
 }
 
-AudioRecording recordExampleHum(int desired_events)
+AudioRecording recordExampleHum(int desired_events, bool prolonged)
 {
-  return recordExampleCommon(desired_events, "humming", "hum");
+  return recordExampleCommon(desired_events, "humming", "hum", prolonged);
 }
 
 HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_examples,

@@ -12,7 +12,7 @@
 double pickBlowScalingFactor(std::vector<std::pair<AudioRecording, int>>
                              const& audio_examples);
 
-AudioRecording recordExampleBlow(int desired_events);
+AudioRecording recordExampleBlow(int desired_events, bool prolonged = false);
 
 // the int of the pair is the number of blow events that are supposed to be in
 // that particular AudioRecording.

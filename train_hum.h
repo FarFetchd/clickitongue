@@ -12,7 +12,7 @@
 double pickHumScalingFactor(std::vector<std::pair<AudioRecording, int>>
                             const& audio_examples);
 
-AudioRecording recordExampleHum(int desired_events);
+AudioRecording recordExampleHum(int desired_events, bool prolonged = false);
 
 // the int of the pair is the number of hum events that are supposed to be in
 // that particular AudioRecording.

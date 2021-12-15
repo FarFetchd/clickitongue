@@ -252,6 +252,7 @@ void firstTimeTrain()
       displayAndReset(&intro_message);
       for (int i = 0; i < 6; i++)
         blow_examples.emplace_back(recordExampleBlow(i), i);
+      blow_examples.emplace_back(recordExampleBlow(1, /*prolonged=*/true), 1);
     }
   }
   std::vector<std::pair<AudioRecording, int>> hum_examples;
@@ -275,6 +276,7 @@ void firstTimeTrain()
     displayAndReset(&intro_message);
     for (int i = 0; i < 6; i++)
       hum_examples.emplace_back(recordExampleHum(i), i);
+    hum_examples.emplace_back(recordExampleHum(1, /*prolonged=*/true), 1);
   }
 
   // all examples of one are negative examples for the other

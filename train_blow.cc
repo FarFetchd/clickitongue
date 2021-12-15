@@ -489,9 +489,9 @@ double pickBlowScalingFactor(std::vector<std::pair<AudioRecording, int>>
   return best_scale;
 }
 
-AudioRecording recordExampleBlow(int desired_events)
+AudioRecording recordExampleBlow(int desired_events, bool prolonged)
 {
-  return recordExampleCommon(desired_events, "blowing", "blow on the mic");
+  return recordExampleCommon(desired_events, "blowing", "blow on the mic", prolonged);
 }
 
 BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_examples,

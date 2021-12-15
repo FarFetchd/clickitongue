@@ -63,33 +63,63 @@ TrainParams patternSearch(TrainParamsFactory& factory, bool verbose)
 
 AudioRecording recordExampleCommon(int desired_events,
                                    std::string dont_do_any_of_this,
-                                   std::string do_this_n_times)
+                                   std::string do_this_n_times,
+                                   bool prolonged)
 {
-  const int kSecondsToRecord = 4;
   if (desired_events == 0)
   {
     char msg[1024];
-    sprintf(msg, "About to record! Will record for %d seconds. During that time, "
-            "please don't do ANY %s; this is just to record your typical "
-            "background sounds.\n",
-            kSecondsToRecord, dont_do_any_of_this.c_str());
+    sprintf(msg,
+"This first recording is just to record your environment's typical background\n"
+"noise. Please don't do ANY %s.\n\nHit enter to start recording (for 4 seconds).",
+            dont_do_any_of_this.c_str());
+    promptInfo(msg);
+  }
+  else if (prolonged)
+  {
+    char msg[1024];
+    sprintf(msg,
+"Finally, please %s once, but prolonged to 2 or 3 seconds.\n\n"
+"Hit enter to start recording (for 4 seconds).",
+            do_this_n_times.c_str());
     promptInfo(msg);
   }
   else
   {
     char msg[1024];
-    sprintf(msg, "About to record! Will record for %d seconds. During that time, "
-            "please %s %d times.\n",
-            kSecondsToRecord, do_this_n_times.c_str(), desired_events);
+    sprintf(msg,
+"Next, please %s %d times.\n\nHit enter to start recording (for 4 seconds).",
+            do_this_n_times.c_str(), desired_events);
     promptInfo(msg);
   }
-#ifndef CLICKITONGUE_WINDOWS
-  printf("Press any key when you are ready to start."); fflush(stdout);
+
+#ifdef CLICKITONGUE_WINDOWS
+  // TODO do something... show a window?
+#else
   // TODO will this work on OSX? or need something different?
   make_getchar_like_getch(); getchar(); resetTermios();
-  printf("Now recording..."); fflush(stdout);
-#endif // ndef CLICKITONGUE_WINDOWS
-  AudioRecording recorder(kSecondsToRecord);
-  promptInfo("recording done.");
+  printf("\n"
+"##############################################################################\n"
+"#                                                                            #\n"
+"#              **********          ********  ********  ******                #\n"
+"#             ************         **     ** **       **    **               #\n"
+"#            **************        **     ** **       **                     #\n"
+"#            **************        ********  ******   **                     #\n"
+"#            **************        **   **   **       **                     #\n"
+"#             ************         **    **  **       **    **               #\n"
+"#              **********          **     ** ********  ******                #\n"
+"#                                                                            #\n"
+"##############################################################################\n"
+"\n");
+#endif
+
+  AudioRecording recorder(4/*seconds*/);
+
+#ifdef CLICKITONGUE_WINDOWS
+  // TODO do something... hide a window?
+#else
+  promptInfo("");
+#endif
+
   return recorder;
 }
