@@ -56,7 +56,11 @@ public:
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<HumDetector>(
         nullptr, o1_on_thresh, o1_off_thresh, o6_limit, ewma_alpha,
-        /*require_warmup=*/false, &event_frames));
+        /*require_warmup=*/true, &event_frames));
+    // (why require_warmup true? its only drawback is a delay in the action
+    //  being done, which doesn't matter in training. by setting true, might
+    //  give borderline beginnings/ends of our blow counterexamples a chance
+    //  to avoid being detected as hums.)
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale);
 

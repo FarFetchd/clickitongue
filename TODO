@@ -1,13 +1,13 @@
 
 make it easier to retry training. currently have to delete the config file.
+  cmdline option for linux? for windows, config file will be right there in the
+  dir, so maybe just tell them to delete.
 
-different EWMA alpha for going off->on and on->off?
-
-tell them to hold the first blow in the training for a couple of seconds.
+i wonder if my difficulties on the desktop are due to scaling. if the blowing is
+just off the charts huge no matter what, and takes precedence in determining scaling,
+maybe humming wants a larger scale (out of bounds of the allowed param range).
 
 * "tuning": after training, push a param in the desirable way with binary search, finding how far you can push before the score gets worse. then, set the param to (say) halfway between orig and the breaking point.
-    * definitely good for making the EWMA alpha as responsive as possible.
-    * probably also good for on/off thresholds? on being pushed lower, off being pushed higher.
     * DEFINITELY want: make it quite hard indeed to go from on to off.
 
 
@@ -70,11 +70,8 @@ example:
 
 
 * make windows exe+dll+data release package (and keep updated)
-* handle the double keypress in training
-* polished, easy to follow training instructions
 
 wishlist
-* tell them if training failed because they were too soft, or there was too much noise. (based on whether negative or positive examples were failing).
 * for left clicks: make a short period after the refractory period has passed more sensitive, to make double-click easier
 * support osx   https://stackoverflow.com/questions/2369806/simulating-mouse-clicks-on-mac-os-x-does-not-work-for-some-applications
 * easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
