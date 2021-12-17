@@ -11,7 +11,10 @@ struct ClickitongueCmdlineOpts
 
   // record, play
   std::optional<std::string> filename;
+
+  std::optional<bool> retrain = false;
 };
-STRUCTOPT(ClickitongueCmdlineOpts, mode, detector, duration_seconds, filename);
+STRUCTOPT(ClickitongueCmdlineOpts,
+          mode, detector, duration_seconds, filename, retrain);
 
 #endif // CLICKITONGUE_CMDLINE_OPTIONS_H_

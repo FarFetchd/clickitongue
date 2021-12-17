@@ -312,6 +312,7 @@ void firstTimeTrain()
     }
   }
 
+  std::string success_msg;
   // TODO whistle
   if (config.blow.enabled && config.hum.enabled)
   {
@@ -319,34 +320,38 @@ void firstTimeTrain()
     config.blow.action_off = Action::LeftUp;
     config.hum.action_on = Action::RightDown;
     config.hum.action_off = Action::RightUp;
-    promptInfo(
-"Clickitongue is now configured. Blow on the mic to left click, hum for right.\n\n"
-"Now entering normal operation.");
+    success_msg =
+"Clickitongue is now configured. Blow on the mic to left click, hum for right.\n\n";
   }
   else if (config.blow.enabled)
   {
     config.blow.action_on = Action::LeftDown;
     config.blow.action_off = Action::LeftUp;
-    promptInfo(
-"Clickitongue is now configured. Blow on the mic to left click.\n\n"
-"Now entering normal operation.");
+    success_msg =
+"Clickitongue is now configured. Blow on the mic to left click.\n\n";
   }
   else if (config.hum.enabled)
   {
     config.hum.action_on = Action::LeftDown;
     config.hum.action_off = Action::LeftUp;
-    promptInfo(
-"Clickitongue is now configured. Hum to left click.\n\n"
-"Now entering normal operation.");
+    success_msg =
+"Clickitongue is now configured. Hum to left click.\n\n";
   }
   else
   {
     promptInfo(
-"Clickitongue was not able to find parameters that distinguish your humming "
-"from background noise with acceptable accuracy. Remove sources of "
+"Clickitongue was not able to find parameters that distinguish your humming\n"
+"from background noise with acceptable accuracy. Remove sources of\n"
 "background noise, move the mic closer to your mouth, and try again.");
     return;
   }
+#ifdef CLICKITONGUE_WINDOWS
+  success_msg += "If you ever want to redo this training, delete the file default.clickitongue that you should find right next to clickitongue.exe, and then run clickitongue.exe again.\n\nNow entering normal operation.";
+#else
+  success_msg += "If you ever want to redo this training, run clickitongue with the flag --retrain.\n\nNow entering normal operation.";
+#endif
+  promptInfo(success_msg.c_str());
+
 #ifdef CLICKITONGUE_WINDOWS
   promptInfo(
 "A note on admin privileges:\n\nWindows does not allow lesser privileged "
@@ -365,10 +370,12 @@ void firstTimeTrain()
   normalOperation(config);
 }
 
-void defaultMain()
+void defaultMain(bool ignore_existing_config)
 {
-  if (auto maybe_config = readConfig(kDefaultConfig); maybe_config.has_value())
-    normalOperation(maybe_config.value());
+  if (ignore_existing_config)
+    firstTimeTrain();
+  else if (auto maybe_cfg = readConfig(kDefaultConfig); maybe_cfg.has_value())
+    normalOperation(maybe_cfg.value());
   else
     firstTimeTrain();
 }
@@ -443,7 +450,7 @@ int main(int argc, char** argv)
       crash("clickitongue must be run as root.");
     initLinuxUinput();
 #endif // CLICKITONGUE_LINUX
-    defaultMain();
+    defaultMain(opts.retrain.value());
   }
 
   Pa_Terminate(); // corresponds to the Pa_Initialize() at the start

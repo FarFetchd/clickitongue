@@ -1,8 +1,4 @@
 
-make it easier to retry training. currently have to delete the config file.
-  cmdline option for linux? for windows, config file will be right there in the
-  dir, so maybe just tell them to delete.
-
 i wonder if my difficulties on the desktop are due to scaling. if the blowing is
 just off the charts huge no matter what, and takes precedence in determining scaling,
 maybe humming wants a larger scale (out of bounds of the allowed param range).
