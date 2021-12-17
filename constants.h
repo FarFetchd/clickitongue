@@ -20,6 +20,9 @@ constexpr double kNyquist = 22050.0f;
 constexpr int kNumChannels = 2;
 constexpr float kSilentSample = 0.0f;
 
+// Batch size of frames (i.e. pairs of samples if kNumChannels is 2) to feed
+// into each Fourier transform. This is sort of the "master granularity" of
+// all of our DSP logic; we do decision-making exactly every [this many frames].
 constexpr int kFourierBlocksize = 256; // must be 128, 256, 512, or 1024
 
 constexpr int kNumFourierBins = kFourierBlocksize/2 + 1;

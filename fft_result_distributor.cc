@@ -17,9 +17,12 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
     printf("illegal num_frames: expected %d, got %d\n", kFourierBlocksize, num_frames);
     exit(1);
   }
+
+  // requires kNumChannels == 2
   for (int i=0; i<kFourierBlocksize; i++)
-    fft_lease_.in[i] = cur_sample[i * kNumChannels];
+    fft_lease_.in[i] = (cur_sample[i*kNumChannels] + cur_sample[i*kNumChannels+1]) / 2.0;
   fft_lease_.runFFT();
+
   for (int i=0; i<kNumFourierBins; i++)
   {
     fft_lease_.out[i][0] = scale_ * (fft_lease_.out[i][0]*fft_lease_.out[i][0] +

@@ -341,8 +341,9 @@ double pickHumScalingFactor(std::vector<std::pair<AudioRecording, int>>
   std::vector<float> const& samples = rec.samples();
   for (int i = 0; i < samples.size(); i += kFourierBlocksize * kNumChannels)
   {
+    // requires kNumChannels == 2
     for (int j=0; j<kFourierBlocksize; j++)
-      lease.in[j] = samples[i + j * kNumChannels];
+      lease.in[j] = (samples[i + j*kNumChannels] + samples[i + j*kNumChannels + 1]) / 2.0;
     lease.runFFT();
 
     o1.push_back(lease.out[1][0]*lease.out[1][0] + lease.out[1][1]*lease.out[1][1]);
