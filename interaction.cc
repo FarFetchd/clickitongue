@@ -1,5 +1,7 @@
 #include "interaction.h"
 
+#include <string>
+
 // ================================Linux======================================
 #ifdef CLICKITONGUE_LINUX
 #include <cstdio>
@@ -53,11 +55,23 @@ void resetTermios()
 #include <windows.h>
 void promptInfo(const char* prompt)
 {
-  MessageBox(NULL, prompt, "Clickitongue", MB_OK);
+  // The manual line breaks I use for Linux console don't look good in Windows
+  // message boxes. Here is a hacky little cleanup.
+  std::string s(prompt);
+  for (int i=1; i<s.size()-1; i++)
+    if (s[i] == '\n' && s[i-1] != '\n' && s[i+1] != '\n')
+      s[i] = ' ';
+  MessageBox(NULL, s.c_str(), "Clickitongue", MB_OK);
 }
 bool promptYesNo(const char* prompt)
 {
-  return MessageBox(NULL, prompt, "Clickitongue", MB_YESNO) == IDYES;
+  // The manual line breaks I use for Linux console don't look good in Windows
+  // message boxes. Here is a hacky little cleanup.
+  std::string s(prompt);
+  for (int i=1; i<s.size()-1; i++)
+    if (s[i] == '\n' && s[i-1] != '\n' && s[i+1] != '\n')
+      s[i] = ' ';
+  return MessageBox(NULL, s.c_str(), "Clickitongue", MB_YESNO) == IDYES;
 }
 #endif // CLICKITONGUE_WINDOWS
 // =============================End Windows===================================

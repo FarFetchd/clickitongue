@@ -70,8 +70,8 @@ AudioRecording recordExampleCommon(int desired_events,
   {
     char msg[1024];
     sprintf(msg,
-"This first recording is just to record your environment's typical background\n"
-"noise. Please don't do ANY %s.\n\nHit enter to start recording (for 4 seconds).",
+"This first recording is just to record your typical background noise.\n\n"
+"Please don't do ANY %s.\n\nHit enter to start recording (for 4 seconds).",
             dont_do_any_of_this.c_str());
     promptInfo(msg);
   }
