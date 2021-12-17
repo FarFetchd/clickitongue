@@ -203,15 +203,6 @@ void firstTimeTrain()
   bool try_blows = promptYesNo(
 "Can you keep your mic positioned ~1cm from your mouth for long-term usage? ");
 
-  // TODO needed for OSX too?
-#ifdef CLICKITONGUE_LINUX
-  printf("press any key if this message isn't automatically advanced beyond...");
-  fflush(stdout);
-  make_getchar_like_getch(); getchar(); resetTermios();
-  printf("(ok, now advanced beyond that message)\n");
-  promptInfo("About to start training...");
-#endif
-
   std::string intro_message;
   if (try_blows)
   {
@@ -301,26 +292,51 @@ void firstTimeTrain()
 
   Config config;
   if (try_blows)
-    config.blow = trainBlow(blow_examples_plus_neg, scale, true);
+    config.blow = trainBlow(blow_examples_plus_neg, scale);
+  config.hum = trainHum(hum_examples_plus_neg, scale);
 
-  Action hum_on_action = config.blow.enabled ? Action::RightDown
-                                             : Action::LeftDown;
-  Action hum_off_action = config.blow.enabled ? Action::RightUp
-                                              : Action::LeftUp;
-  config.hum = trainHum(hum_examples_plus_neg, hum_on_action, hum_off_action,
-                        scale, true);
+  if (!config.hum.enabled || (try_blows && !config.blow.enabled))
+  {
+    std::string msg;
+    if (!config.hum.enabled)
+      msg += "Clickitongue was not able to learn to detect your humming.\n\n";
+    if (try_blows && !config.blow.enabled)
+      msg += "Clickitongue was not able to learn to detect your blowing.\n\n";
+    msg += "Would you like to redo the training?\n\n";
+    if (config.hum.enabled || config.blow.enabled)
+      msg += "(If you leave it as is, you will only be able to left click.)";
+    if (promptYesNo(msg.c_str()))
+    {
+      firstTimeTrain();
+      return;
+    }
+  }
 
+  // TODO whistle
   if (config.blow.enabled && config.hum.enabled)
   {
+    config.blow.action_on = Action::LeftDown;
+    config.blow.action_off = Action::LeftUp;
+    config.hum.action_on = Action::RightDown;
+    config.hum.action_off = Action::RightUp;
     promptInfo(
-"Clickitongue should now be configured. Blow on the mic to left click, keep "
-"blowing to hold the left 'button' down. Hum for right.\n\n"
+"Clickitongue is now configured. Blow on the mic to left click, hum for right.\n\n"
+"Now entering normal operation.");
+  }
+  else if (config.blow.enabled)
+  {
+    config.blow.action_on = Action::LeftDown;
+    config.blow.action_off = Action::LeftUp;
+    promptInfo(
+"Clickitongue is now configured. Blow on the mic to left click.\n\n"
 "Now entering normal operation.");
   }
   else if (config.hum.enabled)
   {
+    config.hum.action_on = Action::LeftDown;
+    config.hum.action_off = Action::LeftUp;
     promptInfo(
-"Clickitongue should now be configured. Hum to left click.\n\n"
+"Clickitongue is now configured. Hum to left click.\n\n"
 "Now entering normal operation.");
   }
   else

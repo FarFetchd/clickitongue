@@ -1,5 +1,5 @@
 
-NEW IDEAS:
+make it easier to retry training. currently have to delete the config file.
 
 different EWMA alpha for going off->on and on->off?
 
@@ -82,7 +82,6 @@ wishlist
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
 * translate into all languages we can get translators for
 * debian package
-* windows message box ugly line break spacing
 
 
 

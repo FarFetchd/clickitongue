@@ -496,18 +496,18 @@ AudioRecording recordExampleBlow(int desired_events, bool prolonged)
 }
 
 BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
-                     double scale, bool verbose)
+                     double scale)
 {
   std::vector<std::string> noise_fnames =
       {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
 
   TrainParamsFactory factory(audio_examples, noise_fnames, scale);
-  TrainParams best = patternSearch(factory, verbose);
+  TrainParams best = patternSearch(factory);
 
   BlowConfig ret;
   ret.scale = scale;
-  ret.action_on = Action::LeftDown;
-  ret.action_off = Action::LeftUp;
+  ret.action_on = Action::NoAction;
+  ret.action_off = Action::NoAction;
   ret.o5_on_thresh = best.o5_on_thresh;
   ret.o5_off_thresh = best.o5_off_thresh;
   ret.o6_on_thresh = best.o6_on_thresh;
@@ -516,6 +516,6 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.o7_off_thresh = best.o7_off_thresh;
   ret.ewma_alpha = best.ewma_alpha;
 
-  ret.enabled = (best.score[0] == 0 && best.score[1] < 3);
+  ret.enabled = (best.score[0] == 0);
   return ret;
 }

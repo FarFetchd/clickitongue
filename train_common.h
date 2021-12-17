@@ -18,7 +18,7 @@ void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
 }
 
 // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
-TrainParams patternSearch(TrainParamsFactory& factory, bool verbose)
+TrainParams patternSearch(TrainParamsFactory& factory)
 {
   printf("beginning optimization computations...\n");
   std::vector<TrainParams> candidates;
@@ -48,16 +48,13 @@ TrainParams patternSearch(TrainParamsFactory& factory, bool verbose)
       }
     }
 
-    if (verbose)
-    {
-      printf("current best: ");
-      candidates.front().printParams();
-      printf("best scores: %s\n", candidates.front().toString().c_str());
-    }
+    printf("current best: ");
+    candidates.front().printParams();
+    printf("best scores: %s\n", candidates.front().toString().c_str());
+
     historical_bests.push_back(candidates.front());
   }
-  if (verbose)
-    printf("converged; done.\n");
+  printf("converged; done.\n");
   return candidates.front();
 }
 

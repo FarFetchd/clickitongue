@@ -17,6 +17,6 @@ AudioRecording recordExampleBlow(int desired_events, bool prolonged = false);
 // the int of the pair is the number of blow events that are supposed to be in
 // that particular AudioRecording.
 BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
-                     double scale, bool verbose = false);
+                     double scale);
 
 #endif // CLICKITONGUE_TRAIN_BLOW_H_

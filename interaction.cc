@@ -23,6 +23,13 @@ bool promptYesNo(const char* prompt)
     fflush(stdout);
     input = getchar();
   }
+
+  // TODO needed for OSX too?
+  printf("press any key if this message isn't automatically advanced beyond...");
+  fflush(stdout);
+  make_getchar_like_getch(); getchar(); resetTermios();
+  printf("(ok, now advanced beyond that message)\n");
+
   return input == 'y' || input == 'Y';
 }
 

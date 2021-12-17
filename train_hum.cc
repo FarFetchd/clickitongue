@@ -386,24 +386,23 @@ AudioRecording recordExampleHum(int desired_events, bool prolonged)
 }
 
 HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
-                   Action hum_on_action, Action hum_off_action, double scale,
-                   bool verbose)
+                   double scale)
 {
   std::vector<std::string> noise_fnames =
       {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
 
   TrainParamsFactory factory(audio_examples, noise_fnames, scale);
-  TrainParams best = patternSearch(factory, verbose);
+  TrainParams best = patternSearch(factory);
 
   HumConfig ret;
   ret.scale = scale;
-  ret.action_on = hum_on_action;
-  ret.action_off = hum_off_action;
+  ret.action_on = Action::NoAction;
+  ret.action_off = Action::NoAction;
   ret.o1_on_thresh = best.o1_on_thresh;
   ret.o1_off_thresh = best.o1_off_thresh;
   ret.o6_limit = best.o6_limit;
   ret.ewma_alpha = best.ewma_alpha;
 
-  ret.enabled = (best.score[0] == 0 && best.score[1] < 3);
+  ret.enabled = (best.score[0] == 0);
   return ret;
 }
