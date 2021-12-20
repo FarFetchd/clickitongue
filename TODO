@@ -3,8 +3,23 @@ i wonder if my difficulties on the desktop are due to scaling. if the blowing is
 just off the charts huge no matter what, and takes precedence in determining scaling,
 maybe humming wants a larger scale (out of bounds of the allowed param range).
 
-* "tuning": after training, push a param in the desirable way with binary search, finding how far you can push before the score gets worse. then, set the param to (say) halfway between orig and the breaking point.
-    * DEFINITELY want: make it quite hard indeed to go from on to off.
+
+* make windows exe+dll+data release package (and keep updated)
+   (and test that it runs on other people's windows!)
+
+* support osx   https://stackoverflow.com/questions/2369806/simulating-mouse-clicks-on-mac-os-x-does-not-work-for-some-applications
+  ....orrrrrrr https://github.com/BlueM/cliclick
+      launching a shell command per click won't be ideal, but it's an ok start.
+
+
+wishlist
+* easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
+* fun idea: ascending and descending whistles to control scroll wheel. need to track frequencies at a finer resolution; try
+  "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
+* translate into all languages we can get translators for
+* debian package
+* native OSX support (i.e. not just calling cliclick every time)
+
 
 
 * whistle (breathing in): single massive peak, low freqs should have little energy
@@ -61,20 +76,6 @@ example:
       000000000      0      000000000      0        0 0000                  000                    0
      0000000000      0     0000000000      0        0 0000                  000                    0
   0000000000000000 0 0   000000000000 0  0 0     000000000       0          0000                   0
-
-
-
-
-* make windows exe+dll+data release package (and keep updated)
-
-wishlist
-* for left clicks: make a short period after the refractory period has passed more sensitive, to make double-click easier
-* support osx   https://stackoverflow.com/questions/2369806/simulating-mouse-clicks-on-mac-os-x-does-not-work-for-some-applications
-* easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
-* fun idea: ascending and descending whistles to control scroll wheel. need to track frequencies at a finer resolution; try
-  "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
-* translate into all languages we can get translators for
-* debian package
 
 
 

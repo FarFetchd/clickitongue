@@ -400,6 +400,69 @@ public:
     return ret;
   }
 
+  TrainParams tuneOff5(TrainParams start, double min_off, double max_off)
+  {
+    double lo_off = min_off;
+    double hi_off = max_off;
+    TrainParams cur = start;
+    while (hi_off - lo_off > 0.02 * (max_off - min_off))
+    {
+      double cur_off = (lo_off + hi_off) / 2.0;
+      cur.o5_off_thresh = cur_off;
+      cur.computeScore(examples_sets_);
+      if (start < cur)
+        lo_off = cur_off;
+      else
+        hi_off = cur_off;
+    }
+    cur.o5_off_thresh = (start.o5_off_thresh + hi_off) / 2.0;
+    cur.computeScore(examples_sets_);
+    printf("tuned o5 off from %g down to %g\n", start.o5_off_thresh, cur.o5_off_thresh);
+    return cur;
+  }
+
+  TrainParams tuneOff6(TrainParams start, double min_off, double max_off)
+  {
+    double lo_off = min_off;
+    double hi_off = max_off;
+    TrainParams cur = start;
+    while (hi_off - lo_off > 0.02 * (max_off - min_off))
+    {
+      double cur_off = (lo_off + hi_off) / 2.0;
+      cur.o6_off_thresh = cur_off;
+      cur.computeScore(examples_sets_);
+      if (start < cur)
+        lo_off = cur_off;
+      else
+        hi_off = cur_off;
+    }
+    cur.o6_off_thresh = (start.o6_off_thresh + hi_off) / 2.0;
+    cur.computeScore(examples_sets_);
+    printf("tuned o6 off from %g down to %g\n", start.o6_off_thresh, cur.o6_off_thresh);
+    return cur;
+  }
+
+  TrainParams tuneOff7(TrainParams start, double min_off, double max_off)
+  {
+    double lo_off = min_off;
+    double hi_off = max_off;
+    TrainParams cur = start;
+    while (hi_off - lo_off > 0.02 * (max_off - min_off))
+    {
+      double cur_off = (lo_off + hi_off) / 2.0;
+      cur.o7_off_thresh = cur_off;
+      cur.computeScore(examples_sets_);
+      if (start < cur)
+        lo_off = cur_off;
+      else
+        hi_off = cur_off;
+    }
+    cur.o7_off_thresh = (start.o7_off_thresh + hi_off) / 2.0;
+    cur.computeScore(examples_sets_);
+    printf("tuned o7 off from %g down to %g\n", start.o7_off_thresh, cur.o7_off_thresh);
+    return cur;
+  }
+
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
 private:
@@ -503,6 +566,10 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
 
   TrainParamsFactory factory(audio_examples, noise_fnames, scale);
   TrainParams best = patternSearch(factory);
+
+  best = factory.tuneOff5(best, kMinO5Off, best.o5_off_thresh);
+  best = factory.tuneOff6(best, kMinO6Off, best.o6_off_thresh);
+  best = factory.tuneOff7(best, kMinO7Off, best.o7_off_thresh);
 
   BlowConfig ret;
   ret.scale = scale;
