@@ -218,7 +218,10 @@ public:
   {
     std::vector<AudioRecording> noises;
     for (auto name : noise_fnames)
+    {
       noises.emplace_back(name);
+      noises.back().scale(1.0 / scale_);
+    }
 
     // (first, add the base examples, without any noise)
     examples_sets_.push_back(raw_examples);
