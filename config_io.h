@@ -35,6 +35,8 @@ struct HumConfig
   Action action_off;
   double o1_on_thresh;
   double o1_off_thresh;
+  double o2_on_thresh;
+  double o3_limit;
   double o6_limit;
   double ewma_alpha;
   double scale;

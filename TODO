@@ -1,9 +1,4 @@
 
-i wonder if my difficulties on the desktop are due to scaling. if the blowing is
-just off the charts huge no matter what, and takes precedence in determining scaling,
-maybe humming wants a larger scale (out of bounds of the allowed param range).
-
-
 * make windows exe+dll+data release package (and keep updated)
    (and test that it runs on other people's windows!)
 

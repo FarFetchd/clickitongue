@@ -111,8 +111,9 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
   {
     hum_detector = std::make_unique<HumDetector>(
         action_queue, config.hum.action_on, config.hum.action_off,
-        config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o6_limit,
-        config.hum.ewma_alpha, /*require_warmup=*/config.blow.enabled);
+        config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o2_on_thresh,
+        config.hum.o3_limit, config.hum.o6_limit, config.hum.ewma_alpha,
+        /*require_warmup=*/config.blow.enabled);
     if (blow_detector)
       blow_detector->addInhibitionTarget(hum_detector.get());
   }
@@ -208,8 +209,9 @@ void firstTimeTrain()
   {
     intro_message +=
 "Great! You'll be able to do both left- and right-clicks, using blowing and\n"
-"humming. Ensure your mic is in position ~1cm from your mouth. If your mic has\n"
-"a foamy/fuzzy windscreen, remove it for best results.\n\n";
+"humming. Ensure your mic is in position ~1cm from your mouth - your index\n"
+"finger should fit perfectly between mouth and mic. If your mic has a foamy/fuzzy windscreen, remove it for\n"
+"best results.\n\n";
   }
   else
   {
@@ -284,9 +286,9 @@ void firstTimeTrain()
 
   // TODO scale whistle
   double scale = 1.0;
-  if (try_blows)
-    scale = pickBlowScalingFactor(blow_examples_plus_neg);
-  else
+//   if (try_blows)
+//     scale = pickBlowScalingFactor(blow_examples_plus_neg);
+//   else
     scale = pickHumScalingFactor(hum_examples_plus_neg);
   printf("using scale %g\n", scale);
 

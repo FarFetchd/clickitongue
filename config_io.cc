@@ -56,6 +56,8 @@ std::string Config::toString() const
         << "hum_action_off: " << actionString(hum.action_off) << "\n"
         << "hum_o1_on_thresh: " << hum.o1_on_thresh << "\n"
         << "hum_o1_off_thresh: " << hum.o1_off_thresh << "\n"
+        << "hum_o2_on_thresh: " << hum.o2_on_thresh << "\n"
+        << "hum_o3_limit: " << hum.o3_limit << "\n"
         << "hum_o6_limit: " << hum.o6_limit << "\n"
         << "hum_ewma_alpha: " << hum.ewma_alpha << "\n"
         << "hum_scale: " << hum.scale << "\n";
@@ -88,13 +90,15 @@ HumConfig::HumConfig(farfetchd::ConfigReader const& cfg)
   action_off = parseAction(cfg.getString("hum_action_off").value_or("x"));
   o1_on_thresh = cfg.getDouble("hum_o1_on_thresh").value_or(-1);
   o1_off_thresh = cfg.getDouble("hum_o1_off_thresh").value_or(-1);
+  o2_on_thresh = cfg.getDouble("hum_o2_on_thresh").value_or(-1);
+  o3_limit = cfg.getDouble("hum_o3_limit").value_or(-1);
   o6_limit = cfg.getDouble("hum_o6_limit").value_or(-1);
   ewma_alpha = cfg.getDouble("hum_ewma_alpha").value_or(-1);
   scale = cfg.getDouble("hum_scale").value_or(-1);
 
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
-             o1_on_thresh >= 0 && o1_off_thresh >= 0 && o6_limit >= 0 &&
-             ewma_alpha >= 0 && scale >= 0);
+             o1_on_thresh >= 0 && o1_off_thresh >= 0 && o3_limit >= 0 &&
+             o6_limit >= 0 && ewma_alpha >= 0 && scale >= 0);
 }
 
 #ifdef CLICKITONGUE_LINUX
