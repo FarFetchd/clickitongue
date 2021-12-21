@@ -418,7 +418,9 @@ public:
       else
         hi_off = cur_off;
     }
-    cur.o5_off_thresh = (start.o5_off_thresh + hi_off) / 2.0;
+    // pull back from our tuned result by 1/4th to be on the safe side
+    cur.o5_off_thresh = hi_off + (start.o5_off_thresh - hi_off) / 4.0;
+
     cur.computeScore(examples_sets_);
     printf("tuned o5 off from %g down to %g\n", start.o5_off_thresh, cur.o5_off_thresh);
     return cur;
@@ -439,7 +441,9 @@ public:
       else
         hi_off = cur_off;
     }
-    cur.o6_off_thresh = (start.o6_off_thresh + hi_off) / 2.0;
+    // pull back from our tuned result by 1/4th to be on the safe side
+    cur.o6_off_thresh = hi_off + (start.o6_off_thresh - hi_off) / 4.0;
+
     cur.computeScore(examples_sets_);
     printf("tuned o6 off from %g down to %g\n", start.o6_off_thresh, cur.o6_off_thresh);
     return cur;
@@ -460,7 +464,9 @@ public:
       else
         hi_off = cur_off;
     }
-    cur.o7_off_thresh = (start.o7_off_thresh + hi_off) / 2.0;
+    // pull back from our tuned result by 1/4th to be on the safe side
+    cur.o7_off_thresh = hi_off + (start.o7_off_thresh - hi_off) / 4.0;
+
     cur.computeScore(examples_sets_);
     printf("tuned o7 off from %g down to %g\n", start.o7_off_thresh, cur.o7_off_thresh);
     return cur;

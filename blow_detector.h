@@ -44,6 +44,13 @@ private:
   const double ewma_alpha_;
   const double one_minus_ewma_alpha_;
 
+  // When we're in the on state, we use a more conservative alpha - half of
+  // normal - to make it harder for the inherent crazy choppiness of the blowing
+  // to accidentally kick us back into the off state (and mess up a
+  // drag-and-drop or text selection).
+  const double activated_ewma_alpha_;
+  const double one_minus_activated_ewma_alpha_;
+
   double o5_ewma_ = 0;
   double o6_ewma_ = 0;
   double o7_ewma_ = 0;
