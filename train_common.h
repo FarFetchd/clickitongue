@@ -91,10 +91,11 @@ AudioRecording recordExampleCommon(int desired_events,
   }
 
 #ifdef CLICKITONGUE_WINDOWS
-  // TODO do something... show a window?
+  printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 #else
   // TODO will this work on OSX? or need something different?
   make_getchar_like_getch(); getchar(); resetTermios();
+#endif
   printf("\n"
 "##############################################################################\n"
 "#                                                                            #\n"
@@ -108,12 +109,11 @@ AudioRecording recordExampleCommon(int desired_events,
 "#                                                                            #\n"
 "##############################################################################\n"
 "\n");
-#endif
 
   AudioRecording recorder(4/*seconds*/);
 
 #ifdef CLICKITONGUE_WINDOWS
-  // TODO do something... hide a window?
+  printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 #else
   promptInfo("");
 #endif
