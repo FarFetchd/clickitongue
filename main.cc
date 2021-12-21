@@ -212,8 +212,8 @@ void firstTimeTrain()
     intro_message +=
 "Great! You'll be able to do both left- and right-clicks, using blowing and\n"
 "humming. Ensure your mic is in position ~1cm from your mouth - your index\n"
-"finger should fit perfectly between mouth and mic. If your mic has a foamy/fuzzy windscreen, remove it for\n"
-"best results.\n\n";
+"finger should fit perfectly between mouth and mic. If your mic has a foamy/fuzzy\n"
+"windscreen, remove it for best results.\n\n";
   }
   else
   {
@@ -224,18 +224,7 @@ void firstTimeTrain()
   std::vector<std::pair<AudioRecording, int>> blow_examples;
   if (try_blows)
   {
-    if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
-    {
-      blow_examples.emplace_back(AudioRecording("data/blows_0.pcm"), 0);
-      blow_examples.emplace_back(AudioRecording("data/blows_1.pcm"), 1);
-      blow_examples.emplace_back(AudioRecording("data/blows_2.pcm"), 2);
-      blow_examples.emplace_back(AudioRecording("data/blows_3.pcm"), 3);
-      blow_examples.emplace_back(AudioRecording("data/blows_4.pcm"), 4);
-      blow_examples.emplace_back(AudioRecording("data/blows_5.pcm"), 5);
-    }
-    else // for actual use
-    {
-      intro_message +=
+    intro_message +=
 "We will first train Clickitongue on your blowing. These should be extremely\n"
 "gentle puffs of air, blown directly onto the mic. Don't try too hard to make\n"
 "these training examples strong and clear, or else Clickitongue will expect\n"
@@ -244,35 +233,22 @@ void firstTimeTrain()
 "Think of trying to propel an eyelash over a hand's width.\n\n"
 "The training will record several 4-second snippets, during each of which you\n"
 "will be asked to do a specific number of blows.\n\n";
-      displayAndReset(&intro_message);
-      for (int i = 0; i < 6; i++)
-        blow_examples.emplace_back(recordExampleBlow(i), i);
-      blow_examples.emplace_back(recordExampleBlow(1, /*prolonged=*/true), 1);
-    }
+    displayAndReset(&intro_message);
+    for (int i = 0; i < 6; i++)
+      blow_examples.emplace_back(recordExampleBlow(i), i);
+    blow_examples.emplace_back(recordExampleBlow(1, /*prolonged=*/true), 1);
   }
   std::vector<std::pair<AudioRecording, int>> hum_examples;
-  if (DOING_DEVELOPMENT_TESTING) // for easy development of the code
-  {
-    hum_examples.emplace_back(AudioRecording("data/hums_0.pcm"), 0);
-    hum_examples.emplace_back(AudioRecording("data/hums_1.pcm"), 1);
-    hum_examples.emplace_back(AudioRecording("data/hums_2.pcm"), 2);
-    hum_examples.emplace_back(AudioRecording("data/hums_3.pcm"), 3);
-    hum_examples.emplace_back(AudioRecording("data/hums_4.pcm"), 4);
-    hum_examples.emplace_back(AudioRecording("data/hums_5.pcm"), 5);
-  }
-  else // for actual use
-  {
-    intro_message +=
+  intro_message +=
 "We will now train Clickitongue on your humming. These hums should be simple,\n"
 "relatively quiet closed-mouth hums, like saying 'hm' in reaction to something\n"
 "just a tiny bit interesting.\n\n"
 "The training will record several 4-second snippets, during each of which you\n"
 "will be asked to do a specific number of hums.\n\n";
-    displayAndReset(&intro_message);
-    for (int i = 0; i < 6; i++)
-      hum_examples.emplace_back(recordExampleHum(i), i);
-    hum_examples.emplace_back(recordExampleHum(1, /*prolonged=*/true), 1);
-  }
+  displayAndReset(&intro_message);
+  for (int i = 0; i < 6; i++)
+    hum_examples.emplace_back(recordExampleHum(i), i);
+  hum_examples.emplace_back(recordExampleHum(1, /*prolonged=*/true), 1);
 
   // all examples of one are negative examples for the other
   std::vector<std::pair<AudioRecording, int>> hum_examples_plus_neg;

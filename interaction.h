@@ -5,8 +5,6 @@ bool promptYesNo(const char* prompt);
 
 void promptInfo(const char* prompt);
 
-constexpr bool DOING_DEVELOPMENT_TESTING = false;
-
 #ifdef CLICKITONGUE_LINUX
 void make_getchar_like_getch();
 // can now do:    char ch = getchar();

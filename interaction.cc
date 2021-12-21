@@ -7,8 +7,7 @@
 #include <cstdio>
 void promptInfo(const char* prompt)
 {
-  if (!DOING_DEVELOPMENT_TESTING)
-    printf("\e[1;1H\e[2J");
+  printf("\e[1;1H\e[2J");
   printf("\n-------------------------------------------------------------------\n"
          "%s\n-------------------------------------------------------------------\n\n\n",
          prompt);
