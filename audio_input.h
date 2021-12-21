@@ -66,4 +66,6 @@ private:
   RecordingState data_;
 };
 
+PaDeviceIndex chooseInputDevice();
+
 #endif // CLICKITONGUE_AUDIO_INPUT_H_

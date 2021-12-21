@@ -13,8 +13,9 @@ struct ClickitongueCmdlineOpts
   std::optional<std::string> filename;
 
   std::optional<bool> retrain = false;
+  std::optional<bool> forget_input_dev = false;
 };
 STRUCTOPT(ClickitongueCmdlineOpts,
-          mode, detector, duration_seconds, filename, retrain);
+          mode, detector, duration_seconds, filename, retrain, forget_input_dev);
 
 #endif // CLICKITONGUE_CMDLINE_OPTIONS_H_

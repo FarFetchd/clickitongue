@@ -1,7 +1,9 @@
 #ifndef CLICKITONGUE_CONFIG_IO_H_
 #define CLICKITONGUE_CONFIG_IO_H_
 
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "flatconfig.hpp"
 
@@ -61,5 +63,8 @@ bool writeConfig(Config config, std::string config_name,
                  std::string* attempted_filepath);
 
 std::string getAndEnsureConfigDir();
+
+std::optional<int> loadDeviceConfig(std::vector<std::string> dev_names);
+int writeDeviceConfig(std::vector<std::string> dev_names, int chosen);
 
 #endif // CLICKITONGUE_CONFIG_IO_H_

@@ -1,6 +1,4 @@
 
-display what recording device is being used, and ideally allow selection
-
 * make windows exe+dll+data release package (and keep updated)
    (and test that it runs on other people's windows!)
 

@@ -158,3 +158,37 @@ bool writeConfig(Config config, std::string config_name,
     successful = false;
   return successful;
 }
+
+std::optional<int> loadDeviceConfig(std::vector<std::string> dev_names)
+{
+  farfetchd::ConfigReader reader;
+  if (!reader.parseFile(getAndEnsureConfigDir() + "audio_input_device.config"))
+    return std::nullopt;
+  int ind;
+  if (reader.getInt("dev_ind").has_value())
+    ind = reader.getInt("dev_ind").value();
+  else
+    return std::nullopt;
+  std::string name;
+  if (reader.getString("dev_name").has_value())
+    name = reader.getString("dev_name").value();
+  else
+    return std::nullopt;
+
+  if (ind < dev_names.size() && dev_names[ind] == name)
+    return ind;
+  return std::nullopt;
+}
+
+int writeDeviceConfig(std::vector<std::string> dev_names, int chosen)
+{
+  std::string fname = getAndEnsureConfigDir() + "audio_input_device.config";
+  try
+  {
+    std::ofstream out(fname);
+    out << "dev_ind: " << chosen << std::endl
+        << "dev_name: " << dev_names[chosen] << std::endl;
+  }
+  catch (std::exception const& e) {}
+  return chosen;
+}

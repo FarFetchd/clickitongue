@@ -201,6 +201,8 @@ void firstTimeTrain()
 "First, we're going to train Clickitongue on the acoustics\n"
 "and typical background noise of your particular enivornment.");
 
+  chooseInputDevice();
+
   bool try_blows = promptYesNo(
 "Can you keep your mic positioned ~1cm from your mouth for long-term usage? ");
 
@@ -386,6 +388,7 @@ void defaultMain(bool ignore_existing_config)
 #include <unistd.h> // for geteuid
 #endif
 
+extern bool g_forget_input_dev;
 int main(int argc, char** argv)
 {
   if (kNumChannels != 2)
@@ -407,6 +410,7 @@ int main(int argc, char** argv)
   ClickitongueCmdlineOpts opts =
       structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
   validateCmdlineOpts(opts);
+  g_forget_input_dev = opts.forget_input_dev.value();
   g_fourier = new EasyFourier();
 
   if (opts.mode.has_value())

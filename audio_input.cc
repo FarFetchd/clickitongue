@@ -1,5 +1,8 @@
 #include "audio_input.h"
 
+#include "config_io.h"
+#include "interaction.h"
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -55,6 +58,120 @@ int recordCallback(const void* input_buf, void* output_buf,
   return done_or_continue;
 }
 
+const char kNotInputDev[] = "CLICKITONGUENOTANINPUTDEVICE";
+std::vector<std::string> getDeviceNames()
+{
+  int num_devices = Pa_GetDeviceCount();
+  if (num_devices < 0)
+  {
+    fprintf(stderr, "Error: Pa_GetDeviceCount() returned %d\n", num_devices);
+    exit(1);
+  }
+
+  std::vector<std::string> dev_names;
+  for (PaDeviceIndex i=0; i<num_devices; i++)
+  {
+    const PaDeviceInfo* dev_info = Pa_GetDeviceInfo(i);
+    if (!dev_info)
+    {
+      fprintf(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
+      exit(1);
+    }
+    if (dev_info->maxInputChannels > 0)
+      dev_names.push_back(std::to_string(i) + ") " + dev_info->name);
+    else
+      dev_names.push_back(kNotInputDev);
+  }
+  return dev_names;
+}
+
+std::vector<std::string> markChosenDevName(std::vector<std::string> names,
+                                           int choice)
+{
+  std::vector<std::string> ret;
+  for (int i=0; i<names.size(); i++)
+  {
+    std::string cur = "";
+    if (choice == i)
+    {
+      cur = ">>> ";
+      if (names[i] == kNotInputDev)
+        cur += "NOT AN INPUT DEV?!?!?!? ";
+    }
+    ret.push_back(cur + names[i]);
+  }
+  return ret;
+}
+
+bool g_forget_input_dev = false;
+PaDeviceIndex chooseInputDevice()
+{
+  static PaDeviceIndex chosen = paNoDevice;
+  if (chosen != paNoDevice)
+    return chosen;
+
+  PaDeviceIndex default_dev_ind = Pa_GetDefaultInputDevice();
+  if (default_dev_ind == paNoDevice)
+  {
+    fprintf(stderr, "Error: No default audio input device.\n");
+    exit(1);
+  }
+  chosen = default_dev_ind;
+  std::vector<std::string> dev_names = getDeviceNames();
+
+  if (!g_forget_input_dev)
+  {
+    std::optional<int> maybe_remembered = loadDeviceConfig(dev_names);
+    if (maybe_remembered.has_value())
+    {
+      chosen = maybe_remembered.value();
+      return chosen;
+    }
+  }
+
+  int num_output_devs = 0;
+  for (std::string x : dev_names)
+    if (x != kNotInputDev)
+      num_output_devs++;
+  if (num_output_devs == 1)
+    return writeDeviceConfig(dev_names, chosen);
+
+  int user_choice = default_dev_ind;
+#ifdef CLICKITONGUE_WINDOWS
+  while (true)
+  {
+    std::vector<std::string> marked = markChosenDevName(dev_names, user_choice);
+    std::string prompt = "Is this the audio input device you want to use?\n\n\n\n";
+    for (std::string x : marked)
+      if (x != kNotInputDev)
+        prompt += x + "\n\n";
+    prompt += "\n\n(Clickitongue will remember your selection for the future. "
+              "If you ever want to switch to another input device, delete the "
+              "file audio_input_device.config).";
+    if (promptYesNo(prompt.c_str()))
+      break;
+    do
+    {
+      user_choice++;
+      if (user_choice >= dev_names.size())
+        user_choice = 0;
+    } while (dev_names[user_choice] == kNotInputDev);
+  }
+#else // linux or OSX
+  printf("\nDevices:\n");
+  for (std::string x : dev_names)
+    if (x != kNotInputDev)
+      printf("%s\n", x.c_str());
+  printf("\nEnter the number of the input device you want to use.\n\n"
+         "(Clickitongue will remember your selection for the future. If you ever\n"
+         "want to switch to another input device, run clickitongue --forget_input_dev).\n\n"
+         "If in doubt, enter %d. Enter (%d-%d): ", default_dev_ind, 0, dev_names.size()-1);
+  scanf("%d", &user_choice);
+#endif
+  chosen = user_choice;
+  return writeDeviceConfig(dev_names, chosen);
+}
+
 AudioInput::AudioInput(int seconds_to_record, int frames_per_cb)
   : stream_(nullptr), data_(seconds_to_record * kFramesPerSec)
 {
@@ -79,7 +196,7 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
   if (err != paNoError) crash(err);
 
   PaStreamParameters input_param;
-  input_param.device = Pa_GetDefaultInputDevice();
+  input_param.device = chooseInputDevice();
   if (input_param.device == paNoDevice)
   {
     fprintf(stderr,"Error: No default input device.\n");
