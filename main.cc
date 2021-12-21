@@ -393,8 +393,8 @@ int main(int argc, char** argv)
     promptInfo("kNumChannels must be 2! The code that feeds into the FFT "
                "averages [sample ind] and [sample ind + 1] together, under "
                "the assumption that each frame is 2 samples. If you need "
-               "to change kNumChannels, you must change that code. (Don't) "
-               "just look only at sample 0 - perhaps only sample 1 has data. ");
+               "to change kNumChannels, you must change that code. (Don't "
+               "just look only at sample 0 - perhaps only sample 1 has data.)");
     return 1;
   }
 
