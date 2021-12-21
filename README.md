@@ -44,6 +44,15 @@ The tongue clicks it expects are like 0:31-0:34 of
 After that first time training, you should be able to simply run Clickitongue
 and immediately start clicking.
 
+If you ever want to redo the training procedure: On Linux or OSX run
+Clickitongue with the --retrain flag. On Windows delete the
+default.clickitongue file that should live in the same directory as
+clickitongue.exe.
+
+If you want to change audio input devices: On Linux or OSX run Clickitongue with
+the --forget_input_dev flag. On Windows delete the audio_input_device.config
+file that should live in the same directory as clickitongue.exe.
+
 # Compiling on Windows
 
 (You can ignore this if you're not interested in working on Clickitongue's

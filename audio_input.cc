@@ -103,6 +103,58 @@ std::vector<std::string> markChosenDevName(std::vector<std::string> names,
   return ret;
 }
 
+
+
+
+#ifdef CLICKITONGUE_WINDOWS
+int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
+{
+  int user_choice = default_dev_ind;
+  while (true)
+  {
+    std::vector<std::string> marked = markChosenDevName(dev_names, user_choice);
+    std::string prompt = "Is this the audio input device you want to use?\n\n\n\n";
+    for (std::string x : marked)
+      if (x != kNotInputDev)
+        prompt += x + "\n\n";
+    prompt += "\n\n(Clickitongue will remember your selection for the future. "
+              "If you ever want to switch to another input device, delete the "
+              "file audio_input_device.config).";
+    if (promptYesNo(prompt.c_str()))
+      break;
+    do
+    {
+      user_choice++;
+      if (user_choice >= dev_names.size())
+        user_choice = 0;
+    } while (dev_names[user_choice] == kNotInputDev);
+  }
+  return user_choice;
+}
+#else // linux or OSX
+int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
+{
+  int user_choice = default_dev_ind;
+  printf("\nDevices:\n");
+  for (std::string x : dev_names)
+    if (x != kNotInputDev)
+      printf("%s\n", x.c_str());
+  printf(
+"\nEnter the number of the input device you want to use.\n\n"
+"(Clickitongue will remember your selection for the future. If you ever want\n"
+"to switch to another input device, run clickitongue --forget_input_dev).\n\n");
+  int scanf_num_read = 0;
+  while (scanf_num_read != 1)
+  {
+    int highest_acceptable = dev_names.size() - 1;
+    printf("If in doubt, enter %d. Enter [%d-%d]: ",
+           default_dev_ind, 0, highest_acceptable);
+    scanf_num_read = scanf("%d", &user_choice);
+  }
+  return user_choice;
+}
+#endif
+
 bool g_forget_input_dev = false;
 PaDeviceIndex chooseInputDevice()
 {
@@ -130,45 +182,20 @@ PaDeviceIndex chooseInputDevice()
   }
 
   int num_output_devs = 0;
-  for (std::string x : dev_names)
-    if (x != kNotInputDev)
-      num_output_devs++;
-  if (num_output_devs == 1)
-    return writeDeviceConfig(dev_names, chosen);
-
-  int user_choice = default_dev_ind;
-#ifdef CLICKITONGUE_WINDOWS
-  while (true)
-  {
-    std::vector<std::string> marked = markChosenDevName(dev_names, user_choice);
-    std::string prompt = "Is this the audio input device you want to use?\n\n\n\n";
-    for (std::string x : marked)
-      if (x != kNotInputDev)
-        prompt += x + "\n\n";
-    prompt += "\n\n(Clickitongue will remember your selection for the future. "
-              "If you ever want to switch to another input device, delete the "
-              "file audio_input_device.config).";
-    if (promptYesNo(prompt.c_str()))
-      break;
-    do
+  int any_output_dev_ind = -1;
+  for (int i=0; i<dev_names.size(); i++)
+    if (dev_names[i] != kNotInputDev)
     {
-      user_choice++;
-      if (user_choice >= dev_names.size())
-        user_choice = 0;
-    } while (dev_names[user_choice] == kNotInputDev);
+      num_output_devs++;
+      any_output_dev_ind = i;
+    }
+  if (num_output_devs == 1)
+  {
+    chosen = any_output_dev_ind;
+    return writeDeviceConfig(dev_names, chosen);
   }
-#else // linux or OSX
-  printf("\nDevices:\n");
-  for (std::string x : dev_names)
-    if (x != kNotInputDev)
-      printf("%s\n", x.c_str());
-  printf("\nEnter the number of the input device you want to use.\n\n"
-         "(Clickitongue will remember your selection for the future. If you ever\n"
-         "want to switch to another input device, run clickitongue --forget_input_dev).\n\n"
-         "If in doubt, enter %d. Enter (%d-%d): ", default_dev_ind, 0, dev_names.size()-1);
-  scanf("%d", &user_choice);
-#endif
-  chosen = user_choice;
+
+  chosen = askUserChoice(dev_names, default_dev_ind);
   return writeDeviceConfig(dev_names, chosen);
 }
 

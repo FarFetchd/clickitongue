@@ -19,6 +19,7 @@ bool promptYesNo(const char* prompt)
   int input = 'x';
   while (input != 'y' && input != 'Y' && input != 'n' && input != 'N')
   {
+    printf("\e[1;1H\e[2J");
     printf("%s (y/n)  ", prompt);
     fflush(stdout);
     input = getchar();
