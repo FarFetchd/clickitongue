@@ -193,23 +193,20 @@ void displayAndReset(std::string* msg)
 #endif
 }
 
-constexpr char kDefaultConfig[] = "default";
-void firstTimeTrain()
+// returns try_blows
+bool trainIntro(std::string* intro_message)
 {
-  promptInfo(
-"It looks like this is your first time running Clickitongue.\n"
-"First, we're going to train Clickitongue on the acoustics\n"
-"and typical background noise of your particular enivornment.");
-
   chooseInputDevice();
 
   bool try_blows = promptYesNo(
-"Can you keep your mic positioned ~1cm from your mouth for long-term usage? ");
+"It looks like this is your first time running Clickitongue.\n"
+"We'll now train Clickitongue on the acoustics and typical background noise\n"
+"of your particular enivornment.\n\n"
+"First: can you keep your mic positioned ~1cm from your mouth for long-term usage? ");
 
-  std::string intro_message;
   if (try_blows)
   {
-    intro_message +=
+    *intro_message +=
 "Great! You'll be able to do both left- and right-clicks, using blowing and\n"
 "humming. Ensure your mic is in position ~1cm from your mouth - your index\n"
 "finger should fit perfectly between mouth and mic. If your mic has a foamy/fuzzy\n"
@@ -217,14 +214,36 @@ void firstTimeTrain()
   }
   else
   {
-    intro_message +=
+    *intro_message +=
 "Ok, we will fall back to left-clicks only, controlled by humming.\n\n";
   }
+  return try_blows;
+}
 
+void trainingBody(bool try_blows, std::string* intro_message,
+                  std::vector<std::pair<AudioRecording, int>>* blow_examples,
+                  std::vector<std::pair<AudioRecording, int>>* hum_examples);
+
+void firstTimeTrain()
+{
+  std::string intro_message;
+  bool try_blows = trainIntro(&intro_message);
   std::vector<std::pair<AudioRecording, int>> blow_examples;
-  if (try_blows)
+  std::vector<std::pair<AudioRecording, int>> hum_examples;
+  trainingBody(try_blows, &intro_message, &blow_examples, &hum_examples);
+}
+
+bool afterTraining(Config config);
+
+constexpr char kDefaultConfig[] = "default";
+
+void trainingBody(bool try_blows, std::string* intro_message,
+                  std::vector<std::pair<AudioRecording, int>>* blow_examples,
+                  std::vector<std::pair<AudioRecording, int>>* hum_examples)
+{
+  if (try_blows && blow_examples->empty())
   {
-    intro_message +=
+    *intro_message +=
 "We will first train Clickitongue on your blowing. These should be extremely\n"
 "gentle puffs of air, blown directly onto the mic. Don't try too hard to make\n"
 "these training examples strong and clear, or else Clickitongue will expect\n"
@@ -233,41 +252,38 @@ void firstTimeTrain()
 "Think of trying to propel an eyelash over a hand's width.\n\n"
 "The training will record several 4-second snippets, during each of which you\n"
 "will be asked to do a specific number of blows.\n\n";
-    displayAndReset(&intro_message);
+    displayAndReset(intro_message);
     for (int i = 0; i < 6; i++)
-      blow_examples.emplace_back(recordExampleBlow(i), i);
-    blow_examples.emplace_back(recordExampleBlow(1, /*prolonged=*/true), 1);
+      blow_examples->emplace_back(recordExampleBlow(i), i);
+    blow_examples->emplace_back(recordExampleBlow(1, /*prolonged=*/true), 1);
   }
-  std::vector<std::pair<AudioRecording, int>> hum_examples;
-  intro_message +=
+  {
+    *intro_message +=
 "We will now train Clickitongue on your humming. These hums should be simple,\n"
 "relatively quiet closed-mouth hums, like saying 'hm' in reaction to something\n"
 "just a tiny bit interesting.\n\n"
 "The training will record several 4-second snippets, during each of which you\n"
 "will be asked to do a specific number of hums.\n\n";
-  displayAndReset(&intro_message);
-  for (int i = 0; i < 6; i++)
-    hum_examples.emplace_back(recordExampleHum(i), i);
-  hum_examples.emplace_back(recordExampleHum(1, /*prolonged=*/true), 1);
+    displayAndReset(intro_message);
+    for (int i = 0; i < 6; i++)
+      hum_examples->emplace_back(recordExampleHum(i), i);
+    hum_examples->emplace_back(recordExampleHum(1, /*prolonged=*/true), 1);
+  }
 
   // all examples of one are negative examples for the other
   std::vector<std::pair<AudioRecording, int>> hum_examples_plus_neg;
   std::vector<std::pair<AudioRecording, int>> blow_examples_plus_neg;
-  for (auto const& ex_pair : blow_examples)
+  for (auto const& ex_pair : *blow_examples)
     blow_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
-  for (auto const& ex_pair : hum_examples)
+  for (auto const& ex_pair : *hum_examples)
     hum_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
-  for (auto const& ex_pair : blow_examples)
+  for (auto const& ex_pair : *blow_examples)
     hum_examples_plus_neg.emplace_back(ex_pair.first, 0);
-  for (auto const& ex_pair : hum_examples)
+  for (auto const& ex_pair : *hum_examples)
     blow_examples_plus_neg.emplace_back(ex_pair.first, 0);
 
-  // TODO scale whistle
   double scale = 1.0;
-//   if (try_blows)
-//     scale = pickBlowScalingFactor(blow_examples_plus_neg);
-//   else
-    scale = pickHumScalingFactor(hum_examples_plus_neg);
+  scale = pickHumScalingFactor(hum_examples_plus_neg);
   printf("using scale %g\n", scale);
 
   Config config;
@@ -279,19 +295,31 @@ void firstTimeTrain()
   {
     std::string msg;
     if (!config.hum.enabled)
+    {
       msg += "Clickitongue was not able to learn to detect your humming.\n\n";
+      hum_examples->clear();
+    }
     if (try_blows && !config.blow.enabled)
+    {
       msg += "Clickitongue was not able to learn to detect your blowing.\n\n";
+      blow_examples->clear();
+    }
     msg += "Would you like to redo the training?\n\n";
     if (config.hum.enabled || config.blow.enabled)
       msg += "(If you leave it as is, you will only be able to left click.)";
     if (promptYesNo(msg.c_str()))
     {
-      firstTimeTrain();
+      trainingBody(try_blows, intro_message, blow_examples, hum_examples);
       return;
     }
   }
+  if (afterTraining(config))
+    normalOperation(config);
+}
 
+// returns true if we can proceed to normalOperation().
+bool afterTraining(Config config)
+{
   std::string success_msg;
   // TODO whistle
   if (config.blow.enabled && config.hum.enabled)
@@ -323,12 +351,17 @@ void firstTimeTrain()
 "Clickitongue was not able to find parameters that distinguish your humming\n"
 "from background noise with acceptable accuracy. Remove sources of\n"
 "background noise, move the mic closer to your mouth, and try again.");
-    return;
+    return false;
   }
 #ifdef CLICKITONGUE_WINDOWS
-  success_msg += "If you ever want to redo this training, delete the file default.clickitongue that you should find right next to clickitongue.exe, and then run clickitongue.exe again.\n\nNow entering normal operation.";
+  success_msg +=
+"If you ever want to redo this training, delete the file default.clickitongue "
+"that you should find right next to clickitongue.exe, and then run "
+"clickitongue.exe again.\n\nNow entering normal operation.";
 #else
-  success_msg += "If you ever want to redo this training, run clickitongue with the flag --retrain.\n\nNow entering normal operation.";
+  success_msg +=
+"If you ever want to redo this training, run clickitongue with the flag --retrain."
+"\n\nNow entering normal operation.";
 #endif
   promptInfo(success_msg.c_str());
 
@@ -347,7 +380,7 @@ void firstTimeTrain()
     ". You'll have to redo this training the next time you run Clickitongue.";
     promptInfo(msg.c_str());
   }
-  normalOperation(config);
+  return true;
 }
 
 void defaultMain(bool ignore_existing_config)

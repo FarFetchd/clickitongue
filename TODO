@@ -1,4 +1,7 @@
 
+dont make them redo both if only one training bad... implemented but not tested.
+test both good the first time, one good and retry, one good and give up.
+
 * make windows exe+dll+data release package (and keep updated)
    (and test that it runs on other people's windows!)
 
