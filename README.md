@@ -1,8 +1,7 @@
 Clickitongue carries out mouse clicks when triggered by mouth sounds picked
 up by your computer's microphone, to give sore wrists a rest.
 
-Clickitongue is still in development, but is already basically usable. It
-currently runs on Linux (both X and Wayland) and Windows. Support for OSX
+Clickitongue runs on Linux (both X and Wayland) and Windows. Support for OSX
 is planned.
 
 # Installing on Linux
@@ -24,25 +23,19 @@ On Linux, clickitongue must be run as root: `sudo ./clickitongue`.
 Download the Windows release .zip, unzip it, and run clickitongue.exe.
 
 If you want to click any windows belonging to run-as-admin programs, you'll
-have to run clickitongue.exe as admin.
+have to run clickitongue.exe as admin. (But that should be rare).
 
 # Usage
 
-If you have a microphone that you can position like 1cm in front of your mouth,
-you'll be able to use blowing in addition to tongue clicks, allowing both left
-and right clicks. If you can't keep the mic nearby, tongue clicks will still
-work. Don't worry about mic quality - even the built-in mic of an X1 Carbon
-ThinkPad works for tongue clicks, and any mic positioned near your mouth should
-work for blowing. Remove any fuzzy/spongy windscreens for best blowing results!
+If you have a microphone that you can position about 1cm in front of your mouth,
+you'll be able to use both blowing and humming, allowing both left and right
+clicks. If you can't keep the mic that close, humming will still work.
+Don't worry about mic quality - even the built-in mic of an X1 Carbon ThinkPad
+works for humming, and any mic positioned near your mouth should work for
+blowing. Remove any fuzzy/spongy windscreens for best blowing results!
 
 The first time you run Clickitongue, it will have you train it to detect your
-particular tongue click and blowing sounds, in your particular acoustic
-environment. For blow training, use short soft bursts - but not too soft.
-The tongue clicks it expects are like 0:31-0:34 of
-[this video.](https://youtu.be/L7sWPZArUN0?t=31)
-
-After that first time training, you should be able to simply run Clickitongue
-and immediately start clicking.
+particular blowing and humming sounds, in your particular acoustic environment.
 
 If you ever want to redo the training procedure: On Linux or OSX run
 Clickitongue with the --retrain flag. On Windows delete the
