@@ -39,4 +39,6 @@ enum class Action
   NoAction
 };
 
+constexpr char kDefaultConfig[] = "default";
+
 #endif // CLICKITONGUE_CONSTANTS_H_

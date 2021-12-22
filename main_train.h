@@ -1,0 +1,6 @@
+#ifndef CLICKITONGUE_MAIN_TRAIN_H_
+#define CLICKITONGUE_MAIN_TRAIN_H_
+
+void firstTimeTrain();
+
+#endif // CLICKITONGUE_MAIN_TRAIN_H_
