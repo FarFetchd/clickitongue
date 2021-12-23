@@ -93,7 +93,6 @@ AudioRecording recordExampleCommon(int desired_events,
 #ifdef CLICKITONGUE_WINDOWS
   printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 #else
-  // TODO will this work on OSX? or need something different?
   make_getchar_like_getch(); getchar(); resetTermios();
 #endif
   printf("\n"

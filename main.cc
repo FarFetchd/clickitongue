@@ -134,7 +134,7 @@ double loadScaleFromConfig(Config config)
     scale = config.blow.scale;
   else if (config.hum.enabled)
     scale = config.hum.scale;
-//   else if (config.whistle.enabled) TODO
+//   else if (config.whistle.enabled) TODO whistle
 //     scale = config.whistle.scale;
 
   if (config.blow.enabled && config.hum.enabled &&
@@ -143,7 +143,7 @@ double loadScaleFromConfig(Config config)
     promptInfo("Error! Blow and hum both enabled with different scaling factors.");
     exit(1);
   }
-//   if (config.whistle.enabled && config.hum.enabled && TODO
+//   if (config.whistle.enabled && config.hum.enabled && TODO whistle
 //       config.hum.scale != config.whistle.scale)
 //   {
 //     promptInfo("Error! Whistle and hum both enabled with different scaling factors.");

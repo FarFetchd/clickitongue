@@ -53,8 +53,7 @@ void displayAndReset(std::string* msg)
   promptInfo(msg->c_str());
   *msg = "";
 
-// TODO OSX
-#ifdef CLICKITONGUE_LINUX
+#ifndef CLICKITONGUE_WINDOWS
   printf("Press any key to continue to the training prompt.\n\n");
   make_getchar_like_getch(); getchar(); resetTermios();
 #endif

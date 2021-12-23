@@ -24,7 +24,6 @@ bool promptYesNo(const char* prompt)
     input = getchar();
   }
 
-  // TODO needed for OSX too?
   printf("press any key if this message isn't automatically advanced beyond...");
   fflush(stdout);
   make_getchar_like_getch(); getchar(); resetTermios();
@@ -33,7 +32,6 @@ bool promptYesNo(const char* prompt)
   return input == 'y' || input == 'Y';
 }
 
-// TODO will this work on OSX? or need something different?
 #include <termios.h>
 #include <cstdio>
 static struct termios old_termios, current_termios;
