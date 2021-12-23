@@ -83,9 +83,13 @@ int EasyFourier::binContainingFreq(double freq) const
 void EasyFourier::printOctavePowers(const float* samples)
 {
   FourierLease lease = borrowWorker();
-  // requires kNumChannels == 2
   for (int i=0; i<kFourierBlocksize; i++)
-    lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+  {
+    if (kNumChannels == 2)
+      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    else
+      lease.in[i] = samples[i];
+  }
   lease.runFFT();
 
   for (int x = 0; x < kNumFourierBins; x++)
@@ -116,9 +120,13 @@ bool isSpike(fftw_complex* p, int i)
 void EasyFourier::printTopTwoSpikes(const float* samples)
 {
   FourierLease lease = borrowWorker();
-  // requires kNumChannels == 2
   for (int i=0; i<kFourierBlocksize; i++)
-    lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+  {
+    if (kNumChannels == 2)
+      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    else
+      lease.in[i] = samples[i];
+  }
   lease.runFFT();
 
   for (int x = 0; x < kNumFourierBins; x++)
@@ -148,9 +156,13 @@ void EasyFourier::printTopTwoSpikes(const float* samples)
 void EasyFourier::printOvertones(const float* samples)
 {
   FourierLease lease = borrowWorker();
-  // requires kNumChannels == 2
   for (int i=0; i<kFourierBlocksize; i++)
-    lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+  {
+    if (kNumChannels == 2)
+      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    else
+      lease.in[i] = samples[i];
+  }
   lease.runFFT();
 
   for (int x = 0; x < kNumFourierBins; x++)
@@ -194,9 +206,13 @@ void EasyFourier::printOvertones(const float* samples)
 void EasyFourier::printEqualizer(const float* samples)
 {
   FourierLease lease = borrowWorker();
-  // requires kNumChannels == 2
   for (int i=0; i<kFourierBlocksize; i++)
-    lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+  {
+    if (kNumChannels == 2)
+      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    else
+      lease.in[i] = samples[i];
+  }
   lease.runFFT();
 
   for (int x = 0; x < kNumFourierBins; x++)
@@ -223,9 +239,13 @@ void EasyFourier::printEqualizer(const float* samples)
 void EasyFourier::printMaxBucket(const float* samples)
 {
   FourierLease lease = borrowWorker();
-  // requires kNumChannels == 2
   for (int i=0; i<kFourierBlocksize; i++)
-    lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+  {
+    if (kNumChannels == 2)
+      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    else
+      lease.in[i] = samples[i];
+  }
   lease.runFFT();
 
   double max = 0;

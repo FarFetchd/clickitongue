@@ -1,8 +1,7 @@
 Clickitongue carries out mouse clicks when triggered by mouth sounds picked
 up by your computer's microphone, to give sore wrists a rest.
 
-Clickitongue runs on Linux (both X and Wayland) and Windows. Support for OSX
-is planned.
+Clickitongue runs on Linux (both X and Wayland), Windows, and OSX.
 
 # Installing on Linux
 
@@ -24,6 +23,11 @@ Download the Windows release .zip, unzip it, and run clickitongue.exe.
 
 If you want to click any windows belonging to run-as-admin programs, you'll
 have to run clickitongue.exe as admin. (But that should be rare).
+
+# Installing on OSX
+
+`brew install portaudio fftw cliclick`, and then in the clickitongue directory
+run `./build.sh osx.ccbuildfile`. After that, `./clickitongue` to run.
 
 # Usage
 

@@ -1,6 +1,7 @@
 #include "train_blow.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <random>
 #include <thread>
@@ -505,9 +506,13 @@ double pickBlowScalingFactor(std::vector<std::pair<AudioRecording, int>>
   std::vector<float> const& samples = rec.samples();
   for (int i = 0; i < samples.size(); i += kFourierBlocksize * kNumChannels)
   {
-    // requires kNumChannels == 2
     for (int j=0; j <kFourierBlocksize; j++)
-      lease.in[j] = (samples[i + j*kNumChannels] + samples[i + j*kNumChannels + 1]) / 2.0;
+    {
+      if (kNumChannels == 2)
+        lease.in[j] = (samples[i + j*kNumChannels] + samples[i + j*kNumChannels + 1]) / 2.0;
+      else
+        lease.in[j] = samples[i + j];
+    }
     lease.runFFT();
     for (int x = 0; x < kNumFourierBins; x++)
       lease.out[x][0]=lease.out[x][0]*lease.out[x][0] + lease.out[x][1]*lease.out[x][1];

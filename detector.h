@@ -24,6 +24,7 @@ public:
   void addInhibitionTarget(Detector* target);
 
   Detector() = delete;
+  virtual ~Detector();
 
 protected:
   Detector(Action action_on, Action action_off,

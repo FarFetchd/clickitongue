@@ -199,16 +199,6 @@ void defaultMain(bool ignore_existing_config)
 extern bool g_forget_input_dev;
 int main(int argc, char** argv)
 {
-  if (kNumChannels != 2)
-  {
-    promptInfo("kNumChannels must be 2! The code that feeds into the FFT "
-               "averages [sample ind] and [sample ind + 1] together, under "
-               "the assumption that each frame is 2 samples. If you need "
-               "to change kNumChannels, you must change that code. (Don't "
-               "just look only at sample 0 - perhaps only sample 1 has data.)");
-    return 1;
-  }
-
   Pa_Initialize(); // get its annoying spam out of the way immediately
 #ifndef CLICKITONGUE_WINDOWS
   promptInfo("****clickitongue is now running.****");

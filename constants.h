@@ -17,7 +17,11 @@ constexpr int kFramesPerSec = 44100; // aka "sample rate".
 
 // The end frequency of the n/2 + 1 Fourier transform output frequency bins.
 constexpr double kNyquist = 22050.0f;
+#ifdef CLICKITONGUE_OSX
+constexpr int kNumChannels = 1;
+#else
 constexpr int kNumChannels = 2;
+#endif
 constexpr float kSilentSample = 0.0f;
 
 // Batch size of frames (i.e. pairs of samples if kNumChannels is 2) to feed

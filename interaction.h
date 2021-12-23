@@ -5,11 +5,11 @@ bool promptYesNo(const char* prompt);
 
 void promptInfo(const char* prompt);
 
-#ifdef CLICKITONGUE_LINUX
+#ifndef CLICKITONGUE_WINDOWS
 void make_getchar_like_getch();
 // can now do:    char ch = getchar();
 // once you're done, restore normality with:
 void resetTermios();
-#endif // CLICKITONGUE_LINUX
+#endif
 
 #endif // CLICKITONGUE_INTERACTION_H_

@@ -18,9 +18,13 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
     exit(1);
   }
 
-  // requires kNumChannels == 2
   for (int i=0; i<kFourierBlocksize; i++)
-    fft_lease_.in[i] = (cur_sample[i*kNumChannels] + cur_sample[i*kNumChannels+1]) / 2.0;
+  {
+    if (kNumChannels == 2)
+      fft_lease_.in[i] = (cur_sample[i*kNumChannels] + cur_sample[i*kNumChannels+1]) / 2.0;
+    else
+      fft_lease_.in[i] = cur_sample[i];
+  }
   fft_lease_.runFFT();
 
   for (int i=0; i<kNumFourierBins; i++)

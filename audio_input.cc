@@ -230,7 +230,7 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
     Pa_Terminate();
     exit(1);
   }
-  input_param.channelCount = 2; // stereo input
+  input_param.channelCount = kNumChannels;
   input_param.sampleFormat = paFloat32;
   input_param.suggestedLatency =
     Pa_GetDeviceInfo(input_param.device)->defaultLowInputLatency;

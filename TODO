@@ -1,22 +1,18 @@
+hmm... i have a feeling we should be dynamically choosing 1 vs 2 channels...
 
 dont make them redo both if only one training bad... implemented but not tested.
 test both good the first time, one good and retry, one good and give up.
 
-* make windows exe+dll+data release package (and keep updated)
-   (and test that it runs on other people's windows!)
-
-* support osx   https://stackoverflow.com/questions/2369806/simulating-mouse-clicks-on-mac-os-x-does-not-work-for-some-applications
-  ....orrrrrrr https://github.com/BlueM/cliclick
-      launching a shell command per click won't be ideal, but it's an ok start.
-
+cliclick called from within clickitongue doesn't work...
 
 wishlist
+* directly support osx using https://stackoverflow.com/questions/2369806/simulating-mouse-clicks-on-mac-os-x-does-not-work-for-some-applications
+         (rather than cliclick)
 * easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
 * fun idea: ascending and descending whistles to control scroll wheel. need to track frequencies at a finer resolution; try
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
 * translate into all languages we can get translators for
 * debian package
-* native OSX support (i.e. not just calling cliclick every time)
 
 
 

@@ -101,7 +101,6 @@ HumConfig::HumConfig(farfetchd::ConfigReader const& cfg)
              o6_limit >= 0 && ewma_alpha >= 0 && scale >= 0);
 }
 
-#ifdef CLICKITONGUE_LINUX
 std::string getHomeDir()
 {
   char home_dir[1024];
@@ -109,24 +108,18 @@ std::string getHomeDir()
   strncpy(home_dir, getenv("HOME"), 1023);
   return std::string(home_dir);
 }
-#endif // CLICKITONGUE_LINUX
 
 std::string getAndEnsureConfigDir()
 {
-#ifdef CLICKITONGUE_LINUX
+#ifdef CLICKITONGUE_WINDOWS
+  return "";
+#else
   std::string config_dir = getHomeDir() + "/.config";
   mkdir(config_dir.c_str(), S_IRWXU);
   std::string clicki_config_dir = config_dir + "/clickitongue";
   mkdir(clicki_config_dir.c_str(), S_IRWXU);
   return clicki_config_dir + "/";
-#endif // CLICKITONGUE_LINUX
-#ifdef CLICKITONGUE_WINDOWS
-  return "";
-#endif // CLICKITONGUE_WINDOWS
-#ifdef CLICKITONGUE_OSX
-#error "OSX not yet supported"
-    // TODO mkdir and set config_path
-#endif // CLICKITONGUE_OSX
+#endif
 }
 
 std::optional<Config> readConfig(std::string config_name)

@@ -187,6 +187,32 @@ void ActionDispatcher::scrollDown()
 
 // ================================OSX========================================
 #ifdef CLICKITONGUE_OSX
-#error "OSX not supported yet"
+
+// TODO more directly do these clicks, rather than going through a shell command
+void ActionDispatcher::leftDown()
+{
+  printf("leftdown\n");
+  pclose(popen("cliclick dd:.", "r"));
+}
+void ActionDispatcher::leftUp()
+{
+  printf("leftup\n");
+  pclose(popen("cliclick du:.", "r"));
+}
+void ActionDispatcher::rightDown()
+{
+  printf("rightclick\n");
+  pclose(popen("cliclick rc:.", "r"));
+}
+void ActionDispatcher::rightUp()
+{
+}
+void ActionDispatcher::scrollUp()
+{
+}
+void ActionDispatcher::scrollDown()
+{
+}
+
 #endif // CLICKITONGUE_OSX
 // ==============================End OSX======================================

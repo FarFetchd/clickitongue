@@ -2,8 +2,8 @@
 
 #include <string>
 
-// ================================Linux======================================
-#ifdef CLICKITONGUE_LINUX
+// =============================Linux and OSX===================================
+#ifndef CLICKITONGUE_WINDOWS
 #include <cstdio>
 void promptInfo(const char* prompt)
 {
@@ -53,7 +53,7 @@ void resetTermios()
   tcsetattr(0, TCSANOW, &old_termios);
 }
 
-#endif // CLICKITONGUE_LINUX
+#endif // not windows
 // ==============================End Linux====================================
 
 
@@ -82,16 +82,3 @@ bool promptYesNo(const char* prompt)
 }
 #endif // CLICKITONGUE_WINDOWS
 // =============================End Windows===================================
-
-
-// ================================OSX========================================
-#ifdef CLICKITONGUE_OSX
-#error "OSX not supported yet"
-void promptInfo(const char* prompt)
-{
-}
-bool promptYesNo(const char* prompt)
-{
-}
-#endif // CLICKITONGUE_OSX
-// ==============================End OSX======================================

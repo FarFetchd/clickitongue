@@ -6,6 +6,8 @@ Detector::Detector(Action action_on, Action action_off,
   : action_on_(action_on), action_off_(action_off),
     action_queue_(action_queue), cur_frame_dest_(cur_frame_dest) {}
 
+Detector::~Detector() {}
+
 void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
 {
   cur_frame_ += kFourierBlocksize;
