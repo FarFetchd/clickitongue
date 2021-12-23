@@ -4,9 +4,9 @@
 #include <string>
 
 // Important terminology: each single float value is a sample. A chunk of
-// kNumChannels samples (usually 2) is a frame. If you see a pointer to a buffer
+// g_num_channels samples (usually 2) is a frame. If you see a pointer to a buffer
 // of "samples" together with that buffer's length called num_frames, then that
-// buffer holds kNumChannels*num_frames floats (i.e. samples).
+// buffer holds g_num_channels*num_frames floats (i.e. samples).
 //
 // Unfortunately, the standard terms "sample" / "sample rate" (usually 44100Hz
 // for audio) in signal processing are not concerned with multiple channels.
@@ -17,14 +17,10 @@ constexpr int kFramesPerSec = 44100; // aka "sample rate".
 
 // The end frequency of the n/2 + 1 Fourier transform output frequency bins.
 constexpr double kNyquist = 22050.0f;
-#ifdef CLICKITONGUE_OSX
-constexpr int kNumChannels = 1;
-#else
-constexpr int kNumChannels = 2;
-#endif
+
 constexpr float kSilentSample = 0.0f;
 
-// Batch size of frames (i.e. pairs of samples if kNumChannels is 2) to feed
+// Batch size of frames (i.e. pairs of samples if g_num_channels is 2) to feed
 // into each Fourier transform. This is sort of the "master granularity" of
 // all of our DSP logic; we do decision-making exactly every [this many frames].
 constexpr int kFourierBlocksize = 256; // must be 128, 256, 512, or 1024
@@ -44,5 +40,7 @@ enum class Action
 };
 
 constexpr char kDefaultConfig[] = "default";
+
+extern int g_num_channels;
 
 #endif // CLICKITONGUE_CONSTANTS_H_

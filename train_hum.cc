@@ -69,8 +69,8 @@ public:
     FFTResultDistributor wrapper(std::move(just_one_detector), scale);
 
     for (int sample_ind = 0;
-         sample_ind + kFourierBlocksize * kNumChannels < samples.size();
-         sample_ind += kFourierBlocksize * kNumChannels)
+         sample_ind + kFourierBlocksize * g_num_channels < samples.size();
+         sample_ind += kFourierBlocksize * g_num_channels)
     {
       wrapper.processAudio(samples.data() + sample_ind, kFourierBlocksize);
     }
@@ -436,12 +436,12 @@ double pickHumScalingFactor(std::vector<std::pair<AudioRecording, int>>
 
   std::vector<double> o1;
   std::vector<float> const& samples = rec.samples();
-  for (int i = 0; i < samples.size(); i += kFourierBlocksize * kNumChannels)
+  for (int i = 0; i < samples.size(); i += kFourierBlocksize * g_num_channels)
   {
     for (int j=0; j<kFourierBlocksize; j++)
     {
-      if (kNumChannels == 2)
-        lease.in[j] = (samples[i + j*kNumChannels] + samples[i + j*kNumChannels + 1]) / 2.0;
+      if (g_num_channels == 2)
+        lease.in[j] = (samples[i + j*g_num_channels] + samples[i + j*g_num_channels + 1]) / 2.0;
       else
         lease.in[j] = samples[i + j];
     }

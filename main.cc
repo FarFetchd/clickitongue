@@ -17,6 +17,8 @@
 
 #include "config_io.h"
 
+int g_num_channels = 2;
+
 void crash(const char* s)
 {
   fprintf(stderr, "%s\n", s);

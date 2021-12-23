@@ -96,7 +96,7 @@ void AudioRecording::recordToFile(std::string fname) const
     fwrite(&sample16, sizeof(uint16_t), 1, writer);
   }
   fclose(writer);
-  float seconds = (samples_.size() / kNumChannels) / (float)kFramesPerSec;
+  float seconds = (samples_.size() / g_num_channels) / (float)kFramesPerSec;
   printf("Wrote %g seconds of big-endian uint16 %d channel %d Hz audio to %s.\n",
-         seconds, kNumChannels, kFramesPerSec, fname.c_str());
+         seconds, g_num_channels, kFramesPerSec, fname.c_str());
 }

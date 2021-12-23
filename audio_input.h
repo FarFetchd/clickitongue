@@ -11,14 +11,15 @@ struct RecordingState
 {
   RecordingState(long size_in_frames) : size_frames(size_in_frames)
   {
-    samples.reserve(size_frames * kNumChannels);
+    // HACK: assume g_num_channels is 2. a bit wasteful if actually 1, but fine.
+    samples.reserve(size_frames * 2);
   }
   long* frame_index_ptr()
   {
     return &frame_index;
   }
 
-  // *frame-based* index into samples. So, if kNumChannels==2, frame_index 2 is
+  // *frame-based* index into samples. So, if g_num_channels==2, frame_index 2 is
   // actually pointing to samples[4] (and 5).
   long frame_index = 0;
   // intended final size of samples, again specified in frames rather than samples.

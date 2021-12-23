@@ -20,8 +20,8 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
 
   for (int i=0; i<kFourierBlocksize; i++)
   {
-    if (kNumChannels == 2)
-      fft_lease_.in[i] = (cur_sample[i*kNumChannels] + cur_sample[i*kNumChannels+1]) / 2.0;
+    if (g_num_channels == 2)
+      fft_lease_.in[i] = (cur_sample[i*g_num_channels] + cur_sample[i*g_num_channels+1]) / 2.0;
     else
       fft_lease_.in[i] = cur_sample[i];
   }

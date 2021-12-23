@@ -85,8 +85,8 @@ void EasyFourier::printOctavePowers(const float* samples)
   FourierLease lease = borrowWorker();
   for (int i=0; i<kFourierBlocksize; i++)
   {
-    if (kNumChannels == 2)
-      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    if (g_num_channels == 2)
+      lease.in[i] = (samples[i*g_num_channels] + samples[i*g_num_channels + 1]) / 2.0;
     else
       lease.in[i] = samples[i];
   }
@@ -122,8 +122,8 @@ void EasyFourier::printTopTwoSpikes(const float* samples)
   FourierLease lease = borrowWorker();
   for (int i=0; i<kFourierBlocksize; i++)
   {
-    if (kNumChannels == 2)
-      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    if (g_num_channels == 2)
+      lease.in[i] = (samples[i*g_num_channels] + samples[i*g_num_channels + 1]) / 2.0;
     else
       lease.in[i] = samples[i];
   }
@@ -158,8 +158,8 @@ void EasyFourier::printOvertones(const float* samples)
   FourierLease lease = borrowWorker();
   for (int i=0; i<kFourierBlocksize; i++)
   {
-    if (kNumChannels == 2)
-      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    if (g_num_channels == 2)
+      lease.in[i] = (samples[i*g_num_channels] + samples[i*g_num_channels + 1]) / 2.0;
     else
       lease.in[i] = samples[i];
   }
@@ -208,8 +208,8 @@ void EasyFourier::printEqualizer(const float* samples)
   FourierLease lease = borrowWorker();
   for (int i=0; i<kFourierBlocksize; i++)
   {
-    if (kNumChannels == 2)
-      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    if (g_num_channels == 2)
+      lease.in[i] = (samples[i*g_num_channels] + samples[i*g_num_channels + 1]) / 2.0;
     else
       lease.in[i] = samples[i];
   }
@@ -241,8 +241,8 @@ void EasyFourier::printMaxBucket(const float* samples)
   FourierLease lease = borrowWorker();
   for (int i=0; i<kFourierBlocksize; i++)
   {
-    if (kNumChannels == 2)
-      lease.in[i] = (samples[i*kNumChannels] + samples[i*kNumChannels + 1]) / 2.0;
+    if (g_num_channels == 2)
+      lease.in[i] = (samples[i*g_num_channels] + samples[i*g_num_channels + 1]) / 2.0;
     else
       lease.in[i] = samples[i];
   }

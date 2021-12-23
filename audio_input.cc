@@ -41,7 +41,7 @@ int recordCallback(const void* input_buf, void* output_buf,
     for (int i=0; i<frames_provided; i++)
     {
       recorded_samples->push_back(*cur_in++); // left or mono
-      if (kNumChannels == 2)
+      if (g_num_channels == 2)
         recorded_samples->push_back(*cur_in++); // right
     }
   }
@@ -50,7 +50,7 @@ int recordCallback(const void* input_buf, void* output_buf,
     for (int i=0; i<frames_provided; i++)
     {
       recorded_samples->push_back(kSilentSample);  // left or mono
-      if (kNumChannels == 2)
+      if (g_num_channels == 2)
         recorded_samples->push_back(kSilentSample);  // right
     }
   }
@@ -103,8 +103,24 @@ std::vector<std::string> markChosenDevName(std::vector<std::string> names,
   return ret;
 }
 
-
-
+int getNumChannels(PaDeviceIndex dev_index)
+{
+  const PaDeviceInfo* dev_info = Pa_GetDeviceInfo(dev_index);
+  if (!dev_info)
+  {
+    fprintf(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", dev_index);
+    exit(1);
+  }
+  if (dev_info->maxInputChannels < 1)
+  {
+    fprintf(stderr, "Error: Pa_GetDeviceInfo(%d)->maxInputChannels is %d\n",
+                    dev_index, dev_info->maxInputChannels);
+    exit(1);
+  }
+  if (dev_info->maxInputChannels == 1)
+    return 1;
+  return 2;
+}
 
 #ifdef CLICKITONGUE_WINDOWS
 int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
@@ -177,6 +193,7 @@ PaDeviceIndex chooseInputDevice()
     if (maybe_remembered.has_value())
     {
       chosen = maybe_remembered.value();
+      g_num_channels = getNumChannels(chosen);
       return chosen;
     }
   }
@@ -192,10 +209,12 @@ PaDeviceIndex chooseInputDevice()
   if (num_output_devs == 1)
   {
     chosen = any_output_dev_ind;
+    g_num_channels = getNumChannels(chosen);
     return writeDeviceConfig(dev_names, chosen);
   }
 
   chosen = askUserChoice(dev_names, default_dev_ind);
+  g_num_channels = getNumChannels(chosen);
   return writeDeviceConfig(dev_names, chosen);
 }
 
@@ -230,7 +249,7 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
     Pa_Terminate();
     exit(1);
   }
-  input_param.channelCount = kNumChannels;
+  input_param.channelCount = g_num_channels;
   input_param.sampleFormat = paFloat32;
   input_param.suggestedLatency =
     Pa_GetDeviceInfo(input_param.device)->defaultLowInputLatency;

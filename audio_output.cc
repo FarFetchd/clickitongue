@@ -21,12 +21,12 @@ int playCallback(const void* input_buf, void* output_buf,
   Sample* cur_out = static_cast<Sample*>(output_buf);
 
   long samples_left = samples.size() - arg->playback_sample_index;
-  long frames_left = samples_left / kNumChannels;
+  long frames_left = samples_left / g_num_channels;
   long frames_to_write = frames_left > frames_wanted ? frames_wanted : frames_left;
   for (int i = 0; i < frames_to_write; i++)
   {
     *cur_out++ = samples[arg->playback_sample_index++];
-    if (kNumChannels == 2)
+    if (g_num_channels == 2)
       *cur_out++ = samples[arg->playback_sample_index++];
   }
 
@@ -34,7 +34,7 @@ int playCallback(const void* input_buf, void* output_buf,
   for (int i = 0; i < final_silent_frames; i++)
   {
     *cur_out++ = 0;
-    if (kNumChannels == 2)
+    if (g_num_channels == 2)
       *cur_out++ = 0;
   }
   return frames_left > frames_wanted ? paContinue : paComplete;
@@ -54,7 +54,7 @@ void playRecorded(const std::vector<Sample>* samples)
     printf("Couldn't get a default output device!\n");
     exit(1);
   }
-  output_param.channelCount = kNumChannels;
+  output_param.channelCount = g_num_channels;
   output_param.sampleFormat = paFloat32;
   output_param.suggestedLatency =
     Pa_GetDeviceInfo(output_param.device)->defaultLowOutputLatency;
@@ -67,7 +67,7 @@ void playRecorded(const std::vector<Sample>* samples)
   if (stream)
   {
     printf("now playing %g seconds of audio...\n",
-           (samples->size() / kNumChannels) / (float)kFramesPerSec);
+           (samples->size() / g_num_channels) / (float)kFramesPerSec);
     Pa_StartStream(stream);
     while (Pa_IsStreamActive(stream) == 1)
       Pa_Sleep(100);
