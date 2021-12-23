@@ -188,24 +188,59 @@ void ActionDispatcher::scrollDown()
 // ================================OSX========================================
 #ifdef CLICKITONGUE_OSX
 
-// TODO more directly do these clicks, rather than going through a shell command
+#include <ApplicationServices/ApplicationServices.h>
+
+CGPoint getCursorPosition()
+{
+  CGEventRef whereami = CGEventCreate(NULL);
+  CGPoint ret = CGEventGetLocation(whereami);
+  CFRelease(whereami);
+  return ret;
+}
+
 void ActionDispatcher::leftDown()
 {
-  printf("leftdown\n");
-  pclose(popen("cliclick dd:.", "r"));
+  CGEventType event_type = kCGEventLeftMouseDown;
+  CGMouseButton button = kCGMouseButtonLeft;
+
+  CGEventRef event = CGEventCreateMouseEvent(NULL, event_type,
+                                             getCursorPosition(), button);
+  CGEventSetIntegerValueField(event, kCGMouseEventClickState, 1);
+  CGEventPost(kCGSessionEventTap, event);
+  CFRelease(event);
 }
 void ActionDispatcher::leftUp()
 {
-  printf("leftup\n");
-  pclose(popen("cliclick du:.", "r"));
+  CGEventType event_type = kCGEventLeftMouseUp;
+  CGMouseButton button = kCGMouseButtonLeft;
+
+  CGEventRef event = CGEventCreateMouseEvent(NULL, event_type,
+                                             getCursorPosition(), button);
+  CGEventSetIntegerValueField(event, kCGMouseEventClickState, 1);
+  CGEventPost(kCGSessionEventTap, event);
+  CFRelease(event);
 }
 void ActionDispatcher::rightDown()
 {
-  printf("rightclick\n");
-  pclose(popen("cliclick rc:.", "r"));
+  CGEventType event_type = kCGEventRightMouseDown;
+  CGMouseButton button = kCGMouseButtonRight;
+
+  CGEventRef event = CGEventCreateMouseEvent(NULL, event_type,
+                                             getCursorPosition(), button);
+  CGEventSetIntegerValueField(event, kCGMouseEventClickState, 1);
+  CGEventPost(kCGSessionEventTap, event);
+  CFRelease(event);
 }
 void ActionDispatcher::rightUp()
 {
+  CGEventType event_type = kCGEventRightMouseUp;
+  CGMouseButton button = kCGMouseButtonRight;
+
+  CGEventRef event = CGEventCreateMouseEvent(NULL, event_type,
+                                             getCursorPosition(), button);
+  CGEventSetIntegerValueField(event, kCGMouseEventClickState, 1);
+  CGEventPost(kCGSessionEventTap, event);
+  CFRelease(event);
 }
 void ActionDispatcher::scrollUp()
 {

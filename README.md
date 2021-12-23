@@ -26,7 +26,7 @@ have to run clickitongue.exe as admin. (But that should be rare).
 
 # Installing on OSX
 
-`brew install portaudio fftw cliclick`, and then in the clickitongue directory
+`brew install portaudio fftw`, and then in the clickitongue directory
 run `./build.sh osx.ccbuildfile`. After that, `./clickitongue` to run.
 
 # Usage
