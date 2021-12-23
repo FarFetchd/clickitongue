@@ -59,7 +59,7 @@ void displayAndReset(std::string* msg)
 #endif
 }
 
-bool afterTraining(Config config);
+bool afterTraining(Config* config);
 void normalOperation(Config config);
 
 void trainingBody(bool try_blows, std::string* intro_message,
@@ -138,35 +138,35 @@ void trainingBody(bool try_blows, std::string* intro_message,
       return;
     }
   }
-  if (afterTraining(config))
+  if (afterTraining(&config))
     normalOperation(config);
 }
 
 // returns true if we can proceed to normalOperation().
-bool afterTraining(Config config)
+bool afterTraining(Config* config)
 {
   std::string success_msg;
   // TODO whistle
-  if (config.blow.enabled && config.hum.enabled)
+  if (config->blow.enabled && config->hum.enabled)
   {
-    config.blow.action_on = Action::LeftDown;
-    config.blow.action_off = Action::LeftUp;
-    config.hum.action_on = Action::RightDown;
-    config.hum.action_off = Action::RightUp;
+    config->blow.action_on = Action::LeftDown;
+    config->blow.action_off = Action::LeftUp;
+    config->hum.action_on = Action::RightDown;
+    config->hum.action_off = Action::RightUp;
     success_msg =
 "Clickitongue is now configured. Blow on the mic to left click, hum for right.\n\n";
   }
-  else if (config.blow.enabled)
+  else if (config->blow.enabled)
   {
-    config.blow.action_on = Action::LeftDown;
-    config.blow.action_off = Action::LeftUp;
+    config->blow.action_on = Action::LeftDown;
+    config->blow.action_off = Action::LeftUp;
     success_msg =
 "Clickitongue is now configured. Blow on the mic to left click.\n\n";
   }
-  else if (config.hum.enabled)
+  else if (config->hum.enabled)
   {
-    config.hum.action_on = Action::LeftDown;
-    config.hum.action_off = Action::LeftUp;
+    config->hum.action_on = Action::LeftDown;
+    config->hum.action_off = Action::LeftUp;
     success_msg =
 "Clickitongue is now configured. Hum to left click.\n\n";
   }
@@ -199,7 +199,7 @@ bool afterTraining(Config config)
 #endif
 
   std::string attempted_filepath;
-  if (!writeConfig(config, kDefaultConfig, &attempted_filepath))
+  if (!writeConfig(*config, kDefaultConfig, &attempted_filepath))
   {
     std::string msg = "Failed to write config file " + attempted_filepath +
     ". You'll have to redo this training the next time you run Clickitongue.";
