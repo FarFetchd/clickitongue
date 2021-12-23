@@ -59,16 +59,44 @@ int overtonesCallback(const void* inputBuffer, void* outputBuffer,
   return paContinue;
 }
 
+void printDeviceDetails()
+{
+  int num_devices = Pa_GetDeviceCount();
+  if (num_devices < 0)
+  {
+    fprintf(stderr, "Error: Pa_GetDeviceCount() returned %d\n", num_devices);
+    exit(1);
+  }
+
+  for (PaDeviceIndex i=0; i<num_devices; i++)
+  {
+    const PaDeviceInfo* dev_info = Pa_GetDeviceInfo(i);
+    if (!dev_info)
+    {
+      fprintf(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
+      exit(1);
+    }
+    printf("dev %d: %s, max channels %d",
+           i, dev_info->name, dev_info->maxInputChannels);
+    if (dev_info->maxInputChannels > 0)
+      printf("\n");
+    else
+      printf(" (output only!)\n");
+  }
+}
+
 void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
 {
   if (!opts.mode.has_value())
     return;
   std::string mode = opts.mode.value();
   if (mode != "record" && mode != "play" && mode != "equalizer" &&
-      mode != "spikes" && mode != "octaves" && mode != "overtones")
+      mode != "spikes" && mode != "octaves" && mode != "overtones" &&
+      mode != "devdetails")
   {
-    crash("Invalid --mode= value. Must specify --mode=train, use, record,"
-          "play, equalizer, spikes, octaves, or overtones. (Or not specify it).");
+    crash("Invalid --mode= value. Must specify --mode=train, use, record,\n"
+          "play, equalizer, spikes, octaves, overtones, or devdetails.\n"
+          "(Or not specify it).");
   }
 
   if ((mode == "record" || mode == "play") && !opts.filename.has_value())
@@ -247,6 +275,8 @@ int main(int argc, char** argv)
       while (audio_input.active())
         Pa_Sleep(500);
     }
+    else if (opts.mode.value() == "devdetails")
+      printDeviceDetails();
   }
   else
   {
