@@ -29,6 +29,10 @@ have to run clickitongue.exe as admin. (But that should be rare).
 `brew install portaudio fftw`, and then in the clickitongue directory
 run `./build.sh osx.ccbuildfile`. After that, `./clickitongue` to run.
 
+If you want a stricter looser double-click timing, change the value of
+kOSXDoubleClickMs at the top of constants.h before compiling. (Defaults to 1/3rd
+of a second).
+
 # Usage
 
 If you have a microphone that you can position about 1cm in front of your mouth,

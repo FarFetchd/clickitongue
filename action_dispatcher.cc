@@ -212,7 +212,7 @@ CGPoint getCursorPosition()
 void ActionDispatcher::leftDown()
 {
   uint64_t now_msse = curTimeMSSE();
-  if (now_msse - g_osx_last_lclick_msse < 500)
+  if (now_msse - g_osx_last_lclick_msse < kOSXDoubleClickMs)
   {
     g_osx_lclicks++;
     if (g_osx_lclicks > 3)
@@ -247,7 +247,7 @@ void ActionDispatcher::leftUp()
 void ActionDispatcher::rightDown()
 {
   uint64_t now_msse = curTimeMSSE();
-  if (now_msse - g_osx_last_rclick_msse < 500)
+  if (now_msse - g_osx_last_rclick_msse < kOSXDoubleClickMs)
   {
     g_osx_rclicks++;
     if (g_osx_rclicks > 3)
