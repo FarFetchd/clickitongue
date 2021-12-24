@@ -1,7 +1,3 @@
-hmm... i have a feeling we should be dynamically choosing 1 vs 2 channels...
-
-dont make them redo both if only one training bad... implemented but not tested.
-test both good the first time, one good and retry, one good and give up.
 
 wishlist
 * easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.

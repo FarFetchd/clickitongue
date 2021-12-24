@@ -233,7 +233,7 @@ int main(int argc, char** argv)
 #ifndef CLICKITONGUE_WINDOWS
   promptInfo("****clickitongue is now running.****");
 #endif // CLICKITONGUE_WINDOWS
-  printf("clickitongue v0.0.1\n");
+  printf("clickitongue v1.0.0\n");
 
   ClickitongueCmdlineOpts opts =
       structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);

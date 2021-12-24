@@ -1,6 +1,7 @@
 #ifndef CLICKITONGUE_CONSTANTS_H_
 #define CLICKITONGUE_CONSTANTS_H_
 
+#ifdef CLICKITONGUE_OSX
 // ==========================================================================
 // ***** CHANGE ME!!! *****
 // If you are an OSX user and want a different speed double-click.
@@ -11,7 +12,7 @@
 // you meant to do two separate single clicks.
 const uint64_t kOSXDoubleClickMs = 333;
 // ==========================================================================
-
+#endif
 
 
 
