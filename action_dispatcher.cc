@@ -188,7 +188,18 @@ void ActionDispatcher::scrollDown()
 // ================================OSX========================================
 #ifdef CLICKITONGUE_OSX
 
+#include <chrono>
 #include <ApplicationServices/ApplicationServices.h>
+
+uint64_t curTimeMSSE()
+{
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch()).count();
+}
+uint64_t g_osx_last_lclick_msse = 0;
+int g_osx_lclicks = 1;
+uint64_t g_osx_last_rclick_msse = 0;
+int g_osx_rclicks = 1;
 
 CGPoint getCursorPosition()
 {
@@ -200,45 +211,71 @@ CGPoint getCursorPosition()
 
 void ActionDispatcher::leftDown()
 {
+  uint64_t now_msse = curTimeMSSE();
+  if (now_msse - g_osx_last_lclick_msse < 500)
+  {
+    g_osx_lclicks++;
+    if (g_osx_lclicks > 3)
+      g_osx_lclicks = 3;
+  }
+  else
+    g_osx_lclicks = 1;
+
   CGEventType event_type = kCGEventLeftMouseDown;
   CGMouseButton button = kCGMouseButtonLeft;
 
   CGEventRef event = CGEventCreateMouseEvent(NULL, event_type,
                                              getCursorPosition(), button);
-  CGEventSetIntegerValueField(event, kCGMouseEventClickState, 1);
+  CGEventSetIntegerValueField(event, kCGMouseEventClickState, g_osx_lclicks);
   CGEventPost(kCGSessionEventTap, event);
   CFRelease(event);
 }
 void ActionDispatcher::leftUp()
 {
+  uint64_t now_msse = curTimeMSSE();
+  g_osx_last_lclick_msse = now_msse;
+
   CGEventType event_type = kCGEventLeftMouseUp;
   CGMouseButton button = kCGMouseButtonLeft;
 
   CGEventRef event = CGEventCreateMouseEvent(NULL, event_type,
                                              getCursorPosition(), button);
-  CGEventSetIntegerValueField(event, kCGMouseEventClickState, 1);
+  CGEventSetIntegerValueField(event, kCGMouseEventClickState, g_osx_lclicks);
   CGEventPost(kCGSessionEventTap, event);
   CFRelease(event);
 }
 void ActionDispatcher::rightDown()
 {
+  uint64_t now_msse = curTimeMSSE();
+  if (now_msse - g_osx_last_rclick_msse < 500)
+  {
+    g_osx_rclicks++;
+    if (g_osx_rclicks > 3)
+      g_osx_rclicks = 3;
+  }
+  else
+    g_osx_rclicks = 1;
+
   CGEventType event_type = kCGEventRightMouseDown;
   CGMouseButton button = kCGMouseButtonRight;
 
   CGEventRef event = CGEventCreateMouseEvent(NULL, event_type,
                                              getCursorPosition(), button);
-  CGEventSetIntegerValueField(event, kCGMouseEventClickState, 1);
+  CGEventSetIntegerValueField(event, kCGMouseEventClickState, g_osx_rclicks);
   CGEventPost(kCGSessionEventTap, event);
   CFRelease(event);
 }
 void ActionDispatcher::rightUp()
 {
+  uint64_t now_msse = curTimeMSSE();
+  g_osx_last_rclick_msse = now_msse;
+
   CGEventType event_type = kCGEventRightMouseUp;
   CGMouseButton button = kCGMouseButtonRight;
 
   CGEventRef event = CGEventCreateMouseEvent(NULL, event_type,
                                              getCursorPosition(), button);
-  CGEventSetIntegerValueField(event, kCGMouseEventClickState, 1);
+  CGEventSetIntegerValueField(event, kCGMouseEventClickState, g_osx_rclicks);
   CGEventPost(kCGSessionEventTap, event);
   CFRelease(event);
 }
