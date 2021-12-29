@@ -13,7 +13,7 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
-    activated_ewma_alpha_(ewma_alpha_/2.0),
+    activated_ewma_alpha_(ewma_alpha_*0.75),
     one_minus_activated_ewma_alpha_(1.0-activated_ewma_alpha_)
 {}
 
