@@ -597,6 +597,6 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.o7_off_thresh = best.o7_off_thresh;
   ret.ewma_alpha = best.ewma_alpha;
 
-  ret.enabled = (best.score[0] == 0);
+  ret.enabled = (best.score[0] <= 1);
   return ret;
 }
