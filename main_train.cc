@@ -82,6 +82,7 @@ void trainingBody(bool try_blows, std::string* intro_message,
       blow_examples->emplace_back(recordExampleBlow(i), i);
     blow_examples->emplace_back(recordExampleBlow(1, /*prolonged=*/true), 1);
   }
+  if (hum_examples->empty())
   {
     *intro_message +=
 "We will now train Clickitongue on your humming. These hums should be simple,\n"
