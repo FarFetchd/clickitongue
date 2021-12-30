@@ -72,6 +72,34 @@ headset is generally unusable for long-term comfortable Clickitongue blowing.
 Get one with a long flexible arm, instead. For an example, I've been using the
 Nubwo N7 with Clickitongue, and it works quite nicely. (Comfy, too!)
 
+# Manual Tuning
+
+The following is highly user-unfriendly, and should ideally never be needed
+for smooth usage of Clickitongue. However, for determined users who find the
+automatic training almost but not quite good enough, here is how to manually
+tune Clickitongue. First exit Clickitongue, then edit the default.clickitongue
+config file described earlier.
+
+For blowing, there are "on" and "off" thresholds for each of three octaves.
+When tweaking a threshold, do so for all three octaves, proportionately - e.g.
+increase all three by 5% each.
+
+* If Clickitongue is making you blow too hard to start a click, reduce the "on"
+  thresholds, and/or increase the EWMA alpha.
+* If Clickitongue is leaving the mouse clicked too long after you stop blowing,
+  increase the "off" thresholds, and/or increase the EWMA alpha.
+* If Clickitongue is issuing spurious clicks, increase the "on" thresholds,
+  and/or decrease the EWMA alpha.
+* If Clickitongue is spuriously releasing long clicks (flakey drag+drop /
+  selection), decrease the "off" thresholds, and/or decrease the EWMA alpha.
+
+For humming, there are on and off thresholds like blowing, and also two
+"limits". These limits suppress the off->on transition when either is exceeded,
+but do not affect the on->off transition. Increasing them may make it easier to
+trigger hum detection. However, their purpose is to prevent even extremely light
+mouth exhalations from being confused with humming, so increasing them too much
+is likely to cause problems.
+
 # Compiling on Windows
 
 (You can ignore this if you're not interested in working on Clickitongue's
