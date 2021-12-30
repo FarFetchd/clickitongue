@@ -39,7 +39,7 @@ protected:
   virtual void updateState(const fftw_complex* freq_power) = 0;
 
   virtual bool shouldTransitionOn() = 0;
-  virtual bool shouldTransitionOff() = 0;
+  virtual bool shouldTransitionOff() const = 0;
 
   bool on_ = false;
 

@@ -58,7 +58,7 @@ bool HumDetector::shouldTransitionOn()
   return true;
 }
 
-bool HumDetector::shouldTransitionOff()
+bool HumDetector::shouldTransitionOff() const
 {
   return o1_ewma_ < o1_off_thresh_;
 }

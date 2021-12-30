@@ -69,7 +69,7 @@ bool BlowDetector::shouldTransitionOn()
          o7_ewma_ > o7_on_thresh_;
 }
 
-bool BlowDetector::shouldTransitionOff()
+bool BlowDetector::shouldTransitionOff() const
 {
   return o5_ewma_ < o5_off_thresh_ &&
          o6_ewma_ < o6_off_thresh_ &&

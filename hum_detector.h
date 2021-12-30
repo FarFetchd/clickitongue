@@ -31,7 +31,7 @@ protected:
   void updateState(const fftw_complex* freq_power) override;
 
   bool shouldTransitionOn() override;
-  bool shouldTransitionOff() override;
+  bool shouldTransitionOff() const override;
 
 private:
   // o5,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
