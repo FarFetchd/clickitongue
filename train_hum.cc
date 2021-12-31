@@ -208,8 +208,6 @@ private:
   std::unique_ptr<std::thread> score_computer_;
 };
 
-#define KEEP_IN_BOUNDS(mn,x,mx) do { x = std::min(x, mx); x = std::max(x, mn); } while(false)
-
 class TrainParamsFactory
 {
 public:
@@ -300,6 +298,8 @@ public:
       emplaceRandomParams(ret);
     return ret;
   }
+
+#define KEEP_IN_BOUNDS(mn,x,mx) do { x = std::min(x, mx); x = std::max(x, mn); } while(false)
 
   std::vector<TrainParamsCocoon> patternAround(TrainParams x)
   {
