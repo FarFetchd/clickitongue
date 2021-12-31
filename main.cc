@@ -78,12 +78,9 @@ void printDeviceDetails()
       fprintf(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
       exit(1);
     }
-    printf("dev %d: %s, max channels %d",
-           i, dev_info->name, dev_info->maxInputChannels);
-    if (dev_info->maxInputChannels > 0)
-      printf("\n");
-    else
-      printf(" (output only!)\n");
+    printf("dev %d: %s, max channels %d%s\n",
+           i, dev_info->name, dev_info->maxInputChannels,
+           dev_info->maxInputChannels <= 0 ? " (output only!)" : "");
   }
 }
 
