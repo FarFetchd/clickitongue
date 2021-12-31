@@ -473,6 +473,29 @@ public:
     return cur;
   }
 
+  TrainParams tuneAlpha(TrainParams start, double min_alpha, double max_alpha)
+  {
+    double lo_alpha = min_alpha;
+    double hi_alpha = max_alpha;
+    TrainParams cur = start;
+    while (hi_alpha - lo_alpha > 0.02 * (max_alpha - min_alpha))
+    {
+      double cur_alpha = (lo_alpha + hi_alpha) / 2.0;
+      cur.ewma_alpha = cur_alpha;
+      cur.computeScore(examples_sets_);
+      if (start < cur)
+        hi_alpha = cur_alpha;
+      else
+        lo_alpha = cur_alpha;
+    }
+    // pull back from our tuned result by 2/3 to be on the safe side
+    cur.ewma_alpha = lo_alpha + (lo_alpha - start.ewma_alpha) / 3.0;
+
+    cur.computeScore(examples_sets_);
+    printf("tuned ewma alpha from %g up to %g\n", start.ewma_alpha, cur.ewma_alpha);
+    return cur;
+  }
+
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
 private:
@@ -584,6 +607,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   best = factory.tuneOff5(best, kMinO5Off, best.o5_off_thresh);
   best = factory.tuneOff6(best, kMinO6Off, best.o6_off_thresh);
   best = factory.tuneOff7(best, kMinO7Off, best.o7_off_thresh);
+  best = factory.tuneAlpha(best, best.ewma_alpha, kMaxAlpha);
 
   BlowConfig ret;
   ret.scale = scale;

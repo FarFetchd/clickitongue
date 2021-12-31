@@ -1,6 +1,4 @@
 
-tune blow ewma upwards?
-
 wishlist
 * a big sustained spike in the middle of an ongoing press should be recognized as a second (release+)press
 * have some buttons/input during running that allows users to easily apply what's described in the "Manual Tuning" section of the readme.
