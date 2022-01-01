@@ -415,7 +415,10 @@ public:
       cur.o5_off_thresh = cur_off;
       cur.computeScore(examples_sets_);
       if (start < cur)
-        lo_off = cur_off;
+      {
+        lo_off = (max_off - cur_off) / 2.0;
+        hi_off = max_off;
+      }
       else
         hi_off = cur_off;
     }
@@ -424,7 +427,7 @@ public:
 
     cur.computeScore(examples_sets_);
     printf("tuned o5 off from %g down to %g\n", start.o5_off_thresh, cur.o5_off_thresh);
-    return cur;
+    return start < cur ? start : cur;
   }
 
   TrainParams tuneOff6(TrainParams start, double min_off, double max_off)
@@ -438,7 +441,10 @@ public:
       cur.o6_off_thresh = cur_off;
       cur.computeScore(examples_sets_);
       if (start < cur)
-        lo_off = cur_off;
+      {
+        lo_off = (max_off - cur_off) / 2.0;
+        hi_off = max_off;
+      }
       else
         hi_off = cur_off;
     }
@@ -447,7 +453,7 @@ public:
 
     cur.computeScore(examples_sets_);
     printf("tuned o6 off from %g down to %g\n", start.o6_off_thresh, cur.o6_off_thresh);
-    return cur;
+    return start < cur ? start : cur;
   }
 
   TrainParams tuneOff7(TrainParams start, double min_off, double max_off)
@@ -461,7 +467,10 @@ public:
       cur.o7_off_thresh = cur_off;
       cur.computeScore(examples_sets_);
       if (start < cur)
-        lo_off = cur_off;
+      {
+        lo_off = (max_off - cur_off) / 2.0;
+        hi_off = max_off;
+      }
       else
         hi_off = cur_off;
     }
@@ -470,7 +479,7 @@ public:
 
     cur.computeScore(examples_sets_);
     printf("tuned o7 off from %g down to %g\n", start.o7_off_thresh, cur.o7_off_thresh);
-    return cur;
+    return start < cur ? start : cur;
   }
 
   TrainParams tuneAlpha(TrainParams start, double min_alpha, double max_alpha)
@@ -484,16 +493,19 @@ public:
       cur.ewma_alpha = cur_alpha;
       cur.computeScore(examples_sets_);
       if (start < cur)
-        hi_alpha = cur_alpha;
+      {
+        hi_alpha = (cur_alpha - min_alpha) / 2.0;
+        lo_alpha = min_alpha;
+      }
       else
         lo_alpha = cur_alpha;
     }
-    // pull back from our tuned result by 2/3 to be on the safe side
-    cur.ewma_alpha = lo_alpha + (lo_alpha - start.ewma_alpha) / 3.0;
+    // pull back from our tuned result by half to be on the safe side
+    cur.ewma_alpha = lo_alpha + (lo_alpha - start.ewma_alpha) / 2.0;
 
     cur.computeScore(examples_sets_);
     printf("tuned ewma alpha from %g up to %g\n", start.ewma_alpha, cur.ewma_alpha);
-    return cur;
+    return start < cur ? start : cur;
   }
 
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
