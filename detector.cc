@@ -34,9 +34,9 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
 
   if (on_)
   {
-    beginRefractoryPeriod();
+    beginRefractoryPeriod(refracPeriodLengthBlocks());
     for (Detector* target : inhibition_targets_)
-      target->beginRefractoryPeriod();
+      target->beginRefractoryPeriod(target->refracPeriodLengthBlocks());
   }
 }
 
@@ -48,7 +48,10 @@ void Detector::kickoffAction(Action action)
     action_queue_->enqueue(action);
 }
 
-void Detector::beginRefractoryPeriod() { refrac_blocks_left_ = kRefracBlocks; }
+void Detector::beginRefractoryPeriod(int length_blocks)
+{
+  refrac_blocks_left_ = length_blocks;
+}
 
 void Detector::addInhibitionTarget(Detector* target)
 {

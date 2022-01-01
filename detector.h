@@ -5,10 +5,6 @@
 #include "constants.h"
 #include "easy_fourier.h"
 
-// How long (in units of kFourierBlocksize) we must observe low energy after
-// an event before being willing to declare a second event.
-constexpr int kRefracBlocks = 12;
-
 class Detector
 {
 public:
@@ -41,11 +37,15 @@ protected:
   virtual bool shouldTransitionOn() = 0;
   virtual bool shouldTransitionOff() const = 0;
 
+  // How long (in units of kFourierBlocksize) we must observe low energy after
+  // an event before being willing to declare an event of this type.
+  virtual int refracPeriodLengthBlocks() const = 0;
+
   bool on_ = false;
 
 private:
   void kickoffAction(Action action);
-  void beginRefractoryPeriod();
+  void beginRefractoryPeriod(int length_blocks);
 
   // Action to be done when Detector decides an event has started...
   const Action action_on_;

@@ -75,3 +75,5 @@ bool BlowDetector::shouldTransitionOff() const
          o6_ewma_ < o6_off_thresh_ &&
          o7_ewma_ < o7_off_thresh_;
 }
+
+int BlowDetector::refracPeriodLengthBlocks() const { return 7; }

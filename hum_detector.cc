@@ -62,3 +62,5 @@ bool HumDetector::shouldTransitionOff() const
 {
   return o1_ewma_ < o1_off_thresh_;
 }
+
+int HumDetector::refracPeriodLengthBlocks() const { return 16; }

@@ -30,6 +30,7 @@ protected:
 
   bool shouldTransitionOn() override;
   bool shouldTransitionOff() const override;
+  int refracPeriodLengthBlocks() const override;
 
 private:
 
