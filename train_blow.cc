@@ -409,8 +409,11 @@ public:
     double lo_off = min_off;
     double hi_off = max_off;
     TrainParams cur = start;
+    int iterations = 0;
     while (hi_off - lo_off > 0.02 * (max_off - min_off))
     {
+      if (++iterations > 40)
+        break;
       double cur_off = (lo_off + hi_off) / 2.0;
       cur.o5_off_thresh = cur_off;
       cur.computeScore(examples_sets_);
@@ -426,8 +429,13 @@ public:
     cur.o5_off_thresh = hi_off + (start.o5_off_thresh - hi_off) / 2.0;
 
     cur.computeScore(examples_sets_);
-    printf("tuned o5 off from %g down to %g\n", start.o5_off_thresh, cur.o5_off_thresh);
-    return start < cur ? start : cur;
+    if (start < cur)
+    {
+      printf("o5_off tuning unsuccessful; leaving it alone\n");
+      return start;
+    }
+    printf("tuned o5_off from %g down to %g\n", start.o5_off_thresh, cur.o5_off_thresh);
+    return cur;
   }
 
   TrainParams tuneOff6(TrainParams start, double min_off, double max_off)
@@ -435,8 +443,11 @@ public:
     double lo_off = min_off;
     double hi_off = max_off;
     TrainParams cur = start;
+    int iterations = 0;
     while (hi_off - lo_off > 0.02 * (max_off - min_off))
     {
+      if (++iterations > 40)
+        break;
       double cur_off = (lo_off + hi_off) / 2.0;
       cur.o6_off_thresh = cur_off;
       cur.computeScore(examples_sets_);
@@ -452,8 +463,13 @@ public:
     cur.o6_off_thresh = hi_off + (start.o6_off_thresh - hi_off) / 2.0;
 
     cur.computeScore(examples_sets_);
-    printf("tuned o6 off from %g down to %g\n", start.o6_off_thresh, cur.o6_off_thresh);
-    return start < cur ? start : cur;
+    if (start < cur)
+    {
+      printf("o6_off tuning unsuccessful; leaving it alone\n");
+      return start;
+    }
+    printf("tuned o6_off from %g down to %g\n", start.o6_off_thresh, cur.o6_off_thresh);
+    return cur;
   }
 
   TrainParams tuneOff7(TrainParams start, double min_off, double max_off)
@@ -461,8 +477,11 @@ public:
     double lo_off = min_off;
     double hi_off = max_off;
     TrainParams cur = start;
+    int iterations = 0;
     while (hi_off - lo_off > 0.02 * (max_off - min_off))
     {
+      if (++iterations > 40)
+        break;
       double cur_off = (lo_off + hi_off) / 2.0;
       cur.o7_off_thresh = cur_off;
       cur.computeScore(examples_sets_);
@@ -478,7 +497,12 @@ public:
     cur.o7_off_thresh = hi_off + (start.o7_off_thresh - hi_off) / 2.0;
 
     cur.computeScore(examples_sets_);
-    printf("tuned o7 off from %g down to %g\n", start.o7_off_thresh, cur.o7_off_thresh);
+    if (start < cur)
+    {
+      printf("o7_off tuning unsuccessful; leaving it alone\n");
+      return start;
+    }
+    printf("tuned o7_off from %g down to %g\n", start.o7_off_thresh, cur.o7_off_thresh);
     return start < cur ? start : cur;
   }
 
@@ -487,8 +511,11 @@ public:
     double lo_alpha = min_alpha;
     double hi_alpha = max_alpha;
     TrainParams cur = start;
+    int iterations = 0;
     while (hi_alpha - lo_alpha > 0.02 * (max_alpha - min_alpha))
     {
+      if (++iterations > 40)
+        break;
       double cur_alpha = (lo_alpha + hi_alpha) / 2.0;
       cur.ewma_alpha = cur_alpha;
       cur.computeScore(examples_sets_);
@@ -504,8 +531,13 @@ public:
     cur.ewma_alpha = lo_alpha + (lo_alpha - start.ewma_alpha) / 2.0;
 
     cur.computeScore(examples_sets_);
-    printf("tuned ewma alpha from %g up to %g\n", start.ewma_alpha, cur.ewma_alpha);
-    return start < cur ? start : cur;
+    if (start < cur)
+    {
+      printf("ewma_alpha tuning unsuccessful; leaving it alone\n");
+      return start;
+    }
+    printf("tuned ewma_alpha from %g up to %g\n", start.ewma_alpha, cur.ewma_alpha);
+    return cur;
   }
 
   void shrinkSteps() { pattern_divisor_ *= 2.0; }

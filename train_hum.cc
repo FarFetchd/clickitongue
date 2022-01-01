@@ -369,8 +369,11 @@ public:
     double lo_lim = min_lim;
     double hi_lim = max_lim;
     TrainParams cur = start;
+    int iterations = 0;
     while (hi_lim - lo_lim > 0.02 * (max_lim - min_lim))
     {
+      if (++iterations > 40)
+        break;
       double cur_lim = (lo_lim + hi_lim) / 2.0;
       cur.o3_limit = cur_lim;
       cur.computeScore(examples_sets_);
@@ -384,8 +387,13 @@ public:
     }
     cur.o3_limit = (start.o3_limit + hi_lim) / 2.0;
     cur.computeScore(examples_sets_);
-    printf("tuned o3 limit from %g down to %g\n", start.o3_limit, cur.o3_limit);
-    return start < cur ? start : cur;
+    if (start < cur)
+    {
+      printf("o3_limit tuning unsuccessful; leaving it alone\n");
+      return start;
+    }
+    printf("tuned o3_limit from %g down to %g\n", start.o3_limit, cur.o3_limit);
+    return cur;
   }
 
   TrainParams tuneLimit6(TrainParams start, double min_lim, double max_lim)
@@ -393,8 +401,11 @@ public:
     double lo_lim = min_lim;
     double hi_lim = max_lim;
     TrainParams cur = start;
+    int iterations = 0;
     while (hi_lim - lo_lim > 0.02 * (max_lim - min_lim))
     {
+      if (++iterations > 40)
+        break;
       double cur_lim = (lo_lim + hi_lim) / 2.0;
       cur.o6_limit = cur_lim;
       cur.computeScore(examples_sets_);
@@ -408,8 +419,13 @@ public:
     }
     cur.o6_limit = (start.o6_limit + hi_lim) / 2.0;
     cur.computeScore(examples_sets_);
-    printf("tuned o6 limit from %g down to %g\n", start.o6_limit, cur.o6_limit);
-    return start < cur ? start : cur;
+    if (start < cur)
+    {
+      printf("o6_limit tuning unsuccessful; leaving it alone\n");
+      return start;
+    }
+    printf("tuned o6_limit from %g down to %g\n", start.o6_limit, cur.o6_limit);
+    return cur;
   }
 
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
