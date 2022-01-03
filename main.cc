@@ -39,7 +39,19 @@ PaError initPulseAudio()
     exit(0);
   }
   g_unresolved_pulseaudio_inits++;
-  return Pa_Initialize();
+  PaError res = Pa_Initialize();
+  static bool have_initd_pulseaudio = false;
+  if (!have_initd_pulseaudio)
+  {
+#ifndef CLICKITONGUE_WINDOWS
+    if (res == paNoError)
+      promptInfo("Clickitongue successfully initialized PulseAudio.");
+    else
+      promptInfo("Clickitongue failed to initialize PulseAudio!!!");
+#endif
+    have_initd_pulseaudio = true;
+  }
+  return res;
 }
 PaError deinitPulseAudio()
 {
@@ -170,7 +182,7 @@ void describeLoadedParams(Config config, bool first_time)
   if (first_time)
     promptInfo(msg.c_str());
   else
-    PRINTF(msg.c_str());
+    PRINTF("%s", msg.c_str());
   //PRINTF("\ndetection parameters:\n%s\n", config.toString().c_str());
 }
 
@@ -301,18 +313,16 @@ int main(int argc, char** argv)
   std::thread sigint_watcher_thread(signalWatcher);
   sigint_watcher_thread.detach();
   signal(SIGINT, sigintHandler);
-#endif
-  initPulseAudio(); // get its annoying spam out of the way immediately
-  ClickitongueCmdlineOpts opts;
-#ifndef CLICKITONGUE_WINDOWS
-  PRINTF("clickitongue " CLICKITONGUE_VERSION "\n");
-  opts = structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
+  ClickitongueCmdlineOpts opts =
+      structopt::app("clickitongue", CLICKITONGUE_VERSION)
+          .parse<ClickitongueCmdlineOpts>(argc, argv);
   validateCmdlineOpts(opts);
-  promptInfo("****clickitongue is now running.****");
 #else // windows
   std::thread win_gui_thread(windowsGUI, hInstance, nCmdShow);
   win_gui_thread.detach();
 #endif
+  if (initPulseAudio() != paNoError) // get its annoying spam out of the way
+    crash("Pa_Initialize() failed. Giving up.");
 
   g_forget_input_dev = opts.forget_input_dev.value();
   g_fourier = new EasyFourier();
