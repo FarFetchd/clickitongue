@@ -47,7 +47,7 @@ PaError initPulseAudio()
     if (res == paNoError)
       promptInfo("Clickitongue successfully initialized PulseAudio.");
     else
-      promptInfo("Clickitongue failed to initialize PulseAudio!!!");
+      PRINTERR(stderr, "\n\nFailed to initialize PulseAudio: PaError %d\n", res);
 #endif
     have_initd_pulseaudio = true;
   }
@@ -309,13 +309,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 int main(int argc, char** argv)
 #endif
 {
+  ClickitongueCmdlineOpts opts;
 #ifndef CLICKITONGUE_WINDOWS
   std::thread sigint_watcher_thread(signalWatcher);
   sigint_watcher_thread.detach();
   signal(SIGINT, sigintHandler);
-  ClickitongueCmdlineOpts opts =
-      structopt::app("clickitongue", CLICKITONGUE_VERSION)
-          .parse<ClickitongueCmdlineOpts>(argc, argv);
+  opts = structopt::app("clickitongue", CLICKITONGUE_VERSION)
+             .parse<ClickitongueCmdlineOpts>(argc, argv);
   validateCmdlineOpts(opts);
 #else // windows
   std::thread win_gui_thread(windowsGUI, hInstance, nCmdShow);
