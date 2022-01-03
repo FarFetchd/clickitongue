@@ -103,7 +103,7 @@ public:
   }
   void printParams()
   {
-    printf("--o5_on_thresh=%g --o5_off_thresh=%g --o6_on_thresh=%g "
+    PRINTF("--o5_on_thresh=%g --o5_off_thresh=%g --o6_on_thresh=%g "
            "--o6_off_thresh=%g --o7_on_thresh=%g --o7_off_thresh=%g "
            "--ewma_alpha=%g\n",
            o5_on_thresh, o5_off_thresh, o6_on_thresh, o6_off_thresh,
@@ -431,10 +431,10 @@ public:
     cur.computeScore(examples_sets_);
     if (start < cur)
     {
-      printf("o5_off tuning unsuccessful; leaving it alone\n");
+      PRINTF("o5_off tuning unsuccessful; leaving it alone\n");
       return start;
     }
-    printf("tuned o5_off from %g down to %g\n", start.o5_off_thresh, cur.o5_off_thresh);
+    PRINTF("tuned o5_off from %g down to %g\n", start.o5_off_thresh, cur.o5_off_thresh);
     return cur;
   }
 
@@ -465,10 +465,10 @@ public:
     cur.computeScore(examples_sets_);
     if (start < cur)
     {
-      printf("o6_off tuning unsuccessful; leaving it alone\n");
+      PRINTF("o6_off tuning unsuccessful; leaving it alone\n");
       return start;
     }
-    printf("tuned o6_off from %g down to %g\n", start.o6_off_thresh, cur.o6_off_thresh);
+    PRINTF("tuned o6_off from %g down to %g\n", start.o6_off_thresh, cur.o6_off_thresh);
     return cur;
   }
 
@@ -499,10 +499,10 @@ public:
     cur.computeScore(examples_sets_);
     if (start < cur)
     {
-      printf("o7_off tuning unsuccessful; leaving it alone\n");
+      PRINTF("o7_off tuning unsuccessful; leaving it alone\n");
       return start;
     }
-    printf("tuned o7_off from %g down to %g\n", start.o7_off_thresh, cur.o7_off_thresh);
+    PRINTF("tuned o7_off from %g down to %g\n", start.o7_off_thresh, cur.o7_off_thresh);
     return start < cur ? start : cur;
   }
 
@@ -533,10 +533,10 @@ public:
     cur.computeScore(examples_sets_);
     if (start < cur)
     {
-      printf("ewma_alpha tuning unsuccessful; leaving it alone\n");
+      PRINTF("ewma_alpha tuning unsuccessful; leaving it alone\n");
       return start;
     }
-    printf("tuned ewma_alpha from %g up to %g\n", start.ewma_alpha, cur.ewma_alpha);
+    PRINTF("tuned ewma_alpha from %g up to %g\n", start.ewma_alpha, cur.ewma_alpha);
     return cur;
   }
 

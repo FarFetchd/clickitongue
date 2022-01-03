@@ -20,7 +20,7 @@ void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
 // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
 TrainParams patternSearch(TrainParamsFactory& factory)
 {
-  printf("beginning optimization computations...\n");
+  PRINTF("beginning optimization computations...\n");
   std::vector<TrainParams> candidates;
   for (auto& cocoon : factory.startingSet())
     addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 8);
@@ -48,13 +48,13 @@ TrainParams patternSearch(TrainParamsFactory& factory)
       }
     }
 
-    printf("current best: ");
+    PRINTF("current best: ");
     candidates.front().printParams();
-    printf("best scores: %s\n", candidates.front().toString().c_str());
+    PRINTF("best scores: %s\n", candidates.front().toString().c_str());
 
     historical_bests.push_back(candidates.front());
   }
-  printf("converged; done.\n");
+  PRINTF("converged; done.\n");
   return candidates.front();
 }
 
@@ -90,32 +90,9 @@ AudioRecording recordExampleCommon(int desired_events,
     promptInfo(msg);
   }
 
-#ifdef CLICKITONGUE_WINDOWS
-  printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-#else
-  make_getchar_like_getch(); getchar(); resetTermios();
-#endif
-  printf("\n"
-"##############################################################################\n"
-"#                                                                            #\n"
-"#              **********          ********  ********  ******                #\n"
-"#             ************         **     ** **       **    **               #\n"
-"#            **************        **     ** **       **                     #\n"
-"#            **************        ********  ******   **                     #\n"
-"#            **************        **   **   **       **                     #\n"
-"#             ************         **    **  **       **    **               #\n"
-"#              **********          **     ** ********  ******                #\n"
-"#                                                                            #\n"
-"##############################################################################\n"
-"\n");
-
+  showRecordingBanner();
   AudioRecording recorder(4/*seconds*/);
-
-#ifdef CLICKITONGUE_WINDOWS
-  printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-#else
-  promptInfo("");
-#endif
+  hideRecordingBanner();
 
   return recorder;
 }

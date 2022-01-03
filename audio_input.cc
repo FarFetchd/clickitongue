@@ -13,9 +13,9 @@
 void crash(PaError err)
 {
   Pa_Terminate();
-  fprintf(stderr, "An error occurred while using the portaudio stream\n");
-  fprintf(stderr, "Error number: %d\n", err);
-  fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
+  PRINTERR(stderr, "An error occurred while using the portaudio stream\n");
+  PRINTERR(stderr, "Error number: %d\n", err);
+  PRINTERR(stderr, "Error message: %s\n", Pa_GetErrorText(err));
   exit(1);
 }
 
@@ -64,7 +64,7 @@ std::vector<std::string> getDeviceNames()
   int num_devices = Pa_GetDeviceCount();
   if (num_devices < 0)
   {
-    fprintf(stderr, "Error: Pa_GetDeviceCount() returned %d\n", num_devices);
+    PRINTERR(stderr, "Error: Pa_GetDeviceCount() returned %d\n", num_devices);
     exit(1);
   }
 
@@ -74,7 +74,7 @@ std::vector<std::string> getDeviceNames()
     const PaDeviceInfo* dev_info = Pa_GetDeviceInfo(i);
     if (!dev_info)
     {
-      fprintf(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
+      PRINTERR(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
       exit(1);
     }
     if (dev_info->maxInputChannels > 0)
@@ -108,12 +108,12 @@ int getNumChannels(PaDeviceIndex dev_index)
   const PaDeviceInfo* dev_info = Pa_GetDeviceInfo(dev_index);
   if (!dev_info)
   {
-    fprintf(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", dev_index);
+    PRINTERR(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", dev_index);
     exit(1);
   }
   if (dev_info->maxInputChannels < 1)
   {
-    fprintf(stderr, "Error: Pa_GetDeviceInfo(%d)->maxInputChannels is %d\n",
+    PRINTERR(stderr, "Error: Pa_GetDeviceInfo(%d)->maxInputChannels is %d\n",
                     dev_index, dev_info->maxInputChannels);
     exit(1);
   }
@@ -151,11 +151,11 @@ int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
 int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
 {
   int user_choice = default_dev_ind;
-  printf("\nDevices:\n");
+  PRINTF("\nDevices:\n");
   for (std::string x : dev_names)
     if (x != kNotInputDev)
-      printf("%s\n", x.c_str());
-  printf(
+      PRINTF("%s\n", x.c_str());
+  PRINTF(
 "\nEnter the number of the input device you want to use.\n\n"
 "(Clickitongue will remember your selection for the future. If you ever want\n"
 "to switch to another input device, run clickitongue --forget_input_dev).\n\n");
@@ -163,7 +163,7 @@ int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
   while (scanf_num_read != 1)
   {
     int highest_acceptable = dev_names.size() - 1;
-    printf("If in doubt, enter %d. Enter [%d-%d]: ",
+    PRINTF("If in doubt, enter %d. Enter [%d-%d]: ",
            default_dev_ind, 0, highest_acceptable);
     scanf_num_read = scanf("%d", &user_choice);
   }
@@ -181,7 +181,7 @@ PaDeviceIndex chooseInputDevice()
   PaDeviceIndex default_dev_ind = Pa_GetDefaultInputDevice();
   if (default_dev_ind == paNoDevice)
   {
-    fprintf(stderr, "Error: No default audio input device.\n");
+    PRINTERR(stderr, "Error: No default audio input device.\n");
     exit(1);
   }
   chosen = default_dev_ind;
@@ -245,7 +245,7 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
   input_param.device = chooseInputDevice();
   if (input_param.device == paNoDevice)
   {
-    fprintf(stderr,"Error: No default input device.\n");
+    PRINTERR(stderr,"Error: No default input device.\n");
     Pa_Terminate();
     exit(1);
   }

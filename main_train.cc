@@ -54,7 +54,7 @@ void displayAndReset(std::string* msg)
   *msg = "";
 
 #ifndef CLICKITONGUE_WINDOWS
-  printf("Press any key to continue to the training prompt.\n\n");
+  PRINTF("Press any key to continue to the training prompt.\n\n");
   make_getchar_like_getch(); getchar(); resetTermios();
 #endif
 }
@@ -110,7 +110,7 @@ void trainingBody(bool try_blows, std::string* intro_message,
 
   double scale = 1.0;
   scale = pickHumScalingFactor(hum_examples_plus_neg);
-  printf("using scale %g\n", scale);
+  PRINTF("using scale %g\n", scale);
 
   Config config;
   if (try_blows)

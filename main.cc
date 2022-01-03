@@ -21,7 +21,7 @@ int g_num_channels = 2;
 
 void crash(const char* s)
 {
-  fprintf(stderr, "%s\n", s);
+  PRINTERR(stderr, "%s\n", s);
   exit(1);
 }
 
@@ -66,7 +66,7 @@ void printDeviceDetails()
   int num_devices = Pa_GetDeviceCount();
   if (num_devices < 0)
   {
-    fprintf(stderr, "Error: Pa_GetDeviceCount() returned %d\n", num_devices);
+    PRINTERR(stderr, "Error: Pa_GetDeviceCount() returned %d\n", num_devices);
     exit(1);
   }
 
@@ -75,10 +75,10 @@ void printDeviceDetails()
     const PaDeviceInfo* dev_info = Pa_GetDeviceInfo(i);
     if (!dev_info)
     {
-      fprintf(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
+      PRINTERR(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
       exit(1);
     }
-    printf("dev %d: %s, max channels %d%s\n",
+    PRINTF("dev %d: %s, max channels %d%s\n",
            i, dev_info->name, dev_info->maxInputChannels,
            dev_info->maxInputChannels <= 0 ? " (output only!)" : "");
   }
@@ -119,7 +119,7 @@ void describeLoadedParams(Config config)
   }
   // TODO whistle
   promptInfo(msg.c_str());
-  //printf("\ndetection parameters:\n%s\n", config.toString().c_str());
+  //PRINTF("\ndetection parameters:\n%s\n", config.toString().c_str());
 }
 
 std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
@@ -167,20 +167,17 @@ double loadScaleFromConfig(Config config)
   if (config.blow.enabled && config.hum.enabled &&
       config.hum.scale != config.blow.scale)
   {
-    promptInfo("Error! Blow and hum both enabled with different scaling factors.");
-    exit(1);
+    crash("Error! Blow and hum both enabled with different scaling factors.");
   }
 //   if (config.whistle.enabled && config.hum.enabled && TODO whistle
 //       config.hum.scale != config.whistle.scale)
 //   {
-//     promptInfo("Error! Whistle and hum both enabled with different scaling factors.");
-//     exit(1);
+//     crash("Error! Whistle and hum both enabled with different scaling factors.");
 //   }
 //   if (config.blow.enabled && config.whistle.enabled &&
 //       config.whistle.scale != config.blow.scale)
 //   {
-//     promptInfo("Error! Blow and whistle both enabled with different scaling factors.");
-//     exit(1);
+//     crash("Error! Blow and whistle both enabled with different scaling factors.");
 //   }
   return scale;
 }
@@ -219,22 +216,31 @@ void defaultMain(bool ignore_existing_config)
     firstTimeTrain();
 }
 
+extern bool g_forget_input_dev;
+
 #ifdef CLICKITONGUE_LINUX
 #include <unistd.h> // for geteuid
 #endif
 
-extern bool g_forget_input_dev;
+#ifdef CLICKITONGUE_WINDOWS
+#include "windows_gui.h"
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#else // not windows
 int main(int argc, char** argv)
+#endif
 {
   Pa_Initialize(); // get its annoying spam out of the way immediately
+  ClickitongueCmdlineOpts opts;
 #ifndef CLICKITONGUE_WINDOWS
-  promptInfo("****clickitongue is now running.****");
-#endif // CLICKITONGUE_WINDOWS
-  printf("clickitongue v1.0.0\n");
-
-  ClickitongueCmdlineOpts opts =
-      structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
+  PRINTF("clickitongue " CLICKITONGUE_VERSION "\n");
+  opts = structopt::app("clickitongue").parse<ClickitongueCmdlineOpts>(argc, argv);
   validateCmdlineOpts(opts);
+  promptInfo("****clickitongue is now running.****");
+#else // windows
+  std::thread win_gui_thread(windowsGUI, hInstance, nCmdShow);
+  win_gui_thread.detach();
+#endif
+
   g_forget_input_dev = opts.forget_input_dev.value();
   g_fourier = new EasyFourier();
 

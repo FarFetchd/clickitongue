@@ -14,7 +14,7 @@ const uint64_t kOSXDoubleClickMs = 333;
 // ==========================================================================
 #endif
 
-
+#define CLICKITONGUE_VERSION "v1.1.0"
 
 #include <string>
 

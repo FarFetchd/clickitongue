@@ -103,7 +103,7 @@ public:
   }
   void printParams()
   {
-    printf("--o1_on_thresh=%g --o1_off_thresh=%g --o2_on_thresh=%g "
+    PRINTF("--o1_on_thresh=%g --o1_off_thresh=%g --o2_on_thresh=%g "
            "--o3_limit=%g --o6_limit=%g --ewma_alpha=%g\n",
            o1_on_thresh, o1_off_thresh, o2_on_thresh, o3_limit, o6_limit, ewma_alpha);
   }
@@ -389,10 +389,10 @@ public:
     cur.computeScore(examples_sets_);
     if (start < cur)
     {
-      printf("o3_limit tuning unsuccessful; leaving it alone\n");
+      PRINTF("o3_limit tuning unsuccessful; leaving it alone\n");
       return start;
     }
-    printf("tuned o3_limit from %g down to %g\n", start.o3_limit, cur.o3_limit);
+    PRINTF("tuned o3_limit from %g down to %g\n", start.o3_limit, cur.o3_limit);
     return cur;
   }
 
@@ -421,10 +421,10 @@ public:
     cur.computeScore(examples_sets_);
     if (start < cur)
     {
-      printf("o6_limit tuning unsuccessful; leaving it alone\n");
+      PRINTF("o6_limit tuning unsuccessful; leaving it alone\n");
       return start;
     }
-    printf("tuned o6_limit from %g down to %g\n", start.o6_limit, cur.o6_limit);
+    PRINTF("tuned o6_limit from %g down to %g\n", start.o6_limit, cur.o6_limit);
     return cur;
   }
 

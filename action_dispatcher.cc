@@ -1,5 +1,7 @@
 #include "action_dispatcher.h"
 
+#include "interaction.h"
+
 ActionDispatcher::ActionDispatcher(BlockingQueue<Action>* action_queue)
   : action_queue_(action_queue) {}
 
@@ -31,7 +33,7 @@ bool ActionDispatcher::dispatchNextAction()
   case Action::NoAction:
     break;
   default:
-    printf("action not implemented\n");
+    PRINTF("action not implemented\n");
   }
   return true;
 }
@@ -64,7 +66,7 @@ void initLinuxUinput()
   g_linux_uinput_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
   if (g_linux_uinput_fd == -1)
   {
-    fprintf(stderr, "couldn't open /dev/uinput to write mouse clicks\n");
+    PRINTERR(stderr, "couldn't open /dev/uinput to write mouse clicks\n");
     exit(1);
   }
   ioctl(g_linux_uinput_fd, UI_SET_EVBIT, EV_KEY);
@@ -98,7 +100,7 @@ void uinputWrite(int code, int val)
   ie.time.tv_sec = 0;
   ie.time.tv_usec = 0;
   if (write(g_linux_uinput_fd, &ie, sizeof(ie)) == -1)
-    fprintf(stderr, "uinput write %d %d failed\n", code, val);
+    PRINTERR(stderr, "uinput write %d %d failed\n", code, val);
 
   struct input_event ie2;
   ie2.type = EV_SYN;
@@ -107,7 +109,7 @@ void uinputWrite(int code, int val)
   ie2.time.tv_sec = 0;
   ie2.time.tv_usec = 0;
   if (write(g_linux_uinput_fd, &ie2, sizeof(ie2)) == -1)
-    fprintf(stderr, "uinput EV_SYN SYN_REPORT write failed\n");
+    PRINTERR(stderr, "uinput EV_SYN SYN_REPORT write failed\n");
 }
 
 void ActionDispatcher::leftDown()
@@ -128,11 +130,11 @@ void ActionDispatcher::rightUp()
 }
 void ActionDispatcher::scrollUp()
 {
-  fprintf(stderr, "scrollUp not implemented. uinput REL_WHEEL?\n");
+  PRINTERR(stderr, "scrollUp not implemented. uinput REL_WHEEL?\n");
 }
 void ActionDispatcher::scrollDown()
 {
-  fprintf(stderr, "scrollDown not implemented. uinput REL_WHEEL?\n");
+  PRINTERR(stderr, "scrollDown not implemented. uinput REL_WHEEL?\n");
 }
 
 #endif // CLICKITONGUE_LINUX

@@ -4,6 +4,7 @@
 
 #include "audio_input.h"
 #include "audio_output.h"
+#include "interaction.h"
 
 // (don't want to incude weird networking headers just to get htons)
 bool isLittleEndian()
@@ -19,7 +20,8 @@ AudioRecording::AudioRecording(std::string fname)
   FILE* reader = fopen(fname.c_str(), "rb");
   if (!reader)
   {
-    fprintf(stderr, "could not open %s. crashing.\n", fname.c_str());
+    std::string msg = "could not open "+fname+". crashing.";
+    promptInfo(msg.c_str());
     exit(1);
   }
   fseek(reader, 0, SEEK_END);
@@ -97,6 +99,6 @@ void AudioRecording::recordToFile(std::string fname) const
   }
   fclose(writer);
   float seconds = (samples_.size() / g_num_channels) / (float)kFramesPerSec;
-  printf("Wrote %g seconds of big-endian uint16 %d channel %d Hz audio to %s.\n",
+  PRINTF("Wrote %g seconds of big-endian uint16 %d channel %d Hz audio to %s.\n",
          seconds, g_num_channels, kFramesPerSec, fname.c_str());
 }
