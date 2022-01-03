@@ -10,13 +10,17 @@
 #include "pa_linux_alsa.h"
 #endif // CLICKITONGUE_LINUX
 
-void crash(PaError err)
+PaError initPulseAudio();
+PaError deinitPulseAudio();
+void safelyExit(int exit_code);
+
+void audioInputCrash(PaError err)
 {
-  Pa_Terminate();
+  deinitPulseAudio();
   PRINTERR(stderr, "An error occurred while using the portaudio stream\n");
   PRINTERR(stderr, "Error number: %d\n", err);
   PRINTERR(stderr, "Error message: %s\n", Pa_GetErrorText(err));
-  exit(1);
+  safelyExit(1);
 }
 
 int recordCallback(const void* input_buf, void* output_buf,
@@ -65,7 +69,7 @@ std::vector<std::string> getDeviceNames()
   if (num_devices < 0)
   {
     PRINTERR(stderr, "Error: Pa_GetDeviceCount() returned %d\n", num_devices);
-    exit(1);
+    safelyExit(1);
   }
 
   std::vector<std::string> dev_names;
@@ -75,7 +79,7 @@ std::vector<std::string> getDeviceNames()
     if (!dev_info)
     {
       PRINTERR(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
-      exit(1);
+      safelyExit(1);
     }
     if (dev_info->maxInputChannels > 0)
       dev_names.push_back(std::to_string(i) + ") " + dev_info->name);
@@ -109,13 +113,13 @@ int getNumChannels(PaDeviceIndex dev_index)
   if (!dev_info)
   {
     PRINTERR(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", dev_index);
-    exit(1);
+    safelyExit(1);
   }
   if (dev_info->maxInputChannels < 1)
   {
     PRINTERR(stderr, "Error: Pa_GetDeviceInfo(%d)->maxInputChannels is %d\n",
                     dev_index, dev_info->maxInputChannels);
-    exit(1);
+    safelyExit(1);
   }
   if (dev_info->maxInputChannels == 1)
     return 1;
@@ -182,7 +186,7 @@ PaDeviceIndex chooseInputDevice()
   if (default_dev_ind == paNoDevice)
   {
     PRINTERR(stderr, "Error: No default audio input device.\n");
-    exit(1);
+    safelyExit(1);
   }
   chosen = default_dev_ind;
   std::vector<std::string> dev_names = getDeviceNames();
@@ -238,16 +242,16 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
                             PaStreamCallbackFlags, void*), void* opaque,
                             int frames_per_cb)
 {
-  PaError err = Pa_Initialize();
-  if (err != paNoError) crash(err);
+  PaError err = initPulseAudio();
+  if (err != paNoError) audioInputCrash(err);
 
   PaStreamParameters input_param;
   input_param.device = chooseInputDevice();
   if (input_param.device == paNoDevice)
   {
     PRINTERR(stderr,"Error: No default input device.\n");
-    Pa_Terminate();
-    exit(1);
+    deinitPulseAudio();
+    safelyExit(1);
   }
   input_param.channelCount = g_num_channels;
   input_param.sampleFormat = paFloat32;
@@ -262,15 +266,15 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
   PaAlsa_EnableRealtimeScheduling(stream_, 1);
 #endif // CLICKITONGUE_LINUX
 
-  if (err != paNoError) crash(err);
+  if (err != paNoError) audioInputCrash(err);
   err = Pa_StartStream(stream_);
-  if (err != paNoError) crash(err);
+  if (err != paNoError) audioInputCrash(err);
 }
 
 AudioInput::~AudioInput()
 {
   closeStream();
-  Pa_Terminate();
+  deinitPulseAudio();
 }
 
 void AudioInput::closeStream()

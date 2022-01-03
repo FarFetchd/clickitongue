@@ -8,16 +8,18 @@
 HWND g_printf_hwnd;
 HWND g_banner_hwnd;
 HWND g_main_hwnd;
+void makeSafeToExit();
 LRESULT CALLBACK WindowProcedure(HWND theHwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   if(message == WM_DESTROY || message == WM_CLOSE)
   {
+    makeSafeToExit();
     PostQuitMessage(0);
-    exit(1); // TODO HACK!
     return 0;
   }
   return DefWindowProc(theHwnd, message, wParam, lParam);
 }
+void crash(const char* s);
 void windowsGUI(HINSTANCE hInstance, int nCmdShow)
 {
   INITCOMMONCONTROLSEX icc;
@@ -43,10 +45,7 @@ void windowsGUI(HINSTANCE hInstance, int nCmdShow)
 
   // Register our window classes, or error.
   if (!RegisterClassEx(&win_class))
-  {
-    promptInfo("Failed to register window class, crashing");
-    exit(1);
-  }
+    crash("Failed to register window class, crashing");
 
   g_main_hwnd = CreateWindowEx(
       WS_EX_CLIENTEDGE,
@@ -62,11 +61,8 @@ void windowsGUI(HINSTANCE hInstance, int nCmdShow)
       hInstance,           // instance handler? anyways, WinMain hInstance
       NULL); // some extra data thing we don't use
   if (!g_main_hwnd)
-  {
-    promptInfo("Failed to create main Clickitongue window, crashing");
-    exit(1);
-  }
-  
+    crash("Failed to create main Clickitongue window, crashing");
+
   NONCLIENTMETRICS ncm;
   ncm.cbSize = sizeof(ncm);
   SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
@@ -86,7 +82,7 @@ void windowsGUI(HINSTANCE hInstance, int nCmdShow)
       hInstance,
       NULL);      // some extra data thing we don't use
   SendMessage(g_printf_hwnd, WM_SETFONT, (WPARAM)default_font, 0);
-  
+
   g_banner_hwnd = CreateWindow(
       "STATIC",   // predefined class
       kRecordingBanner,   // text to start with

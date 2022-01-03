@@ -6,6 +6,8 @@
 #include "audio_output.h"
 #include "interaction.h"
 
+void crash(const char* s);
+
 // (don't want to incude weird networking headers just to get htons)
 bool isLittleEndian()
 {
@@ -21,8 +23,7 @@ AudioRecording::AudioRecording(std::string fname)
   if (!reader)
   {
     std::string msg = "could not open "+fname+". crashing.";
-    promptInfo(msg.c_str());
-    exit(1);
+    crash(msg.c_str());
   }
   fseek(reader, 0, SEEK_END);
   size_t flen = ftell(reader);

@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <mutex>
 #include <thread>
 
 #include "action_dispatcher.h"
@@ -19,10 +20,45 @@
 
 int g_num_channels = 2;
 
+// The Pa_Terminate() documentation is... menacing... about what happens if
+// every Pa_Initialize() call isn't matched before exiting. So let's be sure.
+// (Never call naked exit(), Pa_Initialize(), or Pa_Terminate()!)
+int g_unresolved_pulseaudio_inits = 0;
+bool g_shutting_down = false;
+std::mutex g_pa_init_mutex;
+PaError initPulseAudio()
+{
+  const std::lock_guard<std::mutex> lock(g_pa_init_mutex);
+  if (g_shutting_down)
+    return paNoError;
+  g_unresolved_pulseaudio_inits++;
+  return Pa_Initialize();
+}
+PaError deinitPulseAudio()
+{
+  const std::lock_guard<std::mutex> lock(g_pa_init_mutex);
+  if (g_shutting_down)
+    return paNoError;
+  if (--g_unresolved_pulseaudio_inits >= 0)
+    return Pa_Terminate();
+  return paNoError;
+}
+void makeSafeToExit()
+{
+  const std::lock_guard<std::mutex> lock(g_pa_init_mutex);
+  g_shutting_down = true;
+  while (--g_unresolved_pulseaudio_inits >= 0)
+    Pa_Terminate();
+}
+void safelyExit(int exit_code)
+{
+  makeSafeToExit();
+  exit(exit_code);
+}
 void crash(const char* s)
 {
   PRINTERR(stderr, "%s\n", s);
-  exit(1);
+  safelyExit(1);
 }
 
 int equalizerCallback(const void* inputBuffer, void* outputBuffer,
@@ -67,7 +103,7 @@ void printDeviceDetails()
   if (num_devices < 0)
   {
     PRINTERR(stderr, "Error: Pa_GetDeviceCount() returned %d\n", num_devices);
-    exit(1);
+    safelyExit(1);
   }
 
   for (PaDeviceIndex i=0; i<num_devices; i++)
@@ -76,7 +112,7 @@ void printDeviceDetails()
     if (!dev_info)
     {
       PRINTERR(stderr, "Error: Pa_GetDeviceInfo(%d) returned null\n", i);
-      exit(1);
+      safelyExit(1);
     }
     PRINTF("dev %d: %s, max channels %d%s\n",
            i, dev_info->name, dev_info->maxInputChannels,
@@ -229,7 +265,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 int main(int argc, char** argv)
 #endif
 {
-  Pa_Initialize(); // get its annoying spam out of the way immediately
+  initPulseAudio(); // get its annoying spam out of the way immediately
   ClickitongueCmdlineOpts opts;
 #ifndef CLICKITONGUE_WINDOWS
   PRINTF("clickitongue " CLICKITONGUE_VERSION "\n");
@@ -293,6 +329,7 @@ int main(int argc, char** argv)
     defaultMain(opts.retrain.value());
   }
 
-  Pa_Terminate(); // corresponds to the Pa_Initialize() at the start
+  deinitPulseAudio(); // corresponds to the initPulseAudio() at the start
+  makeSafeToExit();
   return 0;
 }

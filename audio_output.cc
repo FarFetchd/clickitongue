@@ -5,6 +5,10 @@
 
 #include "portaudio.h"
 
+PaError initPulseAudio();
+PaError deinitPulseAudio();
+void crash(const char* s);
+
 struct PlaybackCbStruct
 {
   const std::vector<Sample>* samples;
@@ -42,7 +46,7 @@ int playCallback(const void* input_buf, void* output_buf,
 
 void playRecorded(const std::vector<Sample>* samples)
 {
-  Pa_Initialize();
+  initPulseAudio();
 
   PlaybackCbStruct arg;
   arg.samples = samples;
@@ -50,10 +54,8 @@ void playRecorded(const std::vector<Sample>* samples)
 
   output_param.device = Pa_GetDefaultOutputDevice();
   if (output_param.device == paNoDevice)
-  {
-    printf("Couldn't get a default output device!\n");
-    exit(1);
-  }
+    crash("Couldn't get a default output device!\n");
+
   output_param.channelCount = g_num_channels;
   output_param.sampleFormat = paFloat32;
   output_param.suggestedLatency =

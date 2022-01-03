@@ -67,7 +67,7 @@ void initLinuxUinput()
   if (g_linux_uinput_fd == -1)
   {
     PRINTERR(stderr, "couldn't open /dev/uinput to write mouse clicks\n");
-    exit(1);
+    safelyExit(1);
   }
   ioctl(g_linux_uinput_fd, UI_SET_EVBIT, EV_KEY);
   ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, BTN_LEFT);
