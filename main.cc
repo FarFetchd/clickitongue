@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <csignal>
 #include <mutex>
 #include <thread>
 
@@ -277,6 +276,7 @@ extern bool g_forget_input_dev;
 #endif
 
 #ifndef CLICKITONGUE_WINDOWS
+#include <csignal>
 volatile sig_atomic_t g_shutdown_flag = 0;
 void sigintHandler(int signal)
 {
