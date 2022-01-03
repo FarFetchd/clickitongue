@@ -75,6 +75,9 @@ extern HWND g_printf_hwnd;
 extern HWND g_banner_hwnd;
 extern HWND g_main_hwnd;
 
+#include <atomic>
+extern std::atomic<bool> g_windows_msgbox_active;
+
 void promptInfo(const char* prompt)
 {
   // The manual line breaks I use for Linux console don't look good in Windows
@@ -83,7 +86,9 @@ void promptInfo(const char* prompt)
   for (int i=1; i<s.size()-1; i++)
     if (s[i] == '\n' && s[i-1] != '\n' && s[i+1] != '\n')
       s[i] = ' ';
+  g_windows_msgbox_active = true;
   MessageBox(NULL, s.c_str(), "Clickitongue", MB_OK);
+  g_windows_msgbox_active = false;
 }
 bool promptYesNo(const char* prompt)
 {
@@ -93,7 +98,10 @@ bool promptYesNo(const char* prompt)
   for (int i=1; i<s.size()-1; i++)
     if (s[i] == '\n' && s[i-1] != '\n' && s[i+1] != '\n')
       s[i] = ' ';
-  return MessageBox(NULL, s.c_str(), "Clickitongue", MB_YESNO) == IDYES;
+  g_windows_msgbox_active = true;
+  bool answer = (MessageBox(NULL, s.c_str(), "Clickitongue", MB_YESNO) == IDYES);
+  g_windows_msgbox_active = false;
+  return answer;
 }
 
 std::string stdstring_sprintf(const char* fmt, va_list args)

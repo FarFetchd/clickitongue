@@ -7,14 +7,17 @@
 
 #include <windows.h>
 #include <commctrl.h>
-#include <unistd.h>
 HWND g_printf_hwnd;
 HWND g_banner_hwnd;
 HWND g_main_hwnd;
 HWND g_retrain_button;
 HWND g_newmic_button;
 HWND g_exit_button;
+#include <unistd.h>
+#include <atomic>
+std::atomic<bool> g_windows_msgbox_active;
 void makeSafeToExit();
+void safelyExit(int exit_code);
 LRESULT CALLBACK WindowProcedure(HWND theHwnd, UINT message,
                                  WPARAM wParam, LPARAM lParam)
 {
@@ -57,6 +60,8 @@ LRESULT CALLBACK WindowProcedure(HWND theHwnd, UINT message,
 void crash(const char* s);
 void windowsGUI(HINSTANCE hInstance, int nCmdShow)
 {
+  g_windows_msgbox_active = false;
+
   INITCOMMONCONTROLSEX icc;
   icc.dwSize = sizeof(icc);
   icc.dwICC = ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES;
@@ -184,6 +189,8 @@ void windowsGUI(HINSTANCE hInstance, int nCmdShow)
     TranslateMessage(&win_msg);
     DispatchMessage(&win_msg);
   }
+  if (g_windows_msgbox_active)
+    safelyExit(0);
 }
 
 #endif // CLICKITONGUE_WINDOWS
