@@ -258,10 +258,14 @@ void normalOperation(Config config, bool first_time)
 
 void defaultMain(bool ignore_existing_config)
 {
+  std::string config_name = kDefaultConfig;
   if (ignore_existing_config)
     firstTimeTrain();
-  else if (auto maybe_cfg = readConfig(kDefaultConfig); maybe_cfg.has_value())
+  else if (auto maybe_cfg = readConfig(config_name); maybe_cfg.has_value())
+  {
+    PRINTF("Read existing config profile '%s'.\n", config_name.c_str());
     normalOperation(maybe_cfg.value(), /*first_time=*/false);
+  }
   else
     firstTimeTrain();
 }
