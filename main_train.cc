@@ -60,7 +60,7 @@ void displayAndReset(std::string* msg)
 }
 
 bool afterTraining(Config* config);
-void normalOperation(Config config);
+void normalOperation(Config config, bool first_time);
 
 void trainingBody(bool try_blows, std::string* intro_message,
                   std::vector<std::pair<AudioRecording, int>>* blow_examples,
@@ -140,7 +140,7 @@ void trainingBody(bool try_blows, std::string* intro_message,
     }
   }
   if (afterTraining(&config))
-    normalOperation(config);
+    normalOperation(config, /*first_time=*/true);
 }
 
 // returns true if we can proceed to normalOperation().

@@ -152,9 +152,9 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
     crash("Must specify a --filename=");
 }
 
-void describeLoadedParams(Config config)
+void describeLoadedParams(Config config, bool first_time)
 {
-  std::string msg = "Clickitongue started!\n";
+  std::string msg = "Clickitongue " CLICKITONGUE_VERSION " started!\n";
   if (config.blow.enabled)
   {
     msg += std::string("Blow to ") +
@@ -168,7 +168,10 @@ void describeLoadedParams(Config config)
            " click.\n";
   }
   // TODO whistle
-  promptInfo(msg.c_str());
+  if (first_time)
+    promptInfo(msg.c_str());
+  else
+    PRINTF(msg.c_str());
   //PRINTF("\ndetection parameters:\n%s\n", config.toString().c_str());
 }
 
@@ -232,13 +235,10 @@ double loadScaleFromConfig(Config config)
   return scale;
 }
 
-void normalOperation(Config config)
+void normalOperation(Config config, bool first_time)
 {
   if (!config.blow.enabled && !config.hum.enabled) // TODO whistle
-  {
-    promptInfo("Neither hum nor blow is enabled. Exiting.");
-    return;
-  }
+    crash("Neither hum nor blow is enabled. Exiting.");
 
   BlockingQueue<Action> action_queue;
   ActionDispatcher action_dispatcher(&action_queue);
@@ -247,7 +247,7 @@ void normalOperation(Config config)
   FFTResultDistributor fft_distributor(makeDetectorsFromConfig(config, &action_queue),
                                        loadScaleFromConfig(config));
   AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
-  describeLoadedParams(config);
+  describeLoadedParams(config, first_time);
 
   while (audio_input.active())
     Pa_Sleep(500);
@@ -261,7 +261,7 @@ void defaultMain(bool ignore_existing_config)
   if (ignore_existing_config)
     firstTimeTrain();
   else if (auto maybe_cfg = readConfig(kDefaultConfig); maybe_cfg.has_value())
-    normalOperation(maybe_cfg.value());
+    normalOperation(maybe_cfg.value(), /*first_time=*/false);
   else
     firstTimeTrain();
 }
