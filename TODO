@@ -2,7 +2,6 @@
 wishlist
 * have some buttons/input during running that allows users to easily apply what's described in the "Manual Tuning" section of the readme.
   the idea is it would look like "make left clicking easier" "make left clicking harder" etc.
-* also, for windows, now that we have a GUI, the "delete this file to redo" should be buttons (with confirmation)
 * easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
 * fun idea: ascending and descending whistles to control scroll wheel. need to track frequencies at a finer resolution; try
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)

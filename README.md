@@ -35,6 +35,9 @@ of a second).
 
 # Usage
 
+The first time you run Clickitongue, it will have you train it to detect your
+particular blowing and humming sounds, in your particular acoustic environment.
+
 If you have a microphone that you can position about 1cm in front of your mouth,
 you'll be able to use both blowing and humming, allowing both left and right
 clicks. If you can't keep the mic that close, humming will still work.
@@ -42,17 +45,9 @@ Don't worry about mic quality - even the built-in mic of an X1 Carbon ThinkPad
 works for humming, and any mic positioned (very) near your mouth should work for
 blowing. Remove any spongy/fuzzy windscreens for best blowing results!
 
-The first time you run Clickitongue, it will have you train it to detect your
-particular blowing and humming sounds, in your particular acoustic environment.
-
-If you ever want to redo the training procedure: On Linux or OSX run
-Clickitongue with the --retrain flag. On Windows delete the
-default.clickitongue file that should live in the same directory as
-clickitongue.exe.
-
-If you want to change audio input devices: On Linux or OSX run Clickitongue with
-the --forget_input_dev flag. On Windows delete the audio_input_device.config
-file that should live in the same directory as clickitongue.exe.
+If you ever want to redo the training procedure, or change the selected audio
+input device: On Linux or OSX run Clickitongue with the --retrain or
+--forget_input_dev flag. On Windows, use the buttons in the main GUI.
 
 # Mic Advice
 
@@ -78,7 +73,8 @@ The following is highly user-unfriendly, and should ideally never be needed
 for smooth usage of Clickitongue. However, for determined users who find the
 automatic training almost but not quite good enough, here is how to manually
 tune Clickitongue. First exit Clickitongue, then edit the default.clickitongue
-config file described earlier.
+config file (find it alongside clickitongue.exe for Windows, in ~/.config/
+for Linux and OSX).
 
 For blowing, there are "on" and "off" thresholds for each of three octaves.
 When tweaking a threshold, do so for all three octaves, proportionately - e.g.

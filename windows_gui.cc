@@ -7,13 +7,46 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <unistd.h>
 HWND g_printf_hwnd;
 HWND g_banner_hwnd;
 HWND g_main_hwnd;
+HWND g_retrain_button;
+HWND g_newmic_button;
+HWND g_exit_button;
 void makeSafeToExit();
-LRESULT CALLBACK WindowProcedure(HWND theHwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProcedure(HWND theHwnd, UINT message,
+                                 WPARAM wParam, LPARAM lParam)
 {
-  if(message == WM_DESTROY || message == WM_CLOSE)
+  bool should_exit = false;
+  if (message == WM_DESTROY || message == WM_CLOSE)
+    should_exit = true;
+  else if (message == WM_COMMAND)
+  {
+    if ((HWND)lParam == g_exit_button)
+      should_exit = true;
+    else if ((HWND)lParam == g_retrain_button)
+    {
+      if (promptYesNo("Do you want to completely redo Clickitongue's training?"))
+      {
+        unlink("default.clickitongue");
+        promptInfo("Ok. Clickitongue will now close. Run it again, and you will "
+                   "be prompted to train it anew.");
+        should_exit = true;
+      }
+    }
+    else if ((HWND)lParam == g_newmic_button)
+    {
+      if (promptYesNo("Do you want to choose a new audio input device?"))
+      {
+        unlink("audio_input_device.config");
+        promptInfo("Ok. Clickitongue will now close. Run it again, and you will "
+                   "be prompted to pick a new audio input device.");
+        should_exit = true;
+      }
+    }
+  }
+  if (should_exit)
   {
     makeSafeToExit();
     PostQuitMessage(0);
@@ -57,7 +90,7 @@ void windowsGUI(HINSTANCE hInstance, int nCmdShow)
       CW_USEDEFAULT,       // default x position
       CW_USEDEFAULT,       // default y position
       640,                 // width in pixels
-      300,                 // height in pixels
+      360,                 // height in pixels
       HWND_DESKTOP,        // parent window
       NULL,                // menu
       hInstance,           // instance handler? anyways, WinMain hInstance
@@ -78,7 +111,7 @@ void windowsGUI(HINSTANCE hInstance, int nCmdShow)
       2,         // starting x position
       2,         // starting y position
       634,        // width in pixels
-      294,        // height in pixels
+      270,        // height in pixels
       g_main_hwnd,       // parent window
       NULL,       // menu
       hInstance,
@@ -87,18 +120,60 @@ void windowsGUI(HINSTANCE hInstance, int nCmdShow)
 
   g_banner_hwnd = CreateWindow(
       "STATIC",   // predefined class
-      kRecordingBanner,   // text to start with
+      kRecordingBanner,   // text
       WS_CHILD,  // styles
       2,         // starting x position
       44,        // starting y position
       634,        // width in pixels
-      294,        // height in pixels
+      230,        // height in pixels
       g_main_hwnd,       // parent window
       NULL,       // menu
-      NULL,
+      hInstance,
       NULL);      // some extra data thing we don't use
   SendMessage(g_banner_hwnd, WM_SETFONT, (WPARAM)mono_font, 0);
   ShowWindow(g_banner_hwnd, SW_HIDE);
+
+  g_retrain_button = CreateWindow(
+        "BUTTON",   // predefined class
+        "Retrain Clickitongue",       // text
+        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles
+        16,         // starting x position
+        274,         // starting y position
+        187,        // width
+        50,        // height
+        g_main_hwnd,       // parent window
+        NULL,       // No menu
+        hInstance,
+        NULL);      // pointer not needed
+  SendMessage(g_retrain_button, WM_SETFONT, (WPARAM)default_font, 0);
+
+  g_newmic_button = CreateWindow(
+        "BUTTON",   // predefined class
+        "Choose new mic device",       // text
+        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles
+        223,         // starting x position
+        274,         // starting y position
+        187,        // width
+        50,        // height
+        g_main_hwnd,       // parent window
+        NULL,       // No menu
+        hInstance,
+        NULL);      // pointer not needed
+  SendMessage(g_newmic_button, WM_SETFONT, (WPARAM)default_font, 0);
+
+  g_exit_button = CreateWindow(
+        "BUTTON",   // predefined class
+        "Exit",       // text
+        WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles
+        430,         // starting x position
+        274,         // starting y position
+        187,        // width
+        50,        // height
+        g_main_hwnd,       // parent window
+        NULL,       // No menu
+        hInstance,
+        NULL);      // pointer not needed
+  SendMessage(g_exit_button, WM_SETFONT, (WPARAM)default_font, 0);
 
   ShowWindow(g_main_hwnd, nCmdShow);
   UpdateWindow(g_main_hwnd);
