@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <csignal>
 #include <mutex>
 #include <thread>
 
@@ -258,6 +259,20 @@ extern bool g_forget_input_dev;
 #include <unistd.h> // for geteuid
 #endif
 
+#ifndef CLICKITONGUE_WINDOWS
+volatile sig_atomic_t g_shutdown_flag = 0;
+void sigintHandler(int signal)
+{
+  g_shutdown_flag = 1;
+}
+void signalWatcher()
+{
+  while (g_shutdown_flag == 0)
+    Pa_Sleep(200);
+  safelyExit(0);
+}
+#endif
+
 #ifdef CLICKITONGUE_WINDOWS
 #include "windows_gui.h"
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -265,6 +280,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 int main(int argc, char** argv)
 #endif
 {
+#ifndef CLICKITONGUE_WINDOWS
+  std::thread sigint_watcher_thread(signalWatcher);
+  sigint_watcher_thread.detach();
+  signal(SIGINT, sigintHandler);
+#endif
   initPulseAudio(); // get its annoying spam out of the way immediately
   ClickitongueCmdlineOpts opts;
 #ifndef CLICKITONGUE_WINDOWS

@@ -1,3 +1,5 @@
+#ifdef CLICKITONGUE_WINDOWS
+
 #include "windows_gui.h"
 
 #include "constants.h"
@@ -108,3 +110,5 @@ void windowsGUI(HINSTANCE hInstance, int nCmdShow)
     DispatchMessage(&win_msg);
   }
 }
+
+#endif // CLICKITONGUE_WINDOWS

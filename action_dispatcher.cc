@@ -60,15 +60,15 @@ void actionDispatch(ActionDispatcher* me)
 #include <unistd.h>
 #include <linux/uinput.h>
 
+void crash(const char* s);
+
 int g_linux_uinput_fd = -1;
 void initLinuxUinput()
 {
   g_linux_uinput_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
   if (g_linux_uinput_fd == -1)
-  {
-    PRINTERR(stderr, "couldn't open /dev/uinput to write mouse clicks\n");
-    safelyExit(1);
-  }
+    crash("couldn't open /dev/uinput to write mouse clicks");
+
   ioctl(g_linux_uinput_fd, UI_SET_EVBIT, EV_KEY);
   ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, BTN_LEFT);
   ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, BTN_RIGHT);
