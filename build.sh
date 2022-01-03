@@ -3,6 +3,9 @@
 BUILDFILENAME="default.ccbuildfile"
 if [ -n "$1" ]; then
   BUILDFILENAME="$1"
+elif [ `uname -s` == "Darwin" ]; then
+  echo "NOTE: detected that the environment is OSX; defaulting to osx.ccbuildfile."
+  BUILDFILENAME="osx.ccbuildfile"
 fi
 
 OUTPUTFILENAME=`grep "OutputBinaryFilename=" $BUILDFILENAME | sed 's/OutputBinaryFilename=//'`
