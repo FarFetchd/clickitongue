@@ -31,7 +31,14 @@ PaError initPulseAudio()
 {
   const std::lock_guard<std::mutex> lock(g_pa_init_mutex);
   if (g_shutting_down)
-    return paNoError;
+  {
+    while (g_unresolved_pulseaudio_inits > 0)
+    {
+      g_unresolved_pulseaudio_inits--;
+      Pa_Terminate();
+    }
+    exit(0);
+  }
   g_unresolved_pulseaudio_inits++;
   return Pa_Initialize();
 }
@@ -40,16 +47,22 @@ PaError deinitPulseAudio()
   const std::lock_guard<std::mutex> lock(g_pa_init_mutex);
   if (g_shutting_down)
     return paNoError;
-  if (--g_unresolved_pulseaudio_inits >= 0)
+  if (g_unresolved_pulseaudio_inits > 0)
+  {
+    g_unresolved_pulseaudio_inits--;
     return Pa_Terminate();
+  }
   return paNoError;
 }
 void makeSafeToExit()
 {
   const std::lock_guard<std::mutex> lock(g_pa_init_mutex);
   g_shutting_down = true;
-  while (--g_unresolved_pulseaudio_inits >= 0)
+  while (g_unresolved_pulseaudio_inits > 0)
+  {
+    g_unresolved_pulseaudio_inits--;
     Pa_Terminate();
+  }
 }
 void safelyExit(int exit_code)
 {
