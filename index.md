@@ -14,4 +14,6 @@ On Linux or OSX, `git clone https://github.com/FarFetchd/clickitongue`, and foll
 
 On the first run, Clickitongue will have you select your audio input device, and then guide you through its training process. The training is quick; it should take about two minutes total. If the training does not leave Clickitongue confident in its ability to detect your sounds, it will give you a chance to redo part or all of the training. Once it is confident, it will proceed to normal operation. Clickitongue saves the results of the training, so all subsequent runs of Clickitongue will immediately let you start clicking, with no further configuration.
 
-TODO talk about mic types
+Just about any microphone should get you basic functionality, but for really smooth operation the mic needs to be positioned very near your mouth. [More details here.](https://github.com/FarFetchd/clickitongue#mic-advice)
+
+For more detailed instructions and usage tips, [read Clickitongue's README](https://github.com/FarFetchd/clickitongue#usage).
