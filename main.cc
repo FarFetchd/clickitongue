@@ -10,11 +10,10 @@
 #include "constants.h"
 #include "easy_fourier.h"
 #include "fft_result_distributor.h"
+#include "hissing_sip_detector.h"
 #include "hum_detector.h"
 #include "interaction.h"
 #include "main_train.h"
-#include "train_blow.h"
-#include "train_hum.h"
 
 #include "config_io.h"
 

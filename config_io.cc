@@ -62,6 +62,16 @@ std::string Config::toString() const
         << "hum_ewma_alpha: " << hum.ewma_alpha << "\n"
         << "hum_scale: " << hum.scale << "\n";
   }
+  if (sip.enabled)
+  {
+    sts << "sip_action_on: " << actionString(sip.action_on) << "\n"
+        << "sip_action_off: " << actionString(sip.action_off) << "\n"
+        << "sip_o7_on_thresh: " << sip.o7_on_thresh << "\n"
+        << "sip_o7_off_thresh: " << sip.o7_off_thresh << "\n"
+        << "sip_o1_limit: " << sip.o1_limit << "\n"
+        << "sip_ewma_alpha: " << sip.ewma_alpha << "\n"
+        << "sip_scale: " << sip.scale << "\n";
+  }
   return sts.str();
 }
 
@@ -97,8 +107,23 @@ HumConfig::HumConfig(farfetchd::ConfigReader const& cfg)
   scale = cfg.getDouble("hum_scale").value_or(-1);
 
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
-             o1_on_thresh >= 0 && o1_off_thresh >= 0 && o3_limit >= 0 &&
-             o6_limit >= 0 && ewma_alpha >= 0 && scale >= 0);
+             o1_on_thresh >= 0 && o1_off_thresh >= 0 && o2_on_thresh >= 0 &&
+             o3_limit >= 0 && o6_limit >= 0 && ewma_alpha >= 0 && scale >= 0);
+}
+
+SipConfig::SipConfig(farfetchd::ConfigReader const& cfg)
+{
+  action_on = parseAction(cfg.getString("sip_action_on").value_or("x"));
+  action_off = parseAction(cfg.getString("sip_action_off").value_or("x"));
+  o7_on_thresh = cfg.getDouble("sip_o7_on_thresh").value_or(-1);
+  o7_off_thresh = cfg.getDouble("sip_o7_off_thresh").value_or(-1);
+  o1_limit = cfg.getDouble("sip_o1_limit").value_or(-1);
+  ewma_alpha = cfg.getDouble("sip_ewma_alpha").value_or(-1);
+  scale = cfg.getDouble("sip_scale").value_or(-1);
+
+  enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
+             o7_on_thresh >= 0 && o7_off_thresh >= 0 && o1_limit >= 0 &&
+             ewma_alpha >= 0 && scale >= 0);
 }
 
 std::string getHomeDir()
