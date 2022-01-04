@@ -1,5 +1,8 @@
 
 wishlist
+* cumulative training examples, across multiple sessions
+* a second silent (e.g. people sitting 5 feet away shouldn't hear anything)
+  control scheme, in addition to blowing.
 * have some buttons/input during running that allows users to easily apply what's described in the "Manual Tuning" section of the readme.
   the idea is it would look like "make left clicking easier" "make left clicking harder" etc.
 * easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
@@ -7,6 +10,67 @@ wishlist
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
 * translate into all languages we can get translators for
 * debian package
+
+
+* "teeth-inhale". not sure of a good name (or how to instruct users what exactly
+  to do, unfortunately). close teeth, part lips slightly, inhale through mouth.
+  gives high-freq energy comparable to blowing, a big spike around the same freq
+  as whistling, and practically NO energy in the first three octaves. easier to
+  distinguish than humming, and should be less disruptive to nearby people.
+  only drawback is communicating to users what exactly to do.
+            00
+            00
+            00
+            00
+            00
+            00
+            00
+            00
+            00
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           000
+           0000
+           0000
+           0000
+           0000                     0
+           0000                     0
+           0000                     0
+           0000      0             00
+           0000      0             00
+  0        0000      0             00
+  0        0000      00     0      00
+  0        0000 0    00     0      000
+  0        0000 0    00     0      000                           0
+  0       0000000    00     000    000                           0
+  0      00000000    00     000    000  0    0        0    0     0
+  0      00000000    00 0   000    000  0    0   0    00   0     0
+  0    0 00000000    00 00  000    0000 0    0 0 0    00   0     0             0
+  0    0 00000000 0  00 00  0000 0 0000 0   00 0 0  0 000  0  0  0  00 0  0    0
+0000 0 0000000000000 00000  0000 000000 0   00 0 0  0 000000 00 00 00000  00   0
+
+
+
 
 
 
@@ -61,9 +125,9 @@ example:
        0000000       0        000000                  000                   00
       000000000      0        000000                  000                   000
       000000000      0       0000000       0        0 000                   000
-      000000000      0      000000000      0        0 0000                  000                    0
-     0000000000      0     0000000000      0        0 0000                  000                    0
-  0000000000000000 0 0   000000000000 0  0 0     000000000       0          0000                   0
+      000000000      0      000000000      0        0 0000                  000
+     0000000000      0     0000000000      0        0 0000                  000
+  0000000000000000 0 0   000000000000 0  0 0     000000000       0          0000
 
 
 
