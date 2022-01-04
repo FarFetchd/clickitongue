@@ -49,6 +49,12 @@ If you ever want to redo the training procedure, or change the selected audio
 input device: On Linux or OSX run Clickitongue with the --retrain or
 --forget_input_dev flag. On Windows, use the buttons in the main GUI.
 
+For long-term use, you'll probably settle into using the gentlest blows
+possible, to avoid fatigue. However, when attempting fast double-clicks,
+these gentle blows tend to smear into each other, making it hard for
+Clickitongue to differentiate them. So, when double-clicking, try making a
+more well-defined plosive sound, like "puh-puh".
+
 # Mic Advice
 
 Humming works, but for really smooth non-annoying long-term use you want your
