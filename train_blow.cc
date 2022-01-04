@@ -17,16 +17,16 @@ namespace {
 class TrainParams
 {
 public:
-  TrainParams(double o5on, double o5off, double o6on, double o6off,
+  TrainParams(double o1on, double o1off, double o6on, double o6off,
               double o7on, double o7off, double alpha, double scl)
-  : o5_on_thresh(o5on), o5_off_thresh(o5off), o6_on_thresh(o6on),
+  : o1_on_thresh(o1on), o1_off_thresh(o1off), o6_on_thresh(o6on),
     o6_off_thresh(o6off), o7_on_thresh(o7on), o7_off_thresh(o7off),
     ewma_alpha(alpha), scale(scl) {}
 
   bool operator==(TrainParams const& other) const
   {
-    return o5_on_thresh == other.o5_on_thresh &&
-           o5_off_thresh == other.o5_off_thresh &&
+    return o1_on_thresh == other.o1_on_thresh &&
+           o1_off_thresh == other.o1_off_thresh &&
            o6_on_thresh == other.o6_on_thresh &&
            o6_off_thresh == other.o6_off_thresh &&
            o7_on_thresh == other.o7_on_thresh &&
@@ -61,7 +61,7 @@ public:
     std::vector<int> event_frames;
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<BlowDetector>(
-        nullptr, o5_on_thresh, o5_off_thresh, o6_on_thresh, o6_off_thresh,
+        nullptr, o1_on_thresh, o1_off_thresh, o6_on_thresh, o6_off_thresh,
         o7_on_thresh, o7_off_thresh, ewma_alpha, &event_frames));
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale);
@@ -103,15 +103,15 @@ public:
   }
   void printParams()
   {
-    PRINTF("--o5_on_thresh=%g --o5_off_thresh=%g --o6_on_thresh=%g "
+    PRINTF("--o1_on_thresh=%g --o1_off_thresh=%g --o6_on_thresh=%g "
            "--o6_off_thresh=%g --o7_on_thresh=%g --o7_off_thresh=%g "
            "--ewma_alpha=%g\n",
-           o5_on_thresh, o5_off_thresh, o6_on_thresh, o6_off_thresh,
+           o1_on_thresh, o1_off_thresh, o6_on_thresh, o6_off_thresh,
            o7_on_thresh, o7_off_thresh, ewma_alpha);
   }
 
-  double o5_on_thresh;
-  double o5_off_thresh;
+  double o1_on_thresh;
+  double o1_off_thresh;
   double o6_on_thresh;
   double o6_off_thresh;
   double o7_on_thresh;
@@ -141,10 +141,10 @@ private:
 };
 double randomBetween(double a, double b) { return RandomStuff(a, b).random(); }
 
-const double kMinO5On = 100;
-const double kMaxO5On = 1000;
-const double kMinO5Off = 20;
-const double kMaxO5Off = 300;
+const double kMinO1On = 500;
+const double kMaxO1On = 5000;
+const double kMinO1Off = 20;
+const double kMaxO1Off = 500;
 const double kMinO6On = 50;
 const double kMaxO6On = 500;
 const double kMinO6Off = 10;
@@ -156,14 +156,14 @@ const double kMaxO7Off = 50;
 const double kMinAlpha = 0.05;
 const double kMaxAlpha = 0.5;
 
-double randomO5On()
+double randomO1On()
 {
-  static RandomStuff* r = new RandomStuff(kMinO5On, kMaxO5On);
+  static RandomStuff* r = new RandomStuff(kMinO1On, kMaxO1On);
   return r->random();
 }
-double randomO5Off()
+double randomO1Off()
 {
-  static RandomStuff* r = new RandomStuff(kMinO5Off, kMaxO5Off);
+  static RandomStuff* r = new RandomStuff(kMinO1Off, kMaxO1Off);
   return r->random();
 }
 double randomO6On()
@@ -203,11 +203,11 @@ class TrainParamsCocoon
 {
 public:
   TrainParamsCocoon(
-      double o5_on_thresh, double o5_off_thresh, double o6_on_thresh,
+      double o1_on_thresh, double o1_off_thresh, double o6_on_thresh,
       double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
       double ewma_alpha, double scale,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
-  : pupa_(std::make_unique<TrainParams>(o5_on_thresh, o5_off_thresh, o6_on_thresh,
+  : pupa_(std::make_unique<TrainParams>(o1_on_thresh, o1_off_thresh, o6_on_thresh,
                                         o6_off_thresh, o7_on_thresh, o7_off_thresh,
                                         ewma_alpha, scale)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
@@ -253,14 +253,14 @@ public:
   }
 
   bool emplaceIfValid(
-      std::vector<TrainParamsCocoon>& ret, double o5_on_thresh, double o5_off_thresh,
+      std::vector<TrainParamsCocoon>& ret, double o1_on_thresh, double o1_off_thresh,
       double o6_on_thresh, double o6_off_thresh, double o7_on_thresh,
       double o7_off_thresh, double ewma_alpha)
   {
-    if (o5_off_thresh < o5_on_thresh && o6_off_thresh < o6_on_thresh &&
+    if (o1_off_thresh < o1_on_thresh && o6_off_thresh < o6_on_thresh &&
         o7_off_thresh < o7_on_thresh)
     {
-      ret.emplace_back(o5_on_thresh, o5_off_thresh, o6_on_thresh, o6_off_thresh,
+      ret.emplace_back(o1_on_thresh, o1_off_thresh, o6_on_thresh, o6_off_thresh,
                        o7_on_thresh, o7_off_thresh, ewma_alpha, scale_,
                        examples_sets_);
       return true;
@@ -272,14 +272,14 @@ public:
   {
     while (true)
     {
-      double o5_on_thresh = randomO5On();
-      double o5_off_thresh = randomO5Off();
+      double o1_on_thresh = randomO1On();
+      double o1_off_thresh = randomO1Off();
       double o6_on_thresh = randomO6On();
       double o6_off_thresh = randomO6Off();
       double o7_on_thresh = randomO7On();
       double o7_off_thresh = randomO7Off();
       double ewma_alpha = randomAlpha();
-      if (emplaceIfValid(ret, o5_on_thresh, o5_off_thresh, o6_on_thresh,
+      if (emplaceIfValid(ret, o1_on_thresh, o1_off_thresh, o6_on_thresh,
                          o6_off_thresh, o7_on_thresh, o7_off_thresh, ewma_alpha))
       {
         break;
@@ -292,20 +292,20 @@ public:
   std::vector<TrainParamsCocoon> startingSet()
   {
     std::vector<TrainParamsCocoon> ret;
-    HIDEOUS_FOR(o5_on_thresh, kMinO5On, kMaxO5On)
-    HIDEOUS_FOR(o5_off_thresh, kMinO5Off, kMaxO5Off)
+    HIDEOUS_FOR(o1_on_thresh, kMinO1On, kMaxO1On)
+    HIDEOUS_FOR(o1_off_thresh, kMinO1Off, kMaxO1Off)
     HIDEOUS_FOR(o6_on_thresh, kMinO6On, kMaxO6On)
     HIDEOUS_FOR(o6_off_thresh, kMinO6Off, kMaxO6Off)
     HIDEOUS_FOR(o7_on_thresh, kMinO7On, kMaxO7On)
     HIDEOUS_FOR(o7_off_thresh, kMinO7Off, kMaxO7Off)
     HIDEOUS_FOR(ewma_alpha, kMinAlpha, kMaxAlpha)
     {
-      emplaceIfValid(ret, o5_on_thresh, o5_off_thresh, o6_on_thresh,
+      emplaceIfValid(ret, o1_on_thresh, o1_off_thresh, o6_on_thresh,
                      o6_off_thresh, o7_on_thresh, o7_off_thresh, ewma_alpha);
     }
 
-    ret.emplace_back(0.5*(kMaxO5On-kMinO5On),
-                     0.5*(kMaxO5Off-kMinO5Off),
+    ret.emplace_back(0.5*(kMaxO1On-kMinO1On),
+                     0.5*(kMaxO1Off-kMinO1Off),
                      0.5*(kMaxO6On-kMinO6On),
                      0.5*(kMaxO6Off-kMinO6Off),
                      0.5*(kMaxO7On-kMinO7On),
@@ -323,67 +323,67 @@ public:
   {
     std::vector<TrainParamsCocoon> ret;
 
-    double left_o5_on_thresh = x.o5_on_thresh - (kMaxO5On-kMinO5On)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO5On, left_o5_on_thresh, kMaxO5On);
-    emplaceIfValid(ret, left_o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    double left_o1_on_thresh = x.o1_on_thresh - (kMaxO1On-kMinO1On)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinO1On, left_o1_on_thresh, kMaxO1On);
+    emplaceIfValid(ret, left_o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
-    double rite_o5_on_thresh = x.o5_on_thresh + (kMaxO5On-kMinO5On)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO5On, rite_o5_on_thresh, kMaxO5On);
-    emplaceIfValid(ret, rite_o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    double rite_o1_on_thresh = x.o1_on_thresh + (kMaxO1On-kMinO1On)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinO1On, rite_o1_on_thresh, kMaxO1On);
+    emplaceIfValid(ret, rite_o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
 
-    double left_o5_off_thresh = x.o5_off_thresh - (kMaxO5Off-kMinO5Off)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO5Off, left_o5_off_thresh, kMaxO5Off);
-    emplaceIfValid(ret, x.o5_on_thresh, left_o5_off_thresh, x.o6_on_thresh,
+    double left_o1_off_thresh = x.o1_off_thresh - (kMaxO1Off-kMinO1Off)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinO1Off, left_o1_off_thresh, kMaxO1Off);
+    emplaceIfValid(ret, x.o1_on_thresh, left_o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
-    double rite_o5_off_thresh = x.o5_off_thresh + (kMaxO5Off-kMinO5Off)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO5Off, rite_o5_off_thresh, kMaxO5Off);
-    emplaceIfValid(ret, x.o5_on_thresh, rite_o5_off_thresh, x.o6_on_thresh,
+    double rite_o1_off_thresh = x.o1_off_thresh + (kMaxO1Off-kMinO1Off)/pattern_divisor_;
+    KEEP_IN_BOUNDS(kMinO1Off, rite_o1_off_thresh, kMaxO1Off);
+    emplaceIfValid(ret, x.o1_on_thresh, rite_o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
 
     double left_o6_on_thresh = x.o6_on_thresh - (kMaxO6On-kMinO6On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6On, left_o6_on_thresh, kMaxO6On);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, left_o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, left_o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
     double rite_o6_on_thresh = x.o6_on_thresh + (kMaxO6On-kMinO6On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6On, rite_o6_on_thresh, kMaxO6On);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, rite_o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, rite_o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
 
     double left_o6_off_thresh = x.o6_off_thresh - (kMaxO6Off-kMinO6Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6Off, left_o6_off_thresh, kMaxO6Off);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    left_o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
     double rite_o6_off_thresh = x.o6_off_thresh + (kMaxO6Off-kMinO6Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6Off, rite_o6_off_thresh, kMaxO6Off);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    rite_o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
 
     double left_o7_on_thresh = x.o7_on_thresh - (kMaxO7On-kMinO7On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7On, left_o7_on_thresh, kMaxO7On);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, left_o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
     double rite_o7_on_thresh = x.o7_on_thresh + (kMaxO7On-kMinO7On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7On, rite_o7_on_thresh, kMaxO7On);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, rite_o7_on_thresh, x.o7_off_thresh, x.ewma_alpha);
 
     double left_o7_off_thresh = x.o7_off_thresh - (kMaxO7Off-kMinO7Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7Off, left_o7_off_thresh, kMaxO7Off);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, left_o7_off_thresh, x.ewma_alpha);
     double rite_o7_off_thresh = x.o7_off_thresh + (kMaxO7Off-kMinO7Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7Off, rite_o7_off_thresh, kMaxO7Off);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, rite_o7_off_thresh, x.ewma_alpha);
 
     double left_ewma_alpha = x.ewma_alpha - (kMaxAlpha-kMinAlpha)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinAlpha, left_ewma_alpha, kMaxAlpha);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, left_ewma_alpha);
     double rite_ewma_alpha = x.ewma_alpha + (kMaxAlpha-kMinAlpha)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinAlpha, rite_ewma_alpha, kMaxAlpha);
-    emplaceIfValid(ret, x.o5_on_thresh, x.o5_off_thresh, x.o6_on_thresh,
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o6_on_thresh,
                    x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, rite_ewma_alpha);
 
     // and some random points within the pattern grid, the idea being that if
@@ -391,20 +391,20 @@ public:
     // search would miss it.
     for (int i=0; i<10; i++)
     {
-      double o5on = randomBetween(left_o5_on_thresh, rite_o5_on_thresh);
-      double o5off = randomBetween(left_o5_off_thresh, rite_o5_off_thresh);
+      double o1on = randomBetween(left_o1_on_thresh, rite_o1_on_thresh);
+      double o1off = randomBetween(left_o1_off_thresh, rite_o1_off_thresh);
       double o6on = randomBetween(left_o6_on_thresh, rite_o6_on_thresh);
       double o6off = randomBetween(left_o6_off_thresh, rite_o6_off_thresh);
       double o7on = randomBetween(left_o7_on_thresh, rite_o7_on_thresh);
       double o7off = randomBetween(left_o7_off_thresh, rite_o7_off_thresh);
       double alpha = randomBetween(left_ewma_alpha, rite_ewma_alpha);
-      emplaceIfValid(ret, o5on, o5off, o6on, o6off, o7on, o7off, alpha);
+      emplaceIfValid(ret, o1on, o1off, o6on, o6off, o7on, o7off, alpha);
     }
 
     return ret;
   }
 
-  TrainParams tuneOff5(TrainParams start, double min_off, double max_off)
+  TrainParams tuneOff1(TrainParams start, double min_off, double max_off)
   {
     double lo_off = min_off;
     double hi_off = max_off;
@@ -415,7 +415,7 @@ public:
       if (++iterations > 40)
         break;
       double cur_off = (lo_off + hi_off) / 2.0;
-      cur.o5_off_thresh = cur_off;
+      cur.o1_off_thresh = cur_off;
       cur.computeScore(examples_sets_);
       if (start < cur)
       {
@@ -426,15 +426,15 @@ public:
         hi_off = cur_off;
     }
     // pull back from our tuned result by half to be on the safe side
-    cur.o5_off_thresh = hi_off + (start.o5_off_thresh - hi_off) / 2.0;
+    cur.o1_off_thresh = hi_off + (start.o1_off_thresh - hi_off) / 2.0;
 
     cur.computeScore(examples_sets_);
     if (start < cur)
     {
-      PRINTF("o5_off tuning unsuccessful; leaving it alone\n");
+      PRINTF("o1_off tuning unsuccessful; leaving it alone\n");
       return start;
     }
-    PRINTF("tuned o5_off from %g down to %g\n", start.o5_off_thresh, cur.o5_off_thresh);
+    PRINTF("tuned o1_off from %g down to %g\n", start.o1_off_thresh, cur.o1_off_thresh);
     return cur;
   }
 
@@ -584,19 +584,19 @@ double pickBlowScalingFactor(std::vector<std::pair<AudioRecording, int>>
     for (int x = 0; x < kNumFourierBins; x++)
       lease.out[x][0]=lease.out[x][0]*lease.out[x][0] + lease.out[x][1]*lease.out[x][1];
 
-    double sixteen = 0; for (int j=0;j<16;j++) sixteen+=lease.out[16+j][0];
-    o[5].push_back(sixteen);
+    o[1].push_back(lease.out[1][0]);
     double t2 = 0; for (int j=0;j<32;j++) t2+=lease.out[32+j][0];
     o[6].push_back(t2);
     double s4 = 0; for (int j=0;j<64;j++) s4+=lease.out[64+j][0];
     o[7].push_back(s4);
   }
-  std::sort(o[5].begin(), o[5].end());
+  std::sort(o[1].begin(), o[1].end());
   std::sort(o[6].begin(), o[6].end());
   std::sort(o[7].begin(), o[7].end());
 
   std::vector<double> medians;
-  for (int i = 5; i < 8; i++)
+
+  for (int i = 1; i < 8; i += (i==1?5:1))
   {
     double max_gap = 0;
     int ind_before_gap = 0;
@@ -613,17 +613,17 @@ double pickBlowScalingFactor(std::vector<std::pair<AudioRecording, int>>
 
   const std::array<double, 22> kScales = {0.001, 0.002, 0.005, 0.01, 0.02, 0.05,
     0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000};
-  const std::array<double, 3> kCanonicalBlowO567 = {883,412,174};
+  const std::array<double, 3> kCanonicalBlowO167 = {4602,673,264};
   double best_scale = 1;
   double best_squerr = 999999999999;
   for (double scale : kScales)
   {
     double squerr = 0;
-    assert(medians.size() == kCanonicalBlowO567.size());
+    assert(medians.size() == kCanonicalBlowO167.size());
     for (int i = 0; i < medians.size(); i++)
     {
-      squerr += (medians[i] * scale - kCanonicalBlowO567[i]) *
-                (medians[i] * scale - kCanonicalBlowO567[i]);
+      squerr += (medians[i] * scale - kCanonicalBlowO167[i]) *
+                (medians[i] * scale - kCanonicalBlowO167[i]);
     }
     if (squerr < best_squerr)
     {
@@ -648,7 +648,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   TrainParamsFactory factory(audio_examples, noise_fnames, scale);
   TrainParams best = patternSearch(factory);
 
-  best = factory.tuneOff5(best, kMinO5Off, best.o5_off_thresh);
+  best = factory.tuneOff1(best, kMinO1Off, best.o1_off_thresh);
   best = factory.tuneOff6(best, kMinO6Off, best.o6_off_thresh);
   best = factory.tuneOff7(best, kMinO7Off, best.o7_off_thresh);
   best = factory.tuneAlpha(best, best.ewma_alpha, kMaxAlpha);
@@ -657,8 +657,8 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.scale = scale;
   ret.action_on = Action::NoAction;
   ret.action_off = Action::NoAction;
-  ret.o5_on_thresh = best.o5_on_thresh;
-  ret.o5_off_thresh = best.o5_off_thresh;
+  ret.o1_on_thresh = best.o1_on_thresh;
+  ret.o1_off_thresh = best.o1_off_thresh;
   ret.o6_on_thresh = best.o6_on_thresh;
   ret.o6_off_thresh = best.o6_off_thresh;
   ret.o7_on_thresh = best.o7_on_thresh;

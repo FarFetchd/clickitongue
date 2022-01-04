@@ -4,12 +4,12 @@
 #include <cmath>
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
-                           double o5_on_thresh, double o5_off_thresh,
+                           double o1_on_thresh, double o1_off_thresh,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
                            double ewma_alpha, std::vector<int>* cur_frame_dest)
   : Detector(Action::RecordCurFrame, Action::NoAction, action_queue, cur_frame_dest),
-    o5_on_thresh_(o5_on_thresh), o5_off_thresh_(o5_off_thresh),
+    o1_on_thresh_(o1_on_thresh), o1_off_thresh_(o1_off_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
@@ -19,12 +19,12 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            Action action_on, Action action_off,
-                           double o5_on_thresh, double o5_off_thresh,
+                           double o1_on_thresh, double o1_off_thresh,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
                            double ewma_alpha)
   : Detector(action_on, action_off, action_queue),
-    o5_on_thresh_(o5_on_thresh), o5_off_thresh_(o5_off_thresh),
+    o1_on_thresh_(o1_on_thresh), o1_off_thresh_(o1_off_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
@@ -46,10 +46,8 @@ void BlowDetector::updateState(const fftw_complex* freq_power)
     cur_1minus_alpha = one_minus_ewma_alpha_;
   }
 
-  double cur_o5 = 0;
-  for (int i=16; i<32; i++)
-    cur_o5 += freq_power[i][0];
-  o5_ewma_ = o5_ewma_ * cur_1minus_alpha + cur_o5 * cur_alpha;
+  double cur_o1 = freq_power[1][0];
+  o1_ewma_ = o1_ewma_ * cur_1minus_alpha + cur_o1 * cur_alpha;
 
   double cur_o6 = 0;
   for (int i=32; i<64; i++)
@@ -64,14 +62,14 @@ void BlowDetector::updateState(const fftw_complex* freq_power)
 
 bool BlowDetector::shouldTransitionOn()
 {
-  return o5_ewma_ > o5_on_thresh_ &&
+  return o1_ewma_ > o1_on_thresh_ &&
          o6_ewma_ > o6_on_thresh_ &&
          o7_ewma_ > o7_on_thresh_;
 }
 
 bool BlowDetector::shouldTransitionOff() const
 {
-  return o5_ewma_ < o5_off_thresh_ &&
+  return o1_ewma_ < o1_off_thresh_ &&
          o6_ewma_ < o6_off_thresh_ &&
          o7_ewma_ < o7_off_thresh_;
 }

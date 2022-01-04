@@ -102,8 +102,20 @@ void EasyFourier::printOctavePowers(const float* samples)
   double sixteen = 0; for (int i=0;i<16;i++) sixteen+=lease.out[16+i][0];
   double t2 = 0; for (int i=0;i<32;i++) t2+=lease.out[32+i][0];
   double s4 = 0; for (int i=0;i<64;i++) s4+=lease.out[64+i][0];
-  if ((one > 100 && two > 50 && four > 20) || eight > 1000)
-    printf("%g, %g, %g, %g, %g, %g, %g\n", one,two,four,eight,sixteen,t2,s4);
+
+
+//   // works with x1carbon builtin mic
+//   if (one < 10 && sixteen > 0.5 && t2 > 5 && s4 > 15)
+//     printf("CAT %f\t%f\t%f\t%f\t%f\t%f\t%f\n", one,two,four,eight,sixteen,t2,s4);
+//
+//   // for upclose
+//    if (s4 > 5 && one < 100)
+//      printf("sip %f\t%f\t%f\t%f\t%f\t%f\t%f\n", one,two,four,eight,sixteen,t2,s4);
+
+
+//  if ((one > 100 && two > 50 && four > 20) || eight > 1000)
+//   if (t2 > 0.5 && s4 > 0.1)
+     printf("%g, %g, %g, %g, %g, %g, %g\n", one,two,four,eight,sixteen,t2,s4);
 }
 
 double powerIfInBounds(fftw_complex* bins, int i)
@@ -225,7 +237,7 @@ void EasyFourier::printEqualizer(const float* samples)
   {
     int y = kMaxHeight - height;
     for (int x = 0; x < kFourierBlocksize / 2; x++)
-      if (lease.out[x+1][0] > 4*height)
+      if (lease.out[x+1][0] > 2*height)
         bars[columns * y + x] = '0';
       else
         bars[columns * y + x] = ' ';

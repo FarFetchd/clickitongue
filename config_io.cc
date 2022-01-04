@@ -41,8 +41,8 @@ std::string Config::toString() const
   {
     sts << "blow_action_on: " << actionString(blow.action_on) << "\n"
         << "blow_action_off: " << actionString(blow.action_off) << "\n"
-        << "blow_o5_on_thresh: " << blow.o5_on_thresh << "\n"
-        << "blow_o5_off_thresh: " << blow.o5_off_thresh << "\n"
+        << "blow_o1_on_thresh: " << blow.o1_on_thresh << "\n"
+        << "blow_o1_off_thresh: " << blow.o1_off_thresh << "\n"
         << "blow_o6_on_thresh: " << blow.o6_on_thresh << "\n"
         << "blow_o6_off_thresh: " << blow.o6_off_thresh << "\n"
         << "blow_o7_on_thresh: " << blow.o7_on_thresh << "\n"
@@ -69,8 +69,8 @@ BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
 {
   action_on = parseAction(cfg.getString("blow_action_on").value_or("x"));
   action_off = parseAction(cfg.getString("blow_action_off").value_or("x"));
-  o5_on_thresh = cfg.getDouble("blow_o5_on_thresh").value_or(-1);
-  o5_off_thresh = cfg.getDouble("blow_o5_off_thresh").value_or(-1);
+  o1_on_thresh = cfg.getDouble("blow_o1_on_thresh").value_or(-1);
+  o1_off_thresh = cfg.getDouble("blow_o1_off_thresh").value_or(-1);
   o6_on_thresh = cfg.getDouble("blow_o6_on_thresh").value_or(-1);
   o6_off_thresh = cfg.getDouble("blow_o6_off_thresh").value_or(-1);
   o7_on_thresh = cfg.getDouble("blow_o7_on_thresh").value_or(-1);
@@ -79,7 +79,7 @@ BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
   scale = cfg.getDouble("blow_scale").value_or(-1);
 
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
-             o5_on_thresh >= 0 && o5_off_thresh >= 0 && o6_on_thresh >= 0 &&
+             o1_on_thresh >= 0 && o1_off_thresh >= 0 && o6_on_thresh >= 0 &&
              o6_off_thresh >= 0 && o7_on_thresh >= 0 && o7_off_thresh >= 0 &&
              ewma_alpha >= 0 && scale >= 0);
 }

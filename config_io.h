@@ -17,8 +17,8 @@ struct BlowConfig
   bool enabled;
   Action action_on;
   Action action_off;
-  double o5_on_thresh;
-  double o5_off_thresh;
+  double o1_on_thresh;
+  double o1_off_thresh;
   double o6_on_thresh;
   double o6_off_thresh;
   double o7_on_thresh;

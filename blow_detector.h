@@ -9,14 +9,14 @@ public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
   BlowDetector(BlockingQueue<Action>* action_queue,
-               double o5_on_thresh, double o5_off_thresh, double o6_on_thresh,
+               double o1_on_thresh, double o1_off_thresh, double o6_on_thresh,
                double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
                double ewma_alpha, std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   BlowDetector(BlockingQueue<Action>* action_queue,
                Action action_on, Action action_off,
-               double o5_on_thresh, double o5_off_thresh, double o6_on_thresh,
+               double o1_on_thresh, double o1_off_thresh, double o6_on_thresh,
                double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
                double ewma_alpha);
 
@@ -34,10 +34,10 @@ protected:
 
 private:
 
-  // o5,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
-  // ...o5 is bins 16+17+...+31, o6 is 32+...+63, o7 is 64+...+127.
-  const double o5_on_thresh_;
-  const double o5_off_thresh_;
+  // o1,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
+  // ...o1 is bins 16+17+...+31, o6 is 32+...+63, o7 is 64+...+127.
+  const double o1_on_thresh_;
+  const double o1_off_thresh_;
   const double o6_on_thresh_;
   const double o6_off_thresh_;
   const double o7_on_thresh_;
@@ -52,7 +52,7 @@ private:
   const double activated_ewma_alpha_;
   const double one_minus_activated_ewma_alpha_;
 
-  double o5_ewma_ = 0;
+  double o1_ewma_ = 0;
   double o6_ewma_ = 0;
   double o7_ewma_ = 0;
 };
