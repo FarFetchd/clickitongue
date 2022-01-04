@@ -1,37 +1,17 @@
-## Welcome to GitHub Pages
+## Clickitongue
 
-You can use the [editor on GitHub](https://github.com/FarFetchd/clickitongue/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+Clickitongue is a tool to help repetitive-strain injured wrists, by removing the need to physically click mouse buttons. It learns to recognize the sound of blowing on and/or humming into a mic, and issues left and right clicks in response. Clickitongue can tolerate noisy environments - people talking, air conditioners running nearby - without issuing spurious clicks.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Clickitongue runs on Linux (both X and Wayland), Windows, and OSX.
 
-### Markdown
+## Installation
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+On Windows, [download the latest Windows release](https://github.com/FarFetchd/clickitongue/releases/latest), unzip it, and run the .exe.
 
-```markdown
-Syntax highlighted code block
+On Linux or OSX, `git clone https://github.com/FarFetchd/clickitongue`, and follow [the installation instructions for Linux](https://github.com/FarFetchd/clickitongue#installing-on-linux) or [for OSX](https://github.com/FarFetchd/clickitongue#installing-on-osx).
 
-# Header 1
-## Header 2
-### Header 3
+## Usage
 
-- Bulleted
-- List
+On the first run, Clickitongue will have you select your audio input device, and then guide you through its training process. The training is quick; it should take about two minutes total. If the training does not leave Clickitongue confident in its ability to detect your sounds, it will give you a chance to redo part or all of the training. Once it is confident, it will proceed to normal operation. Clickitongue saves the results of the training, so all subsequent runs of Clickitongue will immediately let you start clicking, with no further configuration.
 
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/FarFetchd/clickitongue/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+TODO talk about mic types
