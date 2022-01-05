@@ -6,6 +6,7 @@
 #include "audio_input.h"
 #include "audio_recording.h"
 #include "blow_detector.h"
+#include "cat_detector.h"
 #include "cmdline_options.h"
 #include "constants.h"
 #include "easy_fourier.h"
@@ -171,13 +172,24 @@ void describeLoadedParams(Config config, bool first_time)
            (config.blow.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
+  if (config.cat.enabled)
+  {
+    msg += std::string("'tchk' like calling a cat to ") +
+           (config.blow.action_on == Action::RightDown ? "right" : "left") +
+           " click.\n";
+  }
   if (config.hum.enabled)
   {
     msg += std::string("Hum to ") +
            (config.hum.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
-  // TODO whistle
+  if (config.sip.enabled)
+  {
+    msg += std::string("'Hissing sip' (like reacting to being burned) to ") +
+           (config.hum.action_on == Action::RightDown ? "right" : "left") +
+           " click.\n";
+  }
   if (first_time)
     promptInfo(msg.c_str());
   else
@@ -197,6 +209,16 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
         config.blow.o6_off_thresh, config.blow.o7_on_thresh, config.blow.o7_off_thresh,
         config.blow.ewma_alpha);
   }
+
+  std::unique_ptr<Detector> cat_detector;
+  if (config.cat.enabled)
+  {
+    cat_detector = std::make_unique<CatDetector>(
+        action_queue, config.cat.action_on, config.cat.action_off,
+        config.cat.o1_limit, config.cat.o6_on_thresh, config.cat.o6_off_thresh,
+        config.cat.o7_on_thresh, config.cat.o7_off_thresh, config.cat.ewma_alpha);
+  }
+
   std::unique_ptr<Detector> hum_detector;
   if (config.hum.enabled)
   {
@@ -209,11 +231,24 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
       blow_detector->addInhibitionTarget(hum_detector.get());
   }
 
+  std::unique_ptr<Detector> sip_detector;
+  if (config.sip.enabled)
+  {
+    sip_detector = std::make_unique<HissingSipDetector>(
+        action_queue, config.sip.action_on, config.sip.action_off,
+        config.sip.o7_on_thresh, config.sip.o7_off_thresh, config.sip.o1_limit,
+        config.sip.ewma_alpha, /*require_warmup=*/config.blow.enabled);
+  }
+
   std::vector<std::unique_ptr<Detector>> detectors;
-  if (config.blow.enabled)
+  if (blow_detector)
     detectors.push_back(std::move(blow_detector));
-  if (config.hum.enabled)
+  if (cat_detector)
+    detectors.push_back(std::move(cat_detector));
+  if (hum_detector)
     detectors.push_back(std::move(hum_detector));
+  if (sip_detector)
+    detectors.push_back(std::move(sip_detector));
   return detectors;
 }
 
@@ -222,33 +257,30 @@ double loadScaleFromConfig(Config config)
   double scale = 1;
   if (config.blow.enabled)
     scale = config.blow.scale;
-  else if (config.hum.enabled)
+  if (config.cat.enabled)
+    scale = config.cat.scale;
+  if (config.hum.enabled)
     scale = config.hum.scale;
-//   else if (config.whistle.enabled) TODO whistle
-//     scale = config.whistle.scale;
+  if (config.sip.enabled)
+    scale = config.sip.scale;
 
-  if (config.blow.enabled && config.hum.enabled &&
-      config.hum.scale != config.blow.scale)
+  if ((config.blow.enabled && scale != config.blow.scale) ||
+      (config.cat.enabled && scale != config.cat.scale) ||
+      (config.hum.enabled && scale != config.hum.scale) ||
+      (config.sip.enabled && scale != config.sip.scale))
   {
-    crash("Error! Blow and hum both enabled with different scaling factors.");
+    crash("All detectors enabled in a config must have the same scaling factor.");
   }
-//   if (config.whistle.enabled && config.hum.enabled && TODO whistle
-//       config.hum.scale != config.whistle.scale)
-//   {
-//     crash("Error! Whistle and hum both enabled with different scaling factors.");
-//   }
-//   if (config.blow.enabled && config.whistle.enabled &&
-//       config.whistle.scale != config.blow.scale)
-//   {
-//     crash("Error! Blow and whistle both enabled with different scaling factors.");
-//   }
   return scale;
 }
 
 void normalOperation(Config config, bool first_time)
 {
-  if (!config.blow.enabled && !config.hum.enabled) // TODO whistle
-    crash("Neither hum nor blow is enabled. Exiting.");
+  if (!config.blow.enabled && !config.cat.enabled &&
+      !config.hum.enabled && !config.sip.enabled)
+  {
+    crash("Need at least one of blow, cat, hum, sip enabled.");
+  }
 
   BlockingQueue<Action> action_queue;
   ActionDispatcher action_dispatcher(&action_queue);
