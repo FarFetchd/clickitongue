@@ -1,8 +1,5 @@
 #include "blow_detector.h"
 
-#include <cassert>
-#include <cmath>
-
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double o1_on_thresh, double o1_off_thresh,
                            double o6_on_thresh, double o6_off_thresh,

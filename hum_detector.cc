@@ -1,8 +1,5 @@
 #include "hum_detector.h"
 
-#include <cassert>
-#include <cmath>
-
 HumDetector::HumDetector(BlockingQueue<Action>* action_queue,
                          double o1_on_thresh, double o1_off_thresh,
                          double o2_on_thresh, double o3_limit, double o6_limit,
