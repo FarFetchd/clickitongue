@@ -175,7 +175,7 @@ void describeLoadedParams(Config config, bool first_time)
   if (config.cat.enabled)
   {
     msg += std::string("'tchk' like calling a cat to ") +
-           (config.blow.action_on == Action::RightDown ? "right" : "left") +
+           (config.cat.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
   if (config.hum.enabled)
@@ -186,8 +186,8 @@ void describeLoadedParams(Config config, bool first_time)
   }
   if (config.sip.enabled)
   {
-    msg += std::string("'Hissing sip' (like reacting to being burned) to ") +
-           (config.hum.action_on == Action::RightDown ? "right" : "left") +
+    msg += std::string("'Hissing inhale' (like reacting to being burned) to ") +
+           (config.sip.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
   if (first_time)
@@ -226,7 +226,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
         action_queue, config.hum.action_on, config.hum.action_off,
         config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o2_on_thresh,
         config.hum.o3_limit, config.hum.o6_limit, config.hum.ewma_alpha,
-        /*require_warmup=*/config.blow.enabled);
+        /*require_warmup=*/(config.hum.action_on == Action::RightDown));
     if (blow_detector)
       blow_detector->addInhibitionTarget(hum_detector.get());
   }
@@ -237,7 +237,8 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
     sip_detector = std::make_unique<HissingSipDetector>(
         action_queue, config.sip.action_on, config.sip.action_off,
         config.sip.o7_on_thresh, config.sip.o7_off_thresh, config.sip.o1_limit,
-        config.sip.ewma_alpha, /*require_warmup=*/config.blow.enabled);
+        config.sip.ewma_alpha,
+        /*require_warmup=*/(config.sip.action_on == Action::RightDown));
   }
 
   std::vector<std::unique_ptr<Detector>> detectors;

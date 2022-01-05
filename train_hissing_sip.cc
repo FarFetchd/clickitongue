@@ -368,7 +368,8 @@ private:
 
 AudioRecording recordExampleSip(int desired_events, bool prolonged)
 {
-  return recordExampleCommon(desired_events, "hissing sips", "hissing-sip", prolonged);
+  return recordExampleCommon(desired_events, "hissing inhales", "hissing-inhale",
+                             prolonged);
 }
 
 SipConfig trainSip(std::vector<std::pair<AudioRecording, int>> const& audio_examples,

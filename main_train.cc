@@ -75,7 +75,7 @@ void collectAnyMissingExamples(
   if (cat_examples && cat_examples->empty())
   {
     promptInfo(
-"We will now train Clickitongue on your cat 'tchk'-ing - the sound you make when\n"
+"We will now train Clickitongue on your 'tchk'-ing - the sound you make when\n"
 "you want to get a cat's attention.\n\n"
 "The training will record several 4-second snippets, during each of which you\n"
 "will be asked to do a specific number of 'tchk's.\n\n"
