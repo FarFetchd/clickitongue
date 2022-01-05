@@ -1,8 +1,6 @@
 
 wishlist
 * cumulative training examples, across multiple sessions
-* a second silent (e.g. people sitting 5 feet away shouldn't hear anything)
-  control scheme, in addition to blowing.
 * have some buttons/input during running that allows users to easily apply what's described in the "Manual Tuning" section of the readme.
   the idea is it would look like "make left clicking easier" "make left clicking harder" etc.
 * easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.

@@ -1,5 +1,7 @@
 #include "main_train.h"
 
+#include <cassert>
+
 #include "audio_input.h"
 #include "audio_recording.h"
 #include "config_io.h"
@@ -10,67 +12,50 @@
 #include "train_hissing_sip.h"
 #include "train_hum.h"
 
-// returns try_blows
-bool trainIntro(std::string* intro_message)
+using TaggedExamples = std::vector<std::pair<AudioRecording, int>>;
+
+bool introAndAskIfMicNearMouth()
 {
   chooseInputDevice();
 
   bool try_blows = promptYesNo(
-"It looks like this is your first time running Clickitongue.\n"
-"We'll now train Clickitongue on the acoustics and typical background noise\n"
-"of your particular enivornment.\n\n"
-"First: can you keep your mic positioned ~1cm from your mouth for long-term usage? ");
+"It looks like this is your first time running Clickitongue.\n\n"
+"Clickitongue needs to learn your environment's acoustics and background noise.\n\n"
+"First: can you keep your mic positioned 1-2cm from your mouth for long-term usage? ");
 
   if (try_blows)
   {
-    *intro_message +=
-"Great! You'll be able to do both left- and right-clicks, using blowing and\n"
-"humming. Ensure your mic is in position ~1cm from your mouth - your index\n"
-"finger should fit perfectly between mouth and mic. If your mic has a foamy/fuzzy\n"
-"windscreen, remove it for best results.\n\n";
+    promptInfo(
+"Great! That enables more comfortable input methods. You'll now train\n"
+"Clickitongue to recognize each of the following sounds:\n\n"
+" * Gently blowing directly on the mic\n\n"
+" * 'tchk' sucking/clicking noises, like calling a cat\n\n"
+" * Humming\n\n"
+" * A hissing inhalation, like reacting to touching something hot\n\n"
+"Ensure your mic is in position 1-2cm from your mouth. If your mic has a foamy or\n"
+"fuzzy windscreen, remove it for best results.\n\n");
   }
   else
   {
-    *intro_message +=
-"Ok, we will fall back to left-clicks only, controlled by humming.\n\n";
+    promptInfo(
+"That's ok, Clickitongue should still work. You'll now train Clickitongue to\n"
+"recognize humming, and 'tchk' sucking/clicking noises (like calling a cat).\n\n");
   }
-  return try_blows;
-}
-
-void trainingBody(bool try_blows, std::string* intro_message,
-                  std::vector<std::pair<AudioRecording, int>>* blow_examples,
-                  std::vector<std::pair<AudioRecording, int>>* hum_examples);
-
-void firstTimeTrain()
-{
-  std::string intro_message;
-  bool try_blows = trainIntro(&intro_message);
-  std::vector<std::pair<AudioRecording, int>> blow_examples;
-  std::vector<std::pair<AudioRecording, int>> hum_examples;
-  trainingBody(try_blows, &intro_message, &blow_examples, &hum_examples);
-}
-
-void displayAndReset(std::string* msg)
-{
-  promptInfo(msg->c_str());
-  *msg = "";
-
 #ifndef CLICKITONGUE_WINDOWS
   PRINTF("Press any key to continue to the training prompt.\n\n");
   make_getchar_like_getch(); getchar(); resetTermios();
 #endif
+  return try_blows;
 }
 
-bool afterTraining(Config* config);
-void normalOperation(Config config, bool first_time);
-
-void trainingBody(bool try_blows, std::string* intro_message,
-                  std::vector<std::pair<AudioRecording, int>>* blow_examples,
-                  std::vector<std::pair<AudioRecording, int>>* hum_examples)
+// pass null to skip trying to train a type
+void collectAnyMissingExamples(
+    TaggedExamples* blow_examples, TaggedExamples* cat_examples,
+    TaggedExamples* hum_examples, TaggedExamples* sip_examples)
 {
-  if (try_blows && blow_examples->empty())
+  if (blow_examples && blow_examples->empty())
   {
-    *intro_message +=
+    promptInfo(
 "We will first train Clickitongue on your blowing. These should be extremely\n"
 "gentle puffs of air, blown directly onto the mic. Don't try too hard to make\n"
 "these training examples strong and clear, or else Clickitongue will expect\n"
@@ -78,102 +63,191 @@ void trainingBody(bool try_blows, std::string* intro_message,
 "exhaling through an open mouth, but weaker than just about any other blow.\n"
 "Think of trying to propel an eyelash over a hand's width.\n\n"
 "The training will record several 4-second snippets, during each of which you\n"
-"will be asked to do a specific number of blows.\n\n";
-    displayAndReset(intro_message);
+"will be asked to do a specific number of blows.\n\n");
+#ifndef CLICKITONGUE_WINDOWS
+    PRINTF("Press any key to continue to the training prompt.\n\n");
+    make_getchar_like_getch(); getchar(); resetTermios();
+#endif
     for (int i = 0; i < 6; i++)
       blow_examples->emplace_back(recordExampleBlow(i), i);
     blow_examples->emplace_back(recordExampleBlow(1, /*prolonged=*/true), 1);
   }
-  if (hum_examples->empty())
+  if (cat_examples && cat_examples->empty())
   {
-    *intro_message +=
+    promptInfo(
+"We will now train Clickitongue on your cat 'tchk'-ing - the sound you make when\n"
+"you want to get a cat's attention.\n\n"
+"The training will record several 4-second snippets, during each of which you\n"
+"will be asked to do a specific number of 'tchk's.\n\n"
+"When the training asks you to do multiple, don't do them too quickly:\n"
+"no faster than four per second.\n\n");
+#ifndef CLICKITONGUE_WINDOWS
+    PRINTF("Press any key to continue to the training prompt.\n\n");
+    make_getchar_like_getch(); getchar(); resetTermios();
+#endif
+    for (int i = 0; i < 6; i++)
+      cat_examples->emplace_back(recordExampleCat(i), i);
+  }
+  if (hum_examples && hum_examples->empty())
+  {
+    promptInfo(
 "We will now train Clickitongue on your humming. These hums should be simple,\n"
 "relatively quiet closed-mouth hums, like saying 'hm' in reaction to something\n"
 "just a tiny bit interesting.\n\n"
 "The training will record several 4-second snippets, during each of which you\n"
-"will be asked to do a specific number of hums.\n\n";
-    displayAndReset(intro_message);
+"will be asked to do a specific number of hums.\n\n");
+#ifndef CLICKITONGUE_WINDOWS
+    PRINTF("Press any key to continue to the training prompt.\n\n");
+    make_getchar_like_getch(); getchar(); resetTermios();
+#endif
     for (int i = 0; i < 6; i++)
       hum_examples->emplace_back(recordExampleHum(i), i);
     hum_examples->emplace_back(recordExampleHum(1, /*prolonged=*/true), 1);
   }
+  if (sip_examples && sip_examples->empty())
+  {
+    promptInfo(
+"We will now train Clickitongue on hissing inhales. The goal is to make a 'ssss'\n"
+"sound by inhaling through your mouth with your teeth closed. No special\n"
+"technique is needed; your lips and tongue can be neutral. Just keep the teeth\n"
+"together.\n\n"
+"The training will record several 4-second snippets, during each of which you\n"
+"will be asked to do a specific number of hissing inhales.\n\n");
+#ifndef CLICKITONGUE_WINDOWS
+    PRINTF("Press any key to continue to the training prompt.\n\n");
+    make_getchar_like_getch(); getchar(); resetTermios();
+#endif
+    for (int i = 0; i < 6; i++)
+      sip_examples->emplace_back(recordExampleSip(i), i);
+    sip_examples->emplace_back(recordExampleSip(1, /*prolonged=*/true), 1);
+  }
+}
+
+TaggedExamples combinePositiveAndNegative(TaggedExamples* positive,
+                                          std::vector<TaggedExamples*> negatives)
+{
+  if (!positive)
+    return {};
+  assert(!positive->empty());
+  TaggedExamples ret;
+  for (auto const& ex_pair : *positive)
+    ret.emplace_back(ex_pair.first, ex_pair.second);
+  for (TaggedExamples* negative_set : negatives)
+    if (negative_set)
+      for (auto const& ex_pair : *negative_set)
+        ret.emplace_back(ex_pair.first, 0);
+  return ret;
+}
+
+bool afterTraining(Config* config, int success_count);
+void normalOperation(Config config, bool first_time);
+
+// pass null to skip trying to train a type
+void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
+                  TaggedExamples* hum_examples, TaggedExamples* sip_examples)
+{
+  collectAnyMissingExamples(blow_examples, cat_examples,
+                            hum_examples, sip_examples);
 
   // all examples of one are negative examples for the other
-  std::vector<std::pair<AudioRecording, int>> hum_examples_plus_neg;
-  std::vector<std::pair<AudioRecording, int>> blow_examples_plus_neg;
-  for (auto const& ex_pair : *blow_examples)
-    blow_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
-  for (auto const& ex_pair : *hum_examples)
-    hum_examples_plus_neg.emplace_back(ex_pair.first, ex_pair.second);
-  for (auto const& ex_pair : *blow_examples)
-    hum_examples_plus_neg.emplace_back(ex_pair.first, 0);
-  for (auto const& ex_pair : *hum_examples)
-    blow_examples_plus_neg.emplace_back(ex_pair.first, 0);
+  TaggedExamples blow_examples_plus_neg = combinePositiveAndNegative(
+      blow_examples, {cat_examples, hum_examples, sip_examples});
+  TaggedExamples cat_examples_plus_neg = combinePositiveAndNegative(
+      cat_examples, {blow_examples, hum_examples, sip_examples});
+  TaggedExamples hum_examples_plus_neg = combinePositiveAndNegative(
+      hum_examples, {blow_examples, cat_examples, sip_examples});
+  TaggedExamples sip_examples_plus_neg = combinePositiveAndNegative(
+      sip_examples, {blow_examples, cat_examples, hum_examples});
 
-  double scale = 1.0;
-  scale = pickHumScalingFactor(hum_examples_plus_neg);
+  assert(hum_examples && !hum_examples->empty());
+  double scale = pickHumScalingFactor(*hum_examples);
   PRINTF("using scale %g\n", scale);
 
   Config config;
-  if (try_blows)
+  if (!blow_examples_plus_neg.empty())
     config.blow = trainBlow(blow_examples_plus_neg, scale);
-  config.hum = trainHum(hum_examples_plus_neg, scale);
+  if (!cat_examples_plus_neg.empty())
+    config.cat = trainCat(cat_examples_plus_neg, scale);
+  if (!hum_examples_plus_neg.empty())
+    config.hum = trainHum(hum_examples_plus_neg, scale);
+  if (!sip_examples_plus_neg.empty())
+    config.sip = trainSip(sip_examples_plus_neg, scale);
 
-  if (!config.hum.enabled || (try_blows && !config.blow.enabled))
+  std::string failure_list;
+  if (blow_examples && !config.blow.enabled)
   {
-    std::string msg;
-    if (!config.hum.enabled)
+    failure_list += "blowing, ";
+    blow_examples->clear();
+  }
+  if (cat_examples && !config.cat.enabled)
+  {
+    failure_list += "cat 'tchk'-ing, ";
+    cat_examples->clear();
+  }
+  if (hum_examples && !config.hum.enabled)
+  {
+    failure_list += "humming, ";
+    hum_examples->clear();
+  }
+  if (sip_examples && !config.sip.enabled)
+  {
+    failure_list += "hiss-inhaling, ";
+    sip_examples->clear();
+  }
+  if (!failure_list.empty())
+    failure_list.erase(failure_list.end() - 2, failure_list.end());
+  int success_count = (config.blow.enabled? 1:0) + (config.cat.enabled? 1:0) +
+                      (config.hum.enabled? 1:0) + (config.sip.enabled? 1:0);
+  int sounds_attempted = (blow_examples? 1:0) + (cat_examples? 1:0) +
+                         (hum_examples? 1:0) + (sip_examples? 1:0);
+  if (success_count < sounds_attempted)
+  {
+    std::string msg =
+"Clickitongue was not able to learn to detect the following sound types:\n\n" + failure_list + ".\n\n";
+    if (success_count == 1)
     {
-      msg += "Clickitongue was not able to learn to detect your humming.\n\n";
-      hum_examples->clear();
+      msg += "If you leave it as-is, you will only be able to left-click.\n\n";
     }
-    if (try_blows && !config.blow.enabled)
+    msg += "Would you like to retry the problematic types?";
+    if (success_count >= 2)
     {
-      msg += "Clickitongue was not able to learn to detect your blowing.\n\n";
-      blow_examples->clear();
+      msg += "\n\n("+std::to_string(success_count)+
+" types were good, so you can left- and right- click even without retrying)";
     }
-    msg += "Would you like to redo the training?\n\n";
-    if (config.hum.enabled || config.blow.enabled)
-      msg += "(If you leave it as is, you will only be able to left click.)";
     if (promptYesNo(msg.c_str()))
     {
-      trainingBody(try_blows, intro_message, blow_examples, hum_examples);
+      trainingBody(blow_examples, cat_examples, hum_examples, sip_examples);
       return;
     }
   }
-  if (afterTraining(&config))
+
+  if (afterTraining(&config, success_count))
     normalOperation(config, /*first_time=*/true);
 }
 
-// returns true if we can proceed to normalOperation().
-bool afterTraining(Config* config)
+void firstTimeTrain()
 {
-  std::string success_msg;
-  // TODO whistle
-  if (config->blow.enabled && config->hum.enabled)
-  {
-    config->blow.action_on = Action::LeftDown;
-    config->blow.action_off = Action::LeftUp;
-    config->hum.action_on = Action::RightDown;
-    config->hum.action_off = Action::RightUp;
-    success_msg =
-"Clickitongue is now configured. Blow on the mic to left click, hum for right.\n\n";
-  }
-  else if (config->blow.enabled)
-  {
-    config->blow.action_on = Action::LeftDown;
-    config->blow.action_off = Action::LeftUp;
-    success_msg =
-"Clickitongue is now configured. Blow on the mic to left click.\n\n";
-  }
-  else if (config->hum.enabled)
-  {
-    config->hum.action_on = Action::LeftDown;
-    config->hum.action_off = Action::LeftUp;
-    success_msg =
-"Clickitongue is now configured. Hum to left click.\n\n";
-  }
+  TaggedExamples blow_examples;
+  TaggedExamples cat_examples;
+  TaggedExamples hum_examples;
+  TaggedExamples sip_examples;
+  if (introAndAskIfMicNearMouth())
+    trainingBody(&blow_examples, &cat_examples, &hum_examples, &sip_examples);
   else
+    trainingBody(nullptr, &cat_examples, &hum_examples, nullptr);
+}
+
+#define ASSIGN_LEFT_OR_RIGHT_CLICK(x) if (config->x.enabled) \
+{ \
+  config->x.action_on = left_done ? Action::RightDown : Action::LeftDown; \
+  config->x.action_off = left_done ? Action::RightUp : Action::LeftUp; \
+  left_done = true; \
+}
+
+// returns true if we can proceed to normalOperation().
+bool afterTraining(Config* config, int success_count)
+{
+  if (success_count == 0)
   {
     promptInfo(
 "Clickitongue was not able to find parameters that distinguish your humming\n"
@@ -181,17 +255,80 @@ bool afterTraining(Config* config)
 "background noise, move the mic closer to your mouth, and try again.");
     return false;
   }
-#ifdef CLICKITONGUE_WINDOWS
-  success_msg +=
-"If you ever want to redo this training, delete the file default.clickitongue "
-"that you should find right next to clickitongue.exe, and then run "
-"clickitongue.exe again.\n\nNow entering normal operation.";
-#else
-  success_msg +=
-"If you ever want to redo this training, run clickitongue with the flag --retrain."
-"\n\nNow entering normal operation.";
-#endif
-  promptInfo(success_msg.c_str());
+  else if (success_count <= 2)
+  {
+    bool left_done = false;
+    // (not just alphabetical, this is the preference i think makes sense)
+    ASSIGN_LEFT_OR_RIGHT_CLICK(blow);
+    ASSIGN_LEFT_OR_RIGHT_CLICK(cat);
+    ASSIGN_LEFT_OR_RIGHT_CLICK(hum);
+    ASSIGN_LEFT_OR_RIGHT_CLICK(sip);
+  }
+  else if (success_count == 4 || (success_count == 3 && config->blow.enabled))
+  {
+    config->blow.action_on = Action::LeftDown;
+    config->blow.action_off = Action::LeftUp;
+    while (true)
+    {
+      if (config->cat.enabled && promptYesNo("Use cat 'tchk's for right click?"))
+      {
+        config->cat.action_on = Action::RightDown;
+        config->cat.action_off = Action::RightUp;
+        break;
+      }
+      if (config->hum.enabled && promptYesNo("Use humming for right click?"))
+      {
+        config->hum.action_on = Action::RightDown;
+        config->hum.action_off = Action::RightUp;
+        break;
+      }
+      if (config->sip.enabled && promptYesNo("Use hissing inhales for right click?"))
+      {
+        config->sip.action_on = Action::RightDown;
+        config->sip.action_off = Action::RightUp;
+        break;
+      }
+    }
+  }
+  else if (success_count == 3 && !config->blow.enabled)
+  {
+    bool cat_left = promptYesNo(
+"Would you like to use cat 'tchk's for left click? It's more comfortable than\n"
+"humming, but you won't be able to long click (select, drag+drop).");
+
+    std::string right_prompt =
+"Would you like to use hissing inhales for right click? If not, we'll use\n";
+    right_prompt += (cat_left ? "humming" : "cat 'tchk's");
+    right_prompt += " for right click.";
+    bool sip_right = promptYesNo(right_prompt.c_str());
+
+    if (cat_left)
+    {
+      config->cat.action_on = Action::LeftDown;
+      config->cat.action_off = Action::LeftUp;
+      if (!sip_right)
+      {
+        config->hum.action_on = Action::RightDown;
+        config->hum.action_off = Action::RightUp;
+      }
+    }
+    else
+    {
+      config->hum.action_on = Action::LeftDown;
+      config->hum.action_off = Action::LeftUp;
+      if (!sip_right)
+      {
+        config->cat.action_on = Action::RightDown;
+        config->cat.action_off = Action::RightUp;
+      }
+    }
+    if (sip_right)
+    {
+      config->sip.action_on = Action::RightDown;
+      config->sip.action_off = Action::RightUp;
+    }
+  }
+  assert(success_count <= 4);
 
 #ifdef CLICKITONGUE_WINDOWS
   promptInfo(
