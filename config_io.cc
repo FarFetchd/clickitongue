@@ -50,6 +50,18 @@ std::string Config::toString() const
         << "blow_ewma_alpha: " << blow.ewma_alpha << "\n"
         << "blow_scale: " << blow.scale << "\n";
   }
+  if (cat.enabled)
+  {
+    sts << "cat_action_on: " << actionString(cat.action_on) << "\n"
+        << "cat_action_off: " << actionString(cat.action_off) << "\n"
+        << "cat_o1_limit: " << cat.o1_limit << "\n"
+        << "cat_o6_on_thresh: " << cat.o6_on_thresh << "\n"
+        << "cat_o6_off_thresh: " << cat.o6_off_thresh << "\n"
+        << "cat_o7_on_thresh: " << cat.o7_on_thresh << "\n"
+        << "cat_o7_off_thresh: " << cat.o7_off_thresh << "\n"
+        << "cat_ewma_alpha: " << cat.ewma_alpha << "\n"
+        << "cat_scale: " << cat.scale << "\n";
+  }
   if (hum.enabled)
   {
     sts << "hum_action_on: " << actionString(hum.action_on) << "\n"
@@ -91,6 +103,24 @@ BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
              o1_on_thresh >= 0 && o1_off_thresh >= 0 && o6_on_thresh >= 0 &&
              o6_off_thresh >= 0 && o7_on_thresh >= 0 && o7_off_thresh >= 0 &&
+             ewma_alpha >= 0 && scale >= 0);
+}
+
+CatConfig::CatConfig(farfetchd::ConfigReader const& cfg)
+{
+  action_on = parseAction(cfg.getString("cat_action_on").value_or("x"));
+  action_off = parseAction(cfg.getString("cat_action_off").value_or("x"));
+  o1_limit = cfg.getDouble("cat_o1_limit").value_or(-1);
+  o6_on_thresh = cfg.getDouble("cat_o6_on_thresh").value_or(-1);
+  o6_off_thresh = cfg.getDouble("cat_o6_off_thresh").value_or(-1);
+  o7_on_thresh = cfg.getDouble("cat_o7_on_thresh").value_or(-1);
+  o7_off_thresh = cfg.getDouble("cat_o7_off_thresh").value_or(-1);
+  ewma_alpha = cfg.getDouble("cat_ewma_alpha").value_or(-1);
+  scale = cfg.getDouble("cat_scale").value_or(-1);
+
+  enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
+             o1_limit >= 0 && o6_on_thresh >= 0 && o6_off_thresh >= 0 &&
+             o7_on_thresh >= 0 && o7_off_thresh >= 0 &&
              ewma_alpha >= 0 && scale >= 0);
 }
 

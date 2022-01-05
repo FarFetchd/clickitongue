@@ -6,6 +6,7 @@
 #include "constants.h"
 #include "interaction.h"
 #include "train_blow.h"
+#include "train_cat.h"
 #include "train_hissing_sip.h"
 #include "train_hum.h"
 

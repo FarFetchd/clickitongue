@@ -27,6 +27,23 @@ struct BlowConfig
   double scale;
 };
 
+struct CatConfig
+{
+  CatConfig() : enabled(false) {}
+  CatConfig(farfetchd::ConfigReader const& cfg);
+
+  bool enabled;
+  Action action_on;
+  Action action_off;
+  double o1_limit;
+  double o6_on_thresh;
+  double o6_off_thresh;
+  double o7_on_thresh;
+  double o7_off_thresh;
+  double ewma_alpha;
+  double scale;
+};
+
 struct HumConfig
 {
   HumConfig() : enabled(false) {}
@@ -62,10 +79,12 @@ struct SipConfig
 struct Config
 {
   Config() {}
-  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), hum(cfg), sip(cfg) {}
+  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), cat(cfg),
+                                               hum(cfg), sip(cfg) {}
   std::string toString() const;
 
   BlowConfig blow;
+  CatConfig cat;
   HumConfig hum;
   SipConfig sip;
 };
