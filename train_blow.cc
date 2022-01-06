@@ -14,7 +14,7 @@
 
 namespace {
 
-constexpr double ewma_alpha = 0.5;
+constexpr double kEwmaAlpha = 0.5;
 
 constexpr double kMinO1On = 50;
 constexpr double kMaxO1On = 1000;
@@ -72,7 +72,7 @@ public:
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<BlowDetector>(
         nullptr, o1_on_thresh, o6_on_thresh, o6_off_thresh,
-        o7_on_thresh, o7_off_thresh, ewma_alpha, /*require_warmup=*/true,
+        o7_on_thresh, o7_off_thresh, kEwmaAlpha, /*require_warmup=*/true,
         &event_frames));
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale);
@@ -654,7 +654,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.o6_off_thresh = best.o6_off_thresh;
   ret.o7_on_thresh = best.o7_on_thresh;
   ret.o7_off_thresh = best.o7_off_thresh;
-  ret.ewma_alpha = ewma_alpha;
+  ret.ewma_alpha = kEwmaAlpha;
 
   ret.enabled = (best.score[0] <= 1);
   return ret;

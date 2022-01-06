@@ -14,7 +14,7 @@
 
 namespace {
 
-constexpr double ewma_alpha = 0.3;
+constexpr double kEwmaAlpha = 0.3;
 
 constexpr double kMinO1On = 1000;
 constexpr double kMaxO1On = 10000;
@@ -72,7 +72,7 @@ public:
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<HumDetector>(
         nullptr, o1_on_thresh, o1_off_thresh, o2_on_thresh, o3_limit, o6_limit,
-        ewma_alpha, /*require_warmup=*/true, &event_frames));
+        kEwmaAlpha, /*require_warmup=*/true, &event_frames));
     // (why require_warmup true? its only drawback is a delay in the action
     //  being done, which doesn't matter in training. by setting true, might
     //  give borderline beginnings/ends of our blow counterexamples a chance
@@ -515,7 +515,7 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   ret.o2_on_thresh = best.o2_on_thresh;
   ret.o3_limit = best.o3_limit;
   ret.o6_limit = best.o6_limit;
-  ret.ewma_alpha = ewma_alpha;
+  ret.ewma_alpha = kEwmaAlpha;
 
   ret.enabled = (best.score[0] <= 1);
   return ret;
