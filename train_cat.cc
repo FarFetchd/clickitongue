@@ -14,6 +14,19 @@
 
 namespace {
 
+constexpr double kMinO1Lim = 5;
+constexpr double kMaxO1Lim = 500;
+constexpr double kMinO6On = 0.5;
+constexpr double kMaxO6On = 50;
+constexpr double kMinO6Off = 0.2;
+constexpr double kMaxO6Off = 20;
+constexpr double kMinO7On = 1;
+constexpr double kMaxO7On = 100;
+constexpr double kMinO7Off = 0.5;
+constexpr double kMaxO7Off = 50;
+constexpr double kMinAlpha = 0.3;
+constexpr double kMaxAlpha = 0.75;
+
 class TrainParams
 {
 public:
@@ -136,19 +149,6 @@ private:
   std::uniform_real_distribution<double> dist_;
 };
 double randomBetween(double a, double b) { return RandomStuff(a, b).random(); }
-
-const double kMinO1Lim = 5;
-const double kMaxO1Lim = 500;
-const double kMinO6On = 0.5;
-const double kMaxO6On = 50;
-const double kMinO6Off = 0.2;
-const double kMaxO6Off = 20;
-const double kMinO7On = 1;
-const double kMaxO7On = 100;
-const double kMinO7Off = 0.5;
-const double kMaxO7Off = 50;
-const double kMinAlpha = 0.3;
-const double kMaxAlpha = 0.75;
 
 double randomO1Lim()
 {

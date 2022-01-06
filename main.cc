@@ -205,9 +205,8 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
   {
     blow_detector = std::make_unique<BlowDetector>(
         action_queue, config.blow.action_on, config.blow.action_off,
-        config.blow.o1_on_thresh, config.blow.o1_off_thresh, config.blow.o6_on_thresh,
-        config.blow.o6_off_thresh, config.blow.o7_on_thresh, config.blow.o7_off_thresh,
-        config.blow.ewma_alpha);
+        config.blow.o1_on_thresh, config.blow.o6_on_thresh, config.blow.o6_off_thresh,
+        config.blow.o7_on_thresh, config.blow.o7_off_thresh, config.blow.ewma_alpha);
   }
 
   std::unique_ptr<Detector> cat_detector;

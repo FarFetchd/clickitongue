@@ -1,12 +1,12 @@
 #include "blow_detector.h"
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
-                           double o1_on_thresh, double o1_off_thresh,
+                           double o1_on_thresh,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
                            double ewma_alpha, std::vector<int>* cur_frame_dest)
   : Detector(Action::RecordCurFrame, Action::NoAction, action_queue, cur_frame_dest),
-    o1_on_thresh_(o1_on_thresh), o1_off_thresh_(o1_off_thresh),
+    o1_on_thresh_(o1_on_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
@@ -16,12 +16,12 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            Action action_on, Action action_off,
-                           double o1_on_thresh, double o1_off_thresh,
+                           double o1_on_thresh,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
                            double ewma_alpha)
   : Detector(action_on, action_off, action_queue),
-    o1_on_thresh_(o1_on_thresh), o1_off_thresh_(o1_off_thresh),
+    o1_on_thresh_(o1_on_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
@@ -66,8 +66,7 @@ bool BlowDetector::shouldTransitionOn()
 
 bool BlowDetector::shouldTransitionOff() const
 {
-  return o1_ewma_ < o1_off_thresh_ &&
-         o6_ewma_ < o6_off_thresh_ &&
+  return o6_ewma_ < o6_off_thresh_ &&
          o7_ewma_ < o7_off_thresh_;
 }
 
