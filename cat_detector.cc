@@ -55,3 +55,9 @@ bool CatDetector::shouldTransitionOff() const
 }
 
 int CatDetector::refracPeriodLengthBlocks() const { return 7; }
+
+void CatDetector::resetEWMAs()
+{
+  o6_ewma_ = 0;
+  o7_ewma_ = 0;
+}

@@ -71,3 +71,11 @@ bool BlowDetector::shouldTransitionOff() const
 }
 
 int BlowDetector::refracPeriodLengthBlocks() const { return 7; }
+
+void BlowDetector::resetEWMAs()
+{
+  o1_ewma_ = 0;
+  o6_ewma_ = 0;
+  o7_ewma_ = 0;
+  // TODO warmup_blocks_left_ = kBlowWarmupBlocks;
+}

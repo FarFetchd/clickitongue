@@ -41,6 +41,8 @@ protected:
   // an event before being willing to declare an event of this type.
   virtual int refracPeriodLengthBlocks() const = 0;
 
+  virtual void resetEWMAs() = 0;
+
   bool on_ = false;
 
 private:

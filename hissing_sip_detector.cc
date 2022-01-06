@@ -54,3 +54,10 @@ bool HissingSipDetector::shouldTransitionOff() const
 }
 
 int HissingSipDetector::refracPeriodLengthBlocks() const { return 16; }
+
+void HissingSipDetector::resetEWMAs()
+{
+  o1_ewma_ = 0;
+  o7_ewma_ = 0;
+  warmup_blocks_left_ = kHissingSipWarmupBlocks;
+}

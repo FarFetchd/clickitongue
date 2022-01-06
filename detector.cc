@@ -36,7 +36,10 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
   {
     beginRefractoryPeriod(refracPeriodLengthBlocks());
     for (Detector* target : inhibition_targets_)
+    {
       target->beginRefractoryPeriod(target->refracPeriodLengthBlocks());
+      target->resetEWMAs();
+    }
   }
 }
 

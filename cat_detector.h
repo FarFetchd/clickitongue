@@ -32,6 +32,8 @@ protected:
   bool shouldTransitionOff() const override;
   int refracPeriodLengthBlocks() const override;
 
+  void resetEWMAs() override;
+
 private:
 
   // o1,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...

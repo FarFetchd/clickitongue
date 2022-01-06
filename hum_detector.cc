@@ -61,3 +61,10 @@ bool HumDetector::shouldTransitionOff() const
 }
 
 int HumDetector::refracPeriodLengthBlocks() const { return 16; }
+
+void HumDetector::resetEWMAs()
+{
+  o1_ewma_ = 0;
+  o2_ewma_ = 0;
+  warmup_blocks_left_ = kHumWarmupBlocks;
+}
