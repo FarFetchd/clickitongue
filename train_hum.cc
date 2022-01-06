@@ -139,17 +139,17 @@ private:
 double randomBetween(double a, double b) { return RandomStuff(a, b).random(); }
 
 const double kMinO1On = 1000;
-const double kMaxO1On = 12000;
-const double kMinO1Off = 50;
-const double kMaxO1Off = 2000;
-const double kMinO2On = 250;
-const double kMaxO2On = 3000;
+const double kMaxO1On = 10000;
+const double kMinO1Off = 10;
+const double kMaxO1Off = 1000;
+const double kMinO2On = 200;
+const double kMaxO2On = 2000;
 const double kMinO3Limit = 20;
-const double kMaxO3Limit = 600;
+const double kMaxO3Limit = 1000;
 const double kMinO6Limit = 10;
-const double kMaxO6Limit = 400;
-const double kMinAlpha = 0.05;
-const double kMaxAlpha = 0.5;
+const double kMaxO6Limit = 500;
+const double kMinAlpha = 0.3;
+const double kMaxAlpha = 0.6;
 
 double randomO1On()
 {
@@ -200,8 +200,12 @@ public:
                                         o3_limit, o6_limit, ewma_alpha, scale)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
                                                   example_sets)) {}
-
-  TrainParams awaitHatch() { score_computer_->join(); return *pupa_; }
+  TrainParams awaitHatch()
+  {
+    PRINTF("."); fflush(stdout);
+    score_computer_->join();
+    return *pupa_;
+  }
 
 private:
   std::unique_ptr<TrainParams> pupa_;
@@ -350,7 +354,7 @@ public:
     // and some random points within the pattern grid, the idea being that if
     // there are two params that only improve when changed together, pattern
     // search would miss it.
-    for (int i=0; i<10; i++)
+    for (int i=0; i<15; i++)
     {
       double o1on = randomBetween(left_o1_on_thresh, rite_o1_on_thresh);
       double o1off = randomBetween(left_o1_off_thresh, rite_o1_off_thresh);

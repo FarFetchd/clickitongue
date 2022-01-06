@@ -20,7 +20,7 @@ void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
 // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
 TrainParams patternSearch(TrainParamsFactory& factory)
 {
-  PRINTF("beginning optimization computations...\n");
+  PRINTF("beginning optimization computations..."); fflush(stdout);
   std::vector<TrainParams> candidates;
   for (auto& cocoon : factory.startingSet())
     addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 8);
@@ -34,7 +34,7 @@ TrainParams patternSearch(TrainParamsFactory& factory)
 
     // patternAround() kicks off a bunch of parallel computation, and the
     // awaitHatch() calls gather it all up.
-    for (auto const& candidate : candidates)
+    for (auto const& candidate : old_candidates)
       for (auto& cocoon : factory.patternAround(candidate))
         addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 3);
 
@@ -48,7 +48,7 @@ TrainParams patternSearch(TrainParamsFactory& factory)
       }
     }
 
-    PRINTF("current best: ");
+    PRINTF("\ncurrent best: ");
     candidates.front().printParams();
     PRINTF("best scores: %s\n", candidates.front().toString().c_str());
 

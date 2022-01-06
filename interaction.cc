@@ -153,10 +153,13 @@ void PRINTF(const char* fmt...)
   static uint64_t last_printf_msse = 0;
   static std::string printf_text;
   uint64_t now = curTimeMSSE();
-  if (now - last_printf_msse > 5000 || ++lines_filled > 16)
+  if (to_print.find("\n") != std::string::npos)
   {
-    printf_text = "";
-    lines_filled = 0;
+    if (now - last_printf_msse > 5000 || ++lines_filled > 16)
+    {
+      printf_text = "";
+      lines_filled = 0;
+    }
   }
   printf_text += to_print;
   last_printf_msse = now;

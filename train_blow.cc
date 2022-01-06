@@ -153,8 +153,8 @@ const double kMinO7On = 20;
 const double kMaxO7On = 200;
 const double kMinO7Off = 5;
 const double kMaxO7Off = 50;
-const double kMinAlpha = 0.05;
-const double kMaxAlpha = 0.5;
+const double kMinAlpha = 0.3;
+const double kMaxAlpha = 0.6;
 
 double randomO1On()
 {
@@ -212,8 +212,12 @@ public:
                                         ewma_alpha, scale)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
                                                   example_sets)) {}
-
-  TrainParams awaitHatch() { score_computer_->join(); return *pupa_; }
+  TrainParams awaitHatch()
+  {
+    PRINTF("."); fflush(stdout);
+    score_computer_->join();
+    return *pupa_;
+  }
 
 private:
   std::unique_ptr<TrainParams> pupa_;

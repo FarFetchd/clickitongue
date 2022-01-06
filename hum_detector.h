@@ -3,7 +3,7 @@
 
 #include "detector.h"
 
-constexpr int kHumWarmupBlocks = 5;
+constexpr int kHumWarmupBlocks = 4;
 
 class HumDetector : public Detector
 {
