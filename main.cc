@@ -200,15 +200,6 @@ void describeLoadedParams(Config config, bool first_time)
 std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
     Config config, BlockingQueue<Action>* action_queue)
 {
-  std::unique_ptr<Detector> blow_detector;
-  if (config.blow.enabled)
-  {
-    blow_detector = std::make_unique<BlowDetector>(
-        action_queue, config.blow.action_on, config.blow.action_off,
-        config.blow.o1_on_thresh, config.blow.o6_on_thresh, config.blow.o6_off_thresh,
-        config.blow.o7_on_thresh, config.blow.o7_off_thresh, config.blow.ewma_alpha);
-  }
-
   std::unique_ptr<Detector> cat_detector;
   if (config.cat.enabled)
   {
@@ -216,6 +207,17 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
         action_queue, config.cat.action_on, config.cat.action_off,
         config.cat.o1_limit, config.cat.o6_on_thresh, config.cat.o6_off_thresh,
         config.cat.o7_on_thresh, config.cat.o7_off_thresh, config.cat.ewma_alpha);
+  }
+
+  std::unique_ptr<Detector> blow_detector;
+  if (config.blow.enabled)
+  {
+    blow_detector = std::make_unique<BlowDetector>(
+        action_queue, config.blow.action_on, config.blow.action_off,
+        config.blow.o1_on_thresh, config.blow.o6_on_thresh, config.blow.o6_off_thresh,
+        config.blow.o7_on_thresh, config.blow.o7_off_thresh, config.blow.ewma_alpha);
+    if (cat_detector)
+      cat_detector->addInhibitionTarget(blow_detector.get());
   }
 
   std::unique_ptr<Detector> hum_detector;
