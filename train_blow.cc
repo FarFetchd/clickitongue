@@ -72,7 +72,8 @@ public:
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<BlowDetector>(
         nullptr, o1_on_thresh, o6_on_thresh, o6_off_thresh,
-        o7_on_thresh, o7_off_thresh, ewma_alpha, &event_frames));
+        o7_on_thresh, o7_off_thresh, ewma_alpha, /*require_warmup=*/true,
+        &event_frames));
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale);
 

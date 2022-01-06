@@ -208,7 +208,8 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
     blow_detector = std::make_unique<BlowDetector>(
         action_queue, config.blow.action_on, config.blow.action_off,
         config.blow.o1_on_thresh, config.blow.o6_on_thresh, config.blow.o6_off_thresh,
-        config.blow.o7_on_thresh, config.blow.o7_off_thresh, config.blow.ewma_alpha);
+        config.blow.o7_on_thresh, config.blow.o7_off_thresh, config.blow.ewma_alpha,
+        /*require_warmup=*/config.cat.enabled);
     if (cat_detector)
       cat_detector->addInhibitionTarget(blow_detector.get());
   }
@@ -220,7 +221,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
         action_queue, config.hum.action_on, config.hum.action_off,
         config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o2_on_thresh,
         config.hum.o3_limit, config.hum.o6_limit, config.hum.ewma_alpha,
-        /*require_warmup=*/(config.hum.action_on == Action::RightDown));
+        /*require_warmup=*/config.blow.enabled);
     if (blow_detector)
       blow_detector->addInhibitionTarget(hum_detector.get());
   }
