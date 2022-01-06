@@ -107,3 +107,12 @@ is likely to cause problems.
 (You can ignore this if you're not interested in working on Clickitongue's
 source code!) Install MSYS2, and from an MSYS2 terminal run
 `./build.sh windows.ccbuildfile` in the main clickitongue dir.
+
+# Language Support
+
+Currently only English is available. If you are fluent in another language and
+would like to make Clickitongue more widely available, translations will be
+very gratefully accepted! (The code currently just uses a bunch of hard-coded
+English strings, so don't dive right in. Instead, open an issue to let me know
+you'd like to contribute a translation, and I'll add some sort of framework to
+support multiple languages.)
