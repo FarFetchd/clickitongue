@@ -11,7 +11,6 @@
 #include "constants.h"
 #include "easy_fourier.h"
 #include "fft_result_distributor.h"
-#include "hissing_sip_detector.h"
 #include "hum_detector.h"
 #include "interaction.h"
 #include "main_train.h"
@@ -184,12 +183,6 @@ void describeLoadedParams(Config config, bool first_time)
            (config.hum.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
-  if (config.sip.enabled)
-  {
-    msg += std::string("'Hissing inhale' (like reacting to being burned) to ") +
-           (config.sip.action_on == Action::RightDown ? "right" : "left") +
-           " click.\n";
-  }
   if (first_time)
     promptInfo(msg.c_str());
   else
@@ -232,16 +225,6 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
       blow_detector->addInhibitionTarget(hum_detector.get());
   }
 
-  std::unique_ptr<Detector> sip_detector;
-  if (config.sip.enabled)
-  {
-    sip_detector = std::make_unique<HissingSipDetector>(
-        action_queue, config.sip.action_on, config.sip.action_off,
-        config.sip.o7_on_thresh, config.sip.o7_off_thresh, config.sip.o1_limit,
-        config.sip.ewma_alpha,
-        /*require_warmup=*/(config.sip.action_on == Action::RightDown));
-  }
-
   std::vector<std::unique_ptr<Detector>> detectors;
   if (blow_detector)
     detectors.push_back(std::move(blow_detector));
@@ -249,8 +232,6 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
     detectors.push_back(std::move(cat_detector));
   if (hum_detector)
     detectors.push_back(std::move(hum_detector));
-  if (sip_detector)
-    detectors.push_back(std::move(sip_detector));
   return detectors;
 }
 
@@ -263,13 +244,10 @@ double loadScaleFromConfig(Config config)
     scale = config.cat.scale;
   if (config.hum.enabled)
     scale = config.hum.scale;
-  if (config.sip.enabled)
-    scale = config.sip.scale;
 
   if ((config.blow.enabled && scale != config.blow.scale) ||
       (config.cat.enabled && scale != config.cat.scale) ||
-      (config.hum.enabled && scale != config.hum.scale) ||
-      (config.sip.enabled && scale != config.sip.scale))
+      (config.hum.enabled && scale != config.hum.scale))
   {
     crash("All detectors enabled in a config must have the same scaling factor.");
   }
@@ -279,9 +257,9 @@ double loadScaleFromConfig(Config config)
 void normalOperation(Config config, bool first_time)
 {
   if (!config.blow.enabled && !config.cat.enabled &&
-      !config.hum.enabled && !config.sip.enabled)
+      !config.hum.enabled)
   {
-    crash("Need at least one of blow, cat, hum, sip enabled.");
+    crash("Need at least one of blow, cat, hum enabled.");
   }
 
   BlockingQueue<Action> action_queue;

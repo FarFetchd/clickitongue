@@ -9,7 +9,6 @@
 #include "interaction.h"
 #include "train_blow.h"
 #include "train_cat.h"
-#include "train_hissing_sip.h"
 #include "train_hum.h"
 
 using TaggedExamples = std::vector<std::pair<AudioRecording, int>>;
@@ -31,7 +30,6 @@ bool introAndAskIfMicNearMouth()
 " * Gently blowing directly on the mic\n\n"
 " * 'tchk' sucking/clicking noises, like calling a cat\n\n"
 " * Humming\n\n"
-" * A hissing inhalation, like reacting to touching something hot\n\n"
 "Ensure your mic is in position 1-2cm from your mouth. If your mic has a foamy or\n"
 "fuzzy windscreen, remove it for best results.\n\n");
   }
@@ -51,7 +49,7 @@ bool introAndAskIfMicNearMouth()
 // pass null to skip trying to train a type
 void collectAnyMissingExamples(
     TaggedExamples* blow_examples, TaggedExamples* cat_examples,
-    TaggedExamples* hum_examples, TaggedExamples* sip_examples)
+    TaggedExamples* hum_examples)
 {
   if (blow_examples && blow_examples->empty())
   {
@@ -104,23 +102,6 @@ void collectAnyMissingExamples(
       hum_examples->emplace_back(recordExampleHum(i), i);
     hum_examples->emplace_back(recordExampleHum(1, /*prolonged=*/true), 1);
   }
-  if (sip_examples && sip_examples->empty())
-  {
-    promptInfo(
-"We will now train Clickitongue on hissing inhales. The goal is to make a 'ssss'\n"
-"sound by inhaling through your mouth with your teeth closed. No special\n"
-"technique is needed; your lips and tongue can be neutral. Just keep the teeth\n"
-"together.\n\n"
-"The training will record several 4-second snippets, during each of which you\n"
-"will be asked to do a specific number of hissing inhales.\n\n");
-#ifndef CLICKITONGUE_WINDOWS
-    PRINTF("Press any key to continue to the training prompt.\n\n");
-    make_getchar_like_getch(); getchar(); resetTermios();
-#endif
-    for (int i = 0; i < 6; i++)
-      sip_examples->emplace_back(recordExampleSip(i), i);
-    sip_examples->emplace_back(recordExampleSip(1, /*prolonged=*/true), 1);
-  }
 }
 
 TaggedExamples combinePositiveAndNegative(TaggedExamples* positive,
@@ -144,20 +125,17 @@ void normalOperation(Config config, bool first_time);
 
 // pass null to skip trying to train a type
 void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
-                  TaggedExamples* hum_examples, TaggedExamples* sip_examples)
+                  TaggedExamples* hum_examples)
 {
-  collectAnyMissingExamples(blow_examples, cat_examples,
-                            hum_examples, sip_examples);
+  collectAnyMissingExamples(blow_examples, cat_examples, hum_examples);
 
   // all examples of one are negative examples for the other
   TaggedExamples blow_examples_plus_neg = combinePositiveAndNegative(
-      blow_examples, {cat_examples, hum_examples, sip_examples});
+      blow_examples, {cat_examples, hum_examples});
   TaggedExamples cat_examples_plus_neg = combinePositiveAndNegative(
-      cat_examples, {blow_examples, hum_examples, sip_examples});
+      cat_examples, {blow_examples, hum_examples});
   TaggedExamples hum_examples_plus_neg = combinePositiveAndNegative(
-      hum_examples, {blow_examples, cat_examples, sip_examples});
-  TaggedExamples sip_examples_plus_neg = combinePositiveAndNegative(
-      sip_examples, {blow_examples, cat_examples, hum_examples});
+      hum_examples, {blow_examples, cat_examples});
 
   assert(hum_examples && !hum_examples->empty());
   double scale = pickHumScalingFactor(*hum_examples);
@@ -170,8 +148,6 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
     config.cat = trainCat(cat_examples_plus_neg, scale);
   if (!hum_examples_plus_neg.empty())
     config.hum = trainHum(hum_examples_plus_neg, scale);
-  if (!sip_examples_plus_neg.empty())
-    config.sip = trainSip(sip_examples_plus_neg, scale);
 
   std::string failure_list;
   if (blow_examples && !config.blow.enabled)
@@ -189,17 +165,12 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
     failure_list += "humming, ";
     hum_examples->clear();
   }
-  if (sip_examples && !config.sip.enabled)
-  {
-    failure_list += "hiss-inhaling, ";
-    sip_examples->clear();
-  }
   if (!failure_list.empty())
     failure_list.erase(failure_list.end() - 2, failure_list.end());
   int success_count = (config.blow.enabled? 1:0) + (config.cat.enabled? 1:0) +
-                      (config.hum.enabled? 1:0) + (config.sip.enabled? 1:0);
+                      (config.hum.enabled? 1:0);
   int sounds_attempted = (blow_examples? 1:0) + (cat_examples? 1:0) +
-                         (hum_examples? 1:0) + (sip_examples? 1:0);
+                         (hum_examples? 1:0);
   if (success_count < sounds_attempted)
   {
     std::string msg =
@@ -216,7 +187,7 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
     }
     if (promptYesNo(msg.c_str()))
     {
-      trainingBody(blow_examples, cat_examples, hum_examples, sip_examples);
+      trainingBody(blow_examples, cat_examples, hum_examples);
       return;
     }
   }
@@ -230,18 +201,18 @@ void firstTimeTrain()
   TaggedExamples blow_examples;
   TaggedExamples cat_examples;
   TaggedExamples hum_examples;
-  TaggedExamples sip_examples;
   if (introAndAskIfMicNearMouth())
-    trainingBody(&blow_examples, &cat_examples, &hum_examples, &sip_examples);
+    trainingBody(&blow_examples, &cat_examples, &hum_examples);
   else
-    trainingBody(nullptr, &cat_examples, &hum_examples, nullptr);
+    trainingBody(nullptr, &cat_examples, &hum_examples);
 }
 
-#define ASSIGN_LEFT_OR_RIGHT_CLICK(x) if (config->x.enabled) \
+#define ASSIGN_LEFT_OR_RIGHT_CLICK(x) if (config->x.enabled && remaining_to_assign > 0) \
 { \
   config->x.action_on = left_done ? Action::RightDown : Action::LeftDown; \
   config->x.action_off = left_done ? Action::RightUp : Action::LeftUp; \
   left_done = true; \
+  remaining_to_assign--; \
 }
 
 // returns true if we can proceed to normalOperation().
@@ -255,80 +226,13 @@ bool afterTraining(Config* config, int success_count)
 "background noise, move the mic closer to your mouth, and try again.");
     return false;
   }
-  else if (success_count <= 2)
-  {
-    bool left_done = false;
-    // (not just alphabetical, this is the preference i think makes sense)
-    ASSIGN_LEFT_OR_RIGHT_CLICK(blow);
-    ASSIGN_LEFT_OR_RIGHT_CLICK(cat);
-    ASSIGN_LEFT_OR_RIGHT_CLICK(hum);
-    ASSIGN_LEFT_OR_RIGHT_CLICK(sip);
-  }
-  else if (success_count == 4 || (success_count == 3 && config->blow.enabled))
-  {
-    config->blow.action_on = Action::LeftDown;
-    config->blow.action_off = Action::LeftUp;
-    while (true)
-    {
-      if (config->cat.enabled && promptYesNo("Use cat 'tchk's for right click?"))
-      {
-        config->cat.action_on = Action::RightDown;
-        config->cat.action_off = Action::RightUp;
-        break;
-      }
-      if (config->hum.enabled && promptYesNo("Use humming for right click?"))
-      {
-        config->hum.action_on = Action::RightDown;
-        config->hum.action_off = Action::RightUp;
-        break;
-      }
-      if (config->sip.enabled && promptYesNo("Use hissing inhales for right click?"))
-      {
-        config->sip.action_on = Action::RightDown;
-        config->sip.action_off = Action::RightUp;
-        break;
-      }
-    }
-  }
-  else if (success_count == 3 && !config->blow.enabled)
-  {
-    bool cat_left = promptYesNo(
-"Would you like to use cat 'tchk's for left click? It's more comfortable than\n"
-"humming, but you won't be able to long click (select, drag+drop).");
-
-    std::string right_prompt =
-"Would you like to use hissing inhales for right click? If not, we'll use\n";
-    right_prompt += (cat_left ? "humming" : "cat 'tchk's");
-    right_prompt += " for right click.";
-    bool sip_right = promptYesNo(right_prompt.c_str());
-
-    if (cat_left)
-    {
-      config->cat.action_on = Action::LeftDown;
-      config->cat.action_off = Action::LeftUp;
-      if (!sip_right)
-      {
-        config->hum.action_on = Action::RightDown;
-        config->hum.action_off = Action::RightUp;
-      }
-    }
-    else
-    {
-      config->hum.action_on = Action::LeftDown;
-      config->hum.action_off = Action::LeftUp;
-      if (!sip_right)
-      {
-        config->cat.action_on = Action::RightDown;
-        config->cat.action_off = Action::RightUp;
-      }
-    }
-    if (sip_right)
-    {
-      config->sip.action_on = Action::RightDown;
-      config->sip.action_off = Action::RightUp;
-    }
-  }
-  assert(success_count <= 4);
+  bool left_done = false;
+  int remaining_to_assign = 2;
+  // (not just alphabetical, this is the preference i think makes sense)
+  ASSIGN_LEFT_OR_RIGHT_CLICK(blow);
+  ASSIGN_LEFT_OR_RIGHT_CLICK(cat);
+  ASSIGN_LEFT_OR_RIGHT_CLICK(hum);
+  assert(success_count <= 3);
 
 #ifdef CLICKITONGUE_WINDOWS
   promptInfo(

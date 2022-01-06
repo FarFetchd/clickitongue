@@ -60,32 +60,15 @@ struct HumConfig
   double scale;
 };
 
-struct SipConfig
-{
-  SipConfig() : enabled(false) {}
-  SipConfig(farfetchd::ConfigReader const& cfg);
-
-  bool enabled;
-  Action action_on;
-  Action action_off;
-  double o7_on_thresh;
-  double o7_off_thresh;
-  double o1_limit;
-  double ewma_alpha;
-  double scale;
-};
-
 struct Config
 {
   Config() {}
-  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), cat(cfg),
-                                               hum(cfg), sip(cfg) {}
+  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), cat(cfg), hum(cfg) {}
   std::string toString() const;
 
   BlowConfig blow;
   CatConfig cat;
   HumConfig hum;
-  SipConfig sip;
 };
 
 // Returns nullopt if it fails to read file.
