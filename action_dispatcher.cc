@@ -5,6 +5,7 @@
 ActionDispatcher::ActionDispatcher(BlockingQueue<Action>* action_queue)
   : action_queue_(action_queue) {}
 
+extern bool g_show_debug_info;
 bool ActionDispatcher::dispatchNextAction()
 {
   std::optional<Action> action = action_queue_->deque();
@@ -13,27 +14,35 @@ bool ActionDispatcher::dispatchNextAction()
   switch (action.value())
   {
   case Action::LeftDown:
+    if (g_show_debug_info)
+      PRINTF("LeftDown\n");
     leftDown();
     break;
   case Action::LeftUp:
+    if (g_show_debug_info)
+      PRINTF("LeftUp\n");
     leftUp();
     break;
   case Action::RightDown:
+    if (g_show_debug_info)
+      PRINTF("RightDown\n");
     rightDown();
     break;
   case Action::RightUp:
+    if (g_show_debug_info)
+      PRINTF("RightUp\n");
     rightUp();
     break;
   case Action::ScrollUp:
-    scrollUp();
+    PRINTF("ScrollUp not implemented\n");//scrollUp();
     break;
   case Action::ScrollDown:
-    scrollDown();
+    PRINTF("ScrollDown not implemented\n");//scrollDown();
     break;
   case Action::NoAction:
     break;
   default:
-    PRINTF("action not implemented\n");
+    PRINTF("[unknown action] not implemented\n");
   }
   return true;
 }
@@ -128,14 +137,6 @@ void ActionDispatcher::rightUp()
 {
   uinputWrite(BTN_RIGHT, 0);
 }
-void ActionDispatcher::scrollUp()
-{
-  PRINTERR(stderr, "scrollUp not implemented. uinput REL_WHEEL?\n");
-}
-void ActionDispatcher::scrollDown()
-{
-  PRINTERR(stderr, "scrollDown not implemented. uinput REL_WHEEL?\n");
-}
 
 #endif // CLICKITONGUE_LINUX
 // ==============================End Linux====================================
@@ -173,14 +174,6 @@ void ActionDispatcher::rightDown()
 void ActionDispatcher::rightUp()
 {
   mouseButtonEvent(MOUSEEVENTF_RIGHTUP);
-}
-void ActionDispatcher::scrollUp()
-{
-  MessageBox(NULL, "scrollUp", "scrollUp", MB_OK);
-}
-void ActionDispatcher::scrollDown()
-{
-  MessageBox(NULL, "scrollDown", "scrollDown", MB_OK);
 }
 
 #endif // CLICKITONGUE_WINDOWS
@@ -280,12 +273,6 @@ void ActionDispatcher::rightUp()
   CGEventSetIntegerValueField(event, kCGMouseEventClickState, g_osx_rclicks);
   CGEventPost(kCGSessionEventTap, event);
   CFRelease(event);
-}
-void ActionDispatcher::scrollUp()
-{
-}
-void ActionDispatcher::scrollDown()
-{
 }
 
 #endif // CLICKITONGUE_OSX

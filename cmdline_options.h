@@ -8,6 +8,7 @@ struct ClickitongueCmdlineOpts
   std::optional<std::string> mode;
   std::optional<std::string> detector;
   std::optional<int> duration_seconds = 5;
+  std::optional<bool> debug = false;
 
   // record, play
   std::optional<std::string> filename;
@@ -16,6 +17,7 @@ struct ClickitongueCmdlineOpts
   std::optional<bool> forget_input_dev = false;
 };
 STRUCTOPT(ClickitongueCmdlineOpts,
-          mode, detector, duration_seconds, filename, retrain, forget_input_dev);
+          mode, detector, duration_seconds, debug, filename,
+          retrain, forget_input_dev);
 
 #endif // CLICKITONGUE_CMDLINE_OPTIONS_H_

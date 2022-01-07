@@ -37,6 +37,7 @@ public:
   void printEqualizer(const float* samples);
   void printTopTwoSpikes(const float* samples);
   void printOctavePowers(const float* samples);
+  void printOctavesAlreadyFreq(fftw_complex* powers) const;
   void printOvertones(const float* samples);
 
   // length of freq_buckets should be kFourierBlocksize / 2 + 1.

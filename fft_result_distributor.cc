@@ -12,6 +12,7 @@ FFTResultDistributor::FFTResultDistributor(
   scale_(scale)
 {}
 
+bool g_show_debug_info = false;
 void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames)
 {
   if (num_frames != kFourierBlocksize)
@@ -36,6 +37,8 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
   }
   for (auto& detector : detectors_)
     detector->processFourierOutputBlock(fft_lease_.out);
+  if (g_show_debug_info)
+    g_fourier->printOctavesAlreadyFreq(fft_lease_.out);
 }
 
 

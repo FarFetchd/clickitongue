@@ -24,8 +24,8 @@ private:
   void leftUp();
   void rightDown();
   void rightUp();
-  void scrollUp();
-  void scrollDown();
+//   void scrollUp();
+//   void scrollDown();
 
   BlockingQueue<Action>* const action_queue_;
 };

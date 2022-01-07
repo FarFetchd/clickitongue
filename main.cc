@@ -162,6 +162,7 @@ void validateCmdlineOpts(ClickitongueCmdlineOpts opts)
     crash("Must specify a --filename=");
 }
 
+extern bool g_show_debug_info;
 void describeLoadedParams(Config config, bool first_time)
 {
   std::string msg = "Clickitongue " CLICKITONGUE_VERSION " started!\n";
@@ -183,7 +184,7 @@ void describeLoadedParams(Config config, bool first_time)
            (config.hum.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
-  if (first_time)
+  if (first_time && !g_show_debug_info)
     promptInfo(msg.c_str());
   else
     PRINTF("%s", msg.c_str());
@@ -336,6 +337,7 @@ int main(int argc, char** argv)
   if (initPulseAudio() != paNoError) // get its annoying spam out of the way
     crash("Pa_Initialize() failed. Giving up.");
 
+  g_show_debug_info = opts.debug.value();
   g_forget_input_dev = opts.forget_input_dev.value();
   g_fourier = new EasyFourier();
 

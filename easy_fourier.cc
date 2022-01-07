@@ -80,6 +80,20 @@ int EasyFourier::binContainingFreq(double freq) const
   return lower_bound+1;
 }
 
+void EasyFourier::printOctavesAlreadyFreq(fftw_complex* powers) const
+{
+  double o1 = powers[1][0];
+  double o2 = powers[2][0]+powers[3][0];
+  double o3 = powers[4][0]+powers[5][0]+powers[6][0]+powers[7][0];
+  double o4 = 0; for (int i=0;i<8;i++) o4+=powers[8+i][0];
+  double o5 = 0; for (int i=0;i<16;i++) o5+=powers[16+i][0];
+  double o6 = 0; for (int i=0;i<32;i++) o6+=powers[32+i][0];
+  double o7 = 0; for (int i=0;i<64;i++) o7+=powers[64+i][0];
+
+  if (o1 > 80 || o2 > 40 || o3 > 20 || o4 > 10 || o5 > 5 || o6 > 2 || o7 > 1)
+    printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\n", o1,o2,o3,o4,o5,o6,o7);
+}
+
 void EasyFourier::printOctavePowers(const float* samples)
 {
   FourierLease lease = borrowWorker();
@@ -94,28 +108,7 @@ void EasyFourier::printOctavePowers(const float* samples)
 
   for (int x = 0; x < kNumFourierBins; x++)
     lease.out[x][0]=lease.out[x][0]*lease.out[x][0] + lease.out[x][1]*lease.out[x][1];
-
-  double one = lease.out[1][0];
-  double two = lease.out[2][0]+lease.out[3][0];
-  double four = lease.out[4][0]+lease.out[5][0]+lease.out[6][0]+lease.out[7][0];
-  double eight = 0; for (int i=0;i<8;i++) eight+=lease.out[8+i][0];
-  double sixteen = 0; for (int i=0;i<16;i++) sixteen+=lease.out[16+i][0];
-  double t2 = 0; for (int i=0;i<32;i++) t2+=lease.out[32+i][0];
-  double s4 = 0; for (int i=0;i<64;i++) s4+=lease.out[64+i][0];
-
-
-//   // works with x1carbon builtin mic
-//   if (one < 10 && sixteen > 0.5 && t2 > 5 && s4 > 15)
-//     printf("CAT %f\t%f\t%f\t%f\t%f\t%f\t%f\n", one,two,four,eight,sixteen,t2,s4);
-//
-//   // for upclose
-//    if (s4 > 5 && one < 100)
-//      printf("sip %f\t%f\t%f\t%f\t%f\t%f\t%f\n", one,two,four,eight,sixteen,t2,s4);
-
-
-//  if ((one > 100 && two > 50 && four > 20) || eight > 1000)
-//   if (t2 > 0.5 && s4 > 0.1)
-     printf("%g, %g, %g, %g, %g, %g, %g\n", one,two,four,eight,sixteen,t2,s4);
+  printOctavesAlreadyFreq(lease.out);
 }
 
 double powerIfInBounds(fftw_complex* bins, int i)
