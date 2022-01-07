@@ -14,8 +14,6 @@
 
 namespace {
 
-constexpr double kLookbackBlocks = 3;
-
 constexpr double kMinO1On = 50;
 constexpr double kMaxO1On = 10000;
 constexpr double kMinO6On = 50;
@@ -26,14 +24,16 @@ constexpr double kMinO7On = 20;
 constexpr double kMaxO7On = 200;
 constexpr double kMinO7Off = 5;
 constexpr double kMaxO7Off = 50;
+constexpr int kMinLookbackBlocks = 1;
+constexpr int kMaxLookbackBlocks = 10;
 
 class TrainParams
 {
 public:
   TrainParams(double o1on, double o6on, double o6off,
-              double o7on, double o7off, double scl)
+              double o7on, double o7off, int lb, double scl)
   : o1_on_thresh(o1on), o6_on_thresh(o6on), o6_off_thresh(o6off),
-    o7_on_thresh(o7on), o7_off_thresh(o7off), scale(scl) {}
+    o7_on_thresh(o7on), o7_off_thresh(o7off), lookback_blocks(lb), scale(scl) {}
 
   bool operator==(TrainParams const& other) const
   {
@@ -41,7 +41,8 @@ public:
            o6_on_thresh == other.o6_on_thresh &&
            o6_off_thresh == other.o6_off_thresh &&
            o7_on_thresh == other.o7_on_thresh &&
-           o7_off_thresh == other.o7_off_thresh;
+           o7_off_thresh == other.o7_off_thresh &&
+           lookback_blocks == other.lookback_blocks;
   }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
   {
@@ -72,7 +73,7 @@ public:
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<BlowDetector>(
         nullptr, o1_on_thresh, o6_on_thresh, o6_off_thresh,
-        o7_on_thresh, o7_off_thresh, kLookbackBlocks, /*require_delay=*/false,
+        o7_on_thresh, o7_off_thresh, lookback_blocks, /*require_delay=*/false,
         &event_frames));
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale,
@@ -115,8 +116,9 @@ public:
   void printParams()
   {
     PRINTF("blow_o1_on_thresh: %g blow_o6_on_thresh: %g blow_o6_off_thresh: %g "
-           "blow_o7_on_thresh: %g blow_o7_off_thresh: %g\n",
-           o1_on_thresh, o6_on_thresh, o6_off_thresh, o7_on_thresh, o7_off_thresh);
+           "blow_o7_on_thresh: %g blow_o7_off_thresh: %g lookback_blocks: %d\n",
+           o1_on_thresh, o6_on_thresh, o6_off_thresh,
+           o7_on_thresh, o7_off_thresh, lookback_blocks);
   }
 
   double o1_on_thresh;
@@ -124,6 +126,7 @@ public:
   double o6_off_thresh;
   double o7_on_thresh;
   double o7_off_thresh;
+  int lookback_blocks;
   double scale;
 
   std::vector<int> score;
@@ -173,6 +176,11 @@ double randomO7Off()
   static RandomStuff* r = new RandomStuff(kMinO7Off, kMaxO7Off);
   return r->random();
 }
+int randomLookbackBlocks()
+{
+  static RandomStuff* r = new RandomStuff(kMinLookbackBlocks, kMaxLookbackBlocks);
+  return (int)r->random(); // close enough lol
+}
 
 void runComputeScore(
     TrainParams* me,
@@ -186,10 +194,12 @@ class TrainParamsCocoon
 public:
   TrainParamsCocoon(
       double o1_on_thresh, double o6_on_thresh,
-      double o6_off_thresh, double o7_on_thresh, double o7_off_thresh, double scale,
+      double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
+      int lookback_blocks, double scale,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
   : pupa_(std::make_unique<TrainParams>(o1_on_thresh, o6_on_thresh, o6_off_thresh,
-                                        o7_on_thresh, o7_off_thresh, scale)),
+                                        o7_on_thresh, o7_off_thresh,
+                                        lookback_blocks, scale)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
                                                   example_sets)) {}
   TrainParams awaitHatch()
@@ -213,13 +223,13 @@ public:
   bool emplaceIfValid(
       std::vector<TrainParamsCocoon>& ret, double o1_on_thresh,
       double o6_on_thresh, double o6_off_thresh, double o7_on_thresh,
-      double o7_off_thresh)
+      double o7_off_thresh, int lookback_blocks)
   {
     if (o6_off_thresh < o6_on_thresh && o7_off_thresh < o7_on_thresh)
     {
       ret.emplace_back(o1_on_thresh, o6_on_thresh, o6_off_thresh,
-                       o7_on_thresh, o7_off_thresh, scale_,
-                       examples_sets_);
+                       o7_on_thresh, o7_off_thresh, lookback_blocks,
+                       scale_, examples_sets_);
       return true;
     }
     return false;
@@ -234,8 +244,9 @@ public:
       double o6_off_thresh = randomO6Off();
       double o7_on_thresh = randomO7On();
       double o7_off_thresh = randomO7Off();
+      int lookback_blocks = randomLookbackBlocks();
       if (emplaceIfValid(ret, o1_on_thresh, o6_on_thresh, o6_off_thresh,
-                         o7_on_thresh, o7_off_thresh))
+                         o7_on_thresh, o7_off_thresh, lookback_blocks))
       {
         break;
       }
@@ -252,9 +263,10 @@ public:
     HIDEOUS_FOR(o6_off_thresh, kMinO6Off, kMaxO6Off)
     HIDEOUS_FOR(o7_on_thresh, kMinO7On, kMaxO7On)
     HIDEOUS_FOR(o7_off_thresh, kMinO7Off, kMaxO7Off)
+    for (int lookback_blocks = 3; lookback_blocks <= 6; lookback_blocks += 3)
     {
-      emplaceIfValid(ret, o1_on_thresh, o6_on_thresh,
-                     o6_off_thresh, o7_on_thresh, o7_off_thresh);
+      emplaceIfValid(ret, o1_on_thresh, o6_on_thresh, o6_off_thresh,
+                     o7_on_thresh, o7_off_thresh, lookback_blocks);
     }
 
     ret.emplace_back(0.5*(kMaxO1On-kMinO1On),
@@ -262,8 +274,9 @@ public:
                      0.5*(kMaxO6Off-kMinO6Off),
                      0.5*(kMaxO7On-kMinO7On),
                      0.5*(kMaxO7Off-kMinO7Off),
+                     0.5*(kMaxLookbackBlocks-kMinLookbackBlocks),
                      scale_, examples_sets_);
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < 25; i++)
       emplaceRandomParams(ret);
     return ret;
   }
@@ -277,47 +290,56 @@ public:
     double left_o1_on_thresh = x.o1_on_thresh - (kMaxO1On-kMinO1On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO1On, left_o1_on_thresh, kMaxO1On);
     emplaceIfValid(ret, left_o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh);
+                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
     double rite_o1_on_thresh = x.o1_on_thresh + (kMaxO1On-kMinO1On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO1On, rite_o1_on_thresh, kMaxO1On);
     emplaceIfValid(ret, rite_o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh);
+                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
 
     double left_o6_on_thresh = x.o6_on_thresh - (kMaxO6On-kMinO6On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6On, left_o6_on_thresh, kMaxO6On);
     emplaceIfValid(ret, x.o1_on_thresh, left_o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh);
+                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
     double rite_o6_on_thresh = x.o6_on_thresh + (kMaxO6On-kMinO6On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6On, rite_o6_on_thresh, kMaxO6On);
     emplaceIfValid(ret, x.o1_on_thresh, rite_o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh);
+                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
 
     double left_o6_off_thresh = x.o6_off_thresh - (kMaxO6Off-kMinO6Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6Off, left_o6_off_thresh, kMaxO6Off);
     emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   left_o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh);
+                   left_o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
     double rite_o6_off_thresh = x.o6_off_thresh + (kMaxO6Off-kMinO6Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6Off, rite_o6_off_thresh, kMaxO6Off);
     emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   rite_o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh);
+                   rite_o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
 
     double left_o7_on_thresh = x.o7_on_thresh - (kMaxO7On-kMinO7On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7On, left_o7_on_thresh, kMaxO7On);
     emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, left_o7_on_thresh, x.o7_off_thresh);
+                   x.o6_off_thresh, left_o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
     double rite_o7_on_thresh = x.o7_on_thresh + (kMaxO7On-kMinO7On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7On, rite_o7_on_thresh, kMaxO7On);
     emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, rite_o7_on_thresh, x.o7_off_thresh);
+                   x.o6_off_thresh, rite_o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
 
     double left_o7_off_thresh = x.o7_off_thresh - (kMaxO7Off-kMinO7Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7Off, left_o7_off_thresh, kMaxO7Off);
     emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, left_o7_off_thresh);
+                   x.o6_off_thresh, x.o7_on_thresh, left_o7_off_thresh, x.lookback_blocks);
     double rite_o7_off_thresh = x.o7_off_thresh + (kMaxO7Off-kMinO7Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7Off, rite_o7_off_thresh, kMaxO7Off);
     emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, rite_o7_off_thresh);
+                   x.o6_off_thresh, x.o7_on_thresh, rite_o7_off_thresh, x.lookback_blocks);
+
+    int left_lookback_blocks = x.lookback_blocks - 1;
+    if (left_lookback_blocks < kMinLookbackBlocks) left_lookback_blocks = kMinLookbackBlocks;
+    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
+                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, left_lookback_blocks);
+    double rite_lookback_blocks = x.lookback_blocks + 1;
+    if (rite_lookback_blocks > kMaxLookbackBlocks) rite_lookback_blocks = kMaxLookbackBlocks;
+    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
+                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, rite_lookback_blocks);
 
     // and some random points within the pattern grid, the idea being that if
     // there are two params that only improve when changed together, pattern
@@ -329,7 +351,7 @@ public:
       double o6off = randomBetween(left_o6_off_thresh, rite_o6_off_thresh);
       double o7on = randomBetween(left_o7_on_thresh, rite_o7_on_thresh);
       double o7off = randomBetween(left_o7_off_thresh, rite_o7_off_thresh);
-      emplaceIfValid(ret, o1on, o6on, o6off, o7on, o7off);
+      emplaceIfValid(ret, o1on, o6on, o6off, o7on, o7off, x.lookback_blocks);
     }
     // and also just some random ones for extra exploration
     for (int i = 0; i < 5; i++)
@@ -508,6 +530,42 @@ public:
     return start < cur ? start : cur;
   }
 
+  TrainParams tuneLookback(TrainParams start)
+  {
+    int start_lb = start.lookback_blocks - 1;
+    int real_start_lb = start.lookback_blocks;
+    int cur_lb = start_lb;
+    int final_lb = 4;
+    TrainParams cur = start;
+    while (cur_lb >= kMinLookbackBlocks)
+    {
+      cur.lookback_blocks = cur_lb;
+      cur.computeScore(examples_sets_);
+      if (start < cur)
+      {
+        final_lb = cur_lb + 2;
+        if (final_lb > start_lb)
+          final_lb = start_lb;
+        break;
+      }
+      else if (cur < start)
+      {
+        start = cur;
+        start_lb = cur_lb;
+      }
+      if (cur_lb == kMinLookbackBlocks)
+      {
+        final_lb = cur_lb + 1 < start_lb ? cur_lb + 1 : start_lb;
+        break;
+      }
+      cur_lb--;
+    }
+    cur.lookback_blocks = final_lb;
+    cur.computeScore(examples_sets_);
+    PRINTF("tuned lookback_blocks from %d down to %d\n", real_start_lb, final_lb);
+    return cur;
+  }
+
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
 private:
@@ -626,6 +684,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   best = factory.tuneOn1(best, kMinO1On, best.o1_on_thresh);
   best = factory.tuneOn6(best, kMinO6On, best.o6_on_thresh);
   best = factory.tuneOn7(best, kMinO7On, best.o7_on_thresh);
+  best = factory.tuneLookback(best);
 
   BlowConfig ret;
   ret.scale = scale;
@@ -636,7 +695,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.o6_off_thresh = best.o6_off_thresh;
   ret.o7_on_thresh = best.o7_on_thresh;
   ret.o7_off_thresh = best.o7_off_thresh;
-  ret.lookback_blocks = kLookbackBlocks;
+  ret.lookback_blocks = best.lookback_blocks;
 
   ret.enabled = (best.score[0] <= 1);
   return ret;
