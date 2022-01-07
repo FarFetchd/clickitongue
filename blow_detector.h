@@ -3,7 +3,7 @@
 
 #include "detector.h"
 
-constexpr int kBlowWarmupBlocks = 3;
+constexpr int kBlowDelayBlocks = 3;
 
 class BlowDetector : public Detector
 {
@@ -13,7 +13,7 @@ public:
   BlowDetector(BlockingQueue<Action>* action_queue,
                double o1_on_thresh, double o6_on_thresh,
                double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
-               double ewma_alpha, bool require_warmup,
+               double ewma_alpha, bool require_delay,
                std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
@@ -21,7 +21,7 @@ public:
                Action action_on, Action action_off,
                double o1_on_thresh, double o6_on_thresh, double o6_off_thresh,
                double o7_on_thresh, double o7_off_thresh, double ewma_alpha,
-               bool require_warmup);
+               bool require_delay);
 
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
@@ -60,13 +60,13 @@ private:
   double o6_ewma_ = 0;
   double o7_ewma_ = 0;
 
-  // Require consistently exceeding the activation threshold for a little while
+  // After exceeding the activation threshold, wait for a little while
   // before actually transitioning to 'on'. This gives the cat detector a
   // chance to inhibit us in the case where the first instant of what will
   // become a cat temporarily looks like a blow.
-  int warmup_blocks_left_ = kBlowWarmupBlocks;
-  // Whether the warmup_blocks_left_ logic is actually used.
-  const bool require_warmup_ = false;
+  int delay_blocks_left_ = -1;
+  // Whether the delay_blocks_left_ logic is actually used.
+  const bool require_delay_ = false;
 };
 
 #endif // CLICKITONGUE_BLOW_DETECTOR_H_

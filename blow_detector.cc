@@ -4,7 +4,7 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double o1_on_thresh,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
-                           double ewma_alpha, bool require_warmup,
+                           double ewma_alpha, bool require_delay,
                            std::vector<int>* cur_frame_dest)
   : Detector(Action::RecordCurFrame, Action::NoAction, action_queue, cur_frame_dest),
     o1_on_thresh_(o1_on_thresh),
@@ -13,7 +13,7 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
     activated_ewma_alpha_(ewma_alpha_*0.75),
     one_minus_activated_ewma_alpha_(1.0-activated_ewma_alpha_),
-    require_warmup_(require_warmup)
+    require_delay_(require_delay)
 {}
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
@@ -21,7 +21,7 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double o1_on_thresh,
                            double o6_on_thresh, double o6_off_thresh,
                            double o7_on_thresh, double o7_off_thresh,
-                           double ewma_alpha, bool require_warmup)
+                           double ewma_alpha, bool require_delay)
   : Detector(action_on, action_off, action_queue),
     o1_on_thresh_(o1_on_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
@@ -29,7 +29,7 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
     ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
     activated_ewma_alpha_(ewma_alpha_*0.75),
     one_minus_activated_ewma_alpha_(1.0-activated_ewma_alpha_),
-    require_warmup_(require_warmup)
+    require_delay_(require_delay)
 {}
 
 void BlowDetector::updateState(const fftw_complex* freq_power)
@@ -62,15 +62,17 @@ void BlowDetector::updateState(const fftw_complex* freq_power)
 
 bool BlowDetector::shouldTransitionOn()
 {
-  if (!(o1_ewma_ > o1_on_thresh_ && o6_ewma_ > o6_on_thresh_ &&
-        o7_ewma_ > o7_on_thresh_))
+  if (delay_blocks_left_ < 0 && o1_ewma_ > o1_on_thresh_ &&
+      o6_ewma_ > o6_on_thresh_ && o7_ewma_ > o7_on_thresh_)
   {
-    warmup_blocks_left_ = kBlowWarmupBlocks;
-    return false;
+    delay_blocks_left_ = kBlowDelayBlocks;
   }
-  if (require_warmup_ && --warmup_blocks_left_ >= 0)
-    return false;
-  return true;
+  if (delay_blocks_left_ > 0 && (!require_delay_ || --delay_blocks_left_ == 0))
+  {
+    delay_blocks_left_ = -1;
+    return true;
+  }
+  return false;
 }
 
 bool BlowDetector::shouldTransitionOff() const
@@ -79,12 +81,12 @@ bool BlowDetector::shouldTransitionOff() const
          o7_ewma_ < o7_off_thresh_;
 }
 
-int BlowDetector::refracPeriodLengthBlocks() const { return 7; }
+int BlowDetector::refracPeriodLengthBlocks() const { return 10; }
 
 void BlowDetector::resetEWMAs()
 {
   o1_ewma_ = 0;
   o6_ewma_ = 0;
   o7_ewma_ = 0;
-  warmup_blocks_left_ = kBlowWarmupBlocks;
+  delay_blocks_left_ = -1;
 }

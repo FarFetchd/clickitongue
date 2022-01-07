@@ -90,7 +90,7 @@ void EasyFourier::printOctavesAlreadyFreq(fftw_complex* powers) const
   double o6 = 0; for (int i=0;i<32;i++) o6+=powers[32+i][0];
   double o7 = 0; for (int i=0;i<64;i++) o7+=powers[64+i][0];
 
-  if (o1 > 80 || o2 > 40 || o3 > 20 || o4 > 10 || o5 > 5 || o6 > 2 || o7 > 1)
+  if (o5 > 1000 || o6 > 200 || o7 > 100)
     printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\n", o1,o2,o3,o4,o5,o6,o7);
 }
 

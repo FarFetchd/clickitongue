@@ -3,7 +3,7 @@
 
 #include "detector.h"
 
-constexpr int kHumWarmupBlocks = 4;
+constexpr int kHumDelayBlocks = 4;
 
 class HumDetector : public Detector
 {
@@ -13,14 +13,14 @@ public:
   HumDetector(BlockingQueue<Action>* action_queue,
               double o1_on_thresh, double o1_off_thresh, double o2_on_thresh,
               double o3_limit, double o6_limit, double ewma_alpha,
-              bool require_warmup, std::vector<int>* cur_frame_dest);
+              bool require_delay, std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   HumDetector(BlockingQueue<Action>* action_queue,
               Action action_on, Action action_off,
               double o1_on_thresh, double o1_off_thresh, double o2_on_thresh,
               double o3_limit, double o6_limit, double ewma_alpha,
-              bool require_warmup);
+              bool require_delay);
 
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
@@ -56,13 +56,13 @@ private:
   double o3_ewma_ = 0;
   double o6_ewma_ = 0;
 
-  // Require consistently exceeding the activation threshold for a little while
-  // before actually transitioning to 'on'. This gives the blow detector a
+  // After exceeding the activation threshold, wait for a little while
+  // before actually transitioning to 'on'. This gives the cat/blow detector a
   // chance to inhibit us in the case where the first instant of what will
-  // become a blow temporarily looks like a hum.
-  int warmup_blocks_left_ = kHumWarmupBlocks;
-  // Whether the warmup_blocks_left_ logic is actually used.
-  const bool require_warmup_ = false;
+  // become a cat/blow temporarily looks like a hum.
+  int delay_blocks_left_ = -1;
+  // Whether the delay_blocks_left_ logic is actually used.
+  const bool require_delay_ = false;
 };
 
 #endif // CLICKITONGUE_HUM_DETECTOR_H_
