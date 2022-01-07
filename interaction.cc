@@ -5,9 +5,11 @@
 // =============================Linux and OSX===================================
 #ifndef CLICKITONGUE_WINDOWS
 #include <cstdio>
+extern bool g_show_debug_info;
 void promptInfo(const char* prompt)
 {
-  PRINTF("\e[1;1H\e[2J");
+  if (!g_show_debug_info)
+    PRINTF("\e[1;1H\e[2J");
   PRINTF("\n-------------------------------------------------------------------\n"
          "%s\n-------------------------------------------------------------------\n\n\n",
          prompt);
@@ -18,7 +20,8 @@ bool promptYesNo(const char* prompt)
   int input = 'x';
   while (input != 'y' && input != 'Y' && input != 'n' && input != 'N')
   {
-    PRINTF("\e[1;1H\e[2J");
+    if (!g_show_debug_info)
+      PRINTF("\e[1;1H\e[2J");
     PRINTF("%s (y/n)  ", prompt);
     fflush(stdout);
     input = getchar();
