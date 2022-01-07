@@ -172,7 +172,8 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
                       (config.hum.enabled? 1:0);
   int sounds_attempted = (blow_examples? 1:0) + (cat_examples? 1:0) +
                          (hum_examples? 1:0);
-  if (success_count < sounds_attempted)
+  bool blow_and_cat_good = config.blow.enabled && config.cat.enabled;
+  if (success_count < sounds_attempted && !blow_and_cat_good)
   {
     std::string msg =
 "Clickitongue was not able to learn to detect the following sound types:\n\n" + failure_list + ".\n\n";
