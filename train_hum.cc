@@ -115,8 +115,8 @@ public:
   }
   void printParams()
   {
-    PRINTF("--o1_on_thresh=%g --o1_off_thresh=%g --o2_on_thresh=%g "
-           "--o3_limit=%g --o6_limit=%g\n",
+    PRINTF("hum_o1_on_thresh: %g hum_o1_off_thresh: %g hum_o2_on_thresh: %g "
+           "hum_o3_limit: %g hum_o6_limit: %g\n",
            o1_on_thresh, o1_off_thresh, o2_on_thresh, o3_limit, o6_limit);
   }
 

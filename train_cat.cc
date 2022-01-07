@@ -106,7 +106,8 @@ public:
   }
   void printParams()
   {
-    PRINTF("--o1_limit=%g --o5_on_thresh=%g --o6_on_thresh=%g --o7_on_thresh=%g\n",
+    PRINTF("cat_o1_limit: %g cat_o5_on_thresh: %g cat_o6_on_thresh: %g "
+           "cat_o7_on_thresh: %g\n",
            o1_limit, o5_on_thresh, o6_on_thresh, o7_on_thresh);
   }
 

@@ -114,8 +114,8 @@ public:
   }
   void printParams()
   {
-    PRINTF("--o1_on_thresh=%g --o6_on_thresh=%g "
-           "--o6_off_thresh=%g --o7_on_thresh=%g --o7_off_thresh=%g\n",
+    PRINTF("blow_o1_on_thresh: %g blow_o6_on_thresh: %g blow_o6_off_thresh: %g "
+           "blow_o7_on_thresh: %g blow_o7_off_thresh: %g\n",
            o1_on_thresh, o6_on_thresh, o6_off_thresh, o7_on_thresh, o7_off_thresh);
   }
 
