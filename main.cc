@@ -199,8 +199,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
   {
     cat_detector = std::make_unique<CatDetector>(
         action_queue, config.cat.action_on, config.cat.action_off,
-        config.cat.o1_limit, config.cat.o5_on_thresh, config.cat.o6_on_thresh,
-        config.cat.o7_on_thresh);
+        config.cat.o5_on_thresh, config.cat.o6_on_thresh, config.cat.o7_on_thresh);
   }
 
   std::unique_ptr<Detector> blow_detector;
@@ -225,6 +224,8 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
         /*require_warmup=*/config.blow.enabled);
     if (blow_detector)
       blow_detector->addInhibitionTarget(hum_detector.get());
+    if (cat_detector)
+      cat_detector->addInhibitionTarget(hum_detector.get());
   }
 
   std::vector<std::unique_ptr<Detector>> detectors;
