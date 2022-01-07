@@ -166,19 +166,19 @@ extern bool g_show_debug_info;
 void describeLoadedParams(Config config, bool first_time)
 {
   std::string msg = "Clickitongue " CLICKITONGUE_VERSION " started!\n";
-  if (config.blow.enabled)
+  if (config.blow.enabled && config.blow.action_on != Action::NoAction)
   {
     msg += std::string("Blow to ") +
            (config.blow.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
-  if (config.cat.enabled)
+  if (config.cat.enabled && config.cat.action_on != Action::NoAction)
   {
     msg += std::string("'tchk' like calling a cat to ") +
            (config.cat.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
-  if (config.hum.enabled)
+  if (config.hum.enabled && config.hum.action_on != Action::NoAction)
   {
     msg += std::string("Hum to ") +
            (config.hum.action_on == Action::RightDown ? "right" : "left") +
