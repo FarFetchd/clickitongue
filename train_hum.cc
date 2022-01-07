@@ -316,6 +316,9 @@ public:
       double o6lim = randomBetween(left_o6_limit, rite_o6_limit);
       emplaceIfValid(ret, o1on, o1off, o2on, o3lim, o6lim);
     }
+    // and also just some random ones for extra exploration
+    for (int i = 0; i < 5; i++)
+      emplaceRandomParams(ret);
 
     return ret;
   }

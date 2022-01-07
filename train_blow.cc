@@ -331,6 +331,9 @@ public:
       double o7off = randomBetween(left_o7_off_thresh, rite_o7_off_thresh);
       emplaceIfValid(ret, o1on, o6on, o6off, o7on, o7off);
     }
+    // and also just some random ones for extra exploration
+    for (int i = 0; i < 5; i++)
+      emplaceRandomParams(ret);
 
     return ret;
   }

@@ -265,6 +265,9 @@ public:
       double o7on = randomBetween(left_o7_on_thresh, rite_o7_on_thresh);
       emplaceIfValid(ret, o5on, o6on, o7on);
     }
+    // and also just some random ones for extra exploration
+    for (int i = 0; i < 5; i++)
+      emplaceRandomParams(ret);
 
     return ret;
   }
