@@ -8,7 +8,8 @@
 
 void TrainParamsFactoryCtorCommon(
     std::vector<std::vector<std::pair<AudioRecording, int>>>* examples_sets,
-    std::vector<std::pair<AudioRecording, int>> const& raw_examples, double scale)
+    std::vector<std::pair<AudioRecording, int>> const& raw_examples,
+    double scale, bool mic_near_mouth)
 {
   std::vector<AudioRecording> noises;
   noises.emplace_back("data/noise1.pcm");
@@ -18,19 +19,29 @@ void TrainParamsFactoryCtorCommon(
   noises.emplace_back("data/noise3.pcm");
   noises.back().scale(1.0 / scale);
 
-  // (first, add the base examples, without any noise)
-  examples_sets->push_back(raw_examples);
-
-  for (auto const& noise : noises) // now a set of our examples for each noise
+  // If we're training for mic-near-mouth, the base examples should include a
+  // recording of light (but near the mic) mouth breathing.
+  std::vector<std::pair<AudioRecording, int>> base_examples = raw_examples;
+  if (mic_near_mouth)
   {
-    std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
+    base_examples.emplace_back(AudioRecording("data/breath.pcm"), 0);
+    base_examples.back().first.scale(1.0 / scale);
+  }
+
+  // First, add the base examples, without any noise.
+  examples_sets->push_back(base_examples);
+
+  // Next, for each noise sample, our raw examples plus that noise.
+  for (auto const& noise : noises)
+  {
+    std::vector<std::pair<AudioRecording, int>> examples = base_examples;
     for (auto& x : examples)
       x.first += noise;
     examples_sets->push_back(examples);
   }
-  // finally, a quiet version, for a challenge/tie breaker
+  // Finally, a quiet version, for a challenge/tie breaker.
   {
-    std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
+    std::vector<std::pair<AudioRecording, int>> examples = base_examples;
     for (auto& x : examples)
       x.first.scale(0.75);
     examples_sets->push_back(examples);

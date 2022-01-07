@@ -17,6 +17,6 @@ AudioRecording recordExampleHum(int desired_events, bool prolonged = false);
 // the int of the pair is the number of hum events that are supposed to be in
 // that particular AudioRecording.
 HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
-                   double scale);
+                   double scale, bool mic_near_mouth);
 
 #endif // CLICKITONGUE_TRAIN_HUM_H_

@@ -17,12 +17,12 @@ bool introAndAskIfMicNearMouth()
 {
   chooseInputDevice();
 
-  bool try_blows = promptYesNo(
+  bool mic_near_mouth = promptYesNo(
 "It looks like this is your first time running Clickitongue.\n\n"
 "Clickitongue needs to learn your environment's acoustics and background noise.\n\n"
 "First: can you keep your mic positioned 1-2cm from your mouth for long-term usage? ");
 
-  if (try_blows)
+  if (mic_near_mouth)
   {
     promptInfo(
 "Great! That enables more comfortable input methods. You'll now train\n"
@@ -43,7 +43,7 @@ bool introAndAskIfMicNearMouth()
   PRINTF("Press any key to continue to the training prompt.\n\n");
   make_getchar_like_getch(); getchar(); resetTermios();
 #endif
-  return try_blows;
+  return mic_near_mouth;
 }
 
 // pass null to skip trying to train a type
@@ -59,7 +59,7 @@ void collectAnyMissingExamples(
 "these training examples strong and clear, or else Clickitongue will expect\n"
 "that much strength every time. These puffs should be more focused than simply\n"
 "exhaling through an open mouth, but weaker than just about any other blow.\n"
-"Think of trying to propel an eyelash over a hand's width.\n\n"
+"Think of trying to move an eyelash by about a hand's width.\n\n"
 "The training will record several 4-second snippets, during each of which you\n"
 "will be asked to do a specific number of blows.\n\n");
 #ifndef CLICKITONGUE_WINDOWS
@@ -85,6 +85,7 @@ void collectAnyMissingExamples(
 #endif
     for (int i = 0; i < 6; i++)
       cat_examples->emplace_back(recordExampleCat(i), i);
+    cat_examples->emplace_back(recordExampleCat(8), 8);
   }
   if (hum_examples && hum_examples->empty())
   {
@@ -125,7 +126,7 @@ void normalOperation(Config config, bool first_time);
 
 // pass null to skip trying to train a type
 void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
-                  TaggedExamples* hum_examples)
+                  TaggedExamples* hum_examples, bool mic_near_mouth)
 {
   collectAnyMissingExamples(blow_examples, cat_examples, hum_examples);
 
@@ -143,11 +144,11 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
 
   Config config;
   if (!blow_examples_plus_neg.empty())
-    config.blow = trainBlow(blow_examples_plus_neg, scale);
+    config.blow = trainBlow(blow_examples_plus_neg, scale, mic_near_mouth);
   if (!cat_examples_plus_neg.empty())
-    config.cat = trainCat(cat_examples_plus_neg, scale);
+    config.cat = trainCat(cat_examples_plus_neg, scale, mic_near_mouth);
   if (!hum_examples_plus_neg.empty())
-    config.hum = trainHum(hum_examples_plus_neg, scale);
+    config.hum = trainHum(hum_examples_plus_neg, scale, mic_near_mouth);
 
   std::string failure_list;
   if (blow_examples && !config.blow.enabled)
@@ -187,7 +188,7 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
     }
     if (promptYesNo(msg.c_str()))
     {
-      trainingBody(blow_examples, cat_examples, hum_examples);
+      trainingBody(blow_examples, cat_examples, hum_examples, mic_near_mouth);
       return;
     }
   }
@@ -201,10 +202,11 @@ void firstTimeTrain()
   TaggedExamples blow_examples;
   TaggedExamples cat_examples;
   TaggedExamples hum_examples;
-  if (introAndAskIfMicNearMouth())
-    trainingBody(&blow_examples, &cat_examples, &hum_examples);
+  bool mic_near_mouth = introAndAskIfMicNearMouth();
+  if (mic_near_mouth)
+    trainingBody(&blow_examples, &cat_examples, &hum_examples, mic_near_mouth);
   else
-    trainingBody(nullptr, &cat_examples, &hum_examples);
+    trainingBody(nullptr, &cat_examples, &hum_examples, mic_near_mouth);
 }
 
 #define ASSIGN_LEFT_OR_RIGHT_CLICK(x) if (config->x.enabled && remaining_to_assign > 0) \

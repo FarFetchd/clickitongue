@@ -208,7 +208,7 @@ class TrainParamsFactory
 {
 public:
   TrainParamsFactory(std::vector<std::pair<AudioRecording, int>> const& raw_examples,
-                     double scale);
+                     double scale, bool mic_near_mouth);
 
   bool emplaceIfValid(
       std::vector<TrainParamsCocoon>& ret, double o1_on_thresh,
@@ -521,10 +521,11 @@ private:
 #include "train_common.h"
 
 TrainParamsFactory::TrainParamsFactory(
-    std::vector<std::pair<AudioRecording, int>> const& raw_examples, double scale)
+    std::vector<std::pair<AudioRecording, int>> const& raw_examples,
+    double scale, bool mic_near_mouth)
   : scale_(scale)
 {
-  TrainParamsFactoryCtorCommon(&examples_sets_, raw_examples, scale);
+  TrainParamsFactoryCtorCommon(&examples_sets_, raw_examples, scale, mic_near_mouth);
 }
 
 } // namespace
@@ -612,9 +613,9 @@ AudioRecording recordExampleBlow(int desired_events, bool prolonged)
 }
 
 BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
-                     double scale)
+                     double scale, bool mic_near_mouth)
 {
-  TrainParamsFactory factory(audio_examples, scale);
+  TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
   best = factory.tuneOff6(best, kMinO6Off, best.o6_off_thresh);
