@@ -4,7 +4,7 @@
 #include "detector.h"
 
 constexpr int kBlowDelayBlocks = 3;
-constexpr int kBlowDeactivateWarmupBlocks = 6;
+constexpr int kBlowDeactivateWarmupBlocks = 7;
 constexpr int kForeverBlocksAgo = 999999999;
 
 class BlowDetector : public Detector
@@ -69,7 +69,7 @@ private:
 
   // How many more blocks we need to stay under the off thresholds before we
   // actually transition to off.
-  mutable int deactivate_warmup_blocks_left_ = -1; // TODO rremove const
+  mutable int deactivate_warmup_blocks_left_ = kBlowDeactivateWarmupBlocks; // TODO rremove const
 };
 
 #endif // CLICKITONGUE_BLOW_DETECTOR_H_

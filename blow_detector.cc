@@ -76,20 +76,20 @@ bool BlowDetector::shouldTransitionOff() const
 {
   bool under_threshs = o6_cur_ < o6_off_thresh_ && o7_cur_ < o7_off_thresh_;
 
-  if (!under_threshs || deactivate_warmup_blocks_left_ < 0)
+  if (!under_threshs)
   {
     deactivate_warmup_blocks_left_ = kBlowDeactivateWarmupBlocks;
     return false;
   }
-  if (--deactivate_warmup_blocks_left_ == 0)
+  if (--deactivate_warmup_blocks_left_ <= 0)
   {
-    deactivate_warmup_blocks_left_ = -1;
+    deactivate_warmup_blocks_left_ = kBlowDeactivateWarmupBlocks;
     return true;
   }
   return false;
 }
 
-int BlowDetector::refracPeriodLengthBlocks() const { return 12; }
+int BlowDetector::refracPeriodLengthBlocks() const { return 18; }
 
 void BlowDetector::resetEWMAs()
 {
