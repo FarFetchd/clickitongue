@@ -1,69 +1,66 @@
 #include "blow_detector.h"
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
-                           double o1_on_thresh,
-                           double o6_on_thresh, double o6_off_thresh,
-                           double o7_on_thresh, double o7_off_thresh,
-                           double ewma_alpha, bool require_delay,
+                           double o1_on_thresh, double o6_on_thresh,
+                           double o6_off_thresh, double o7_on_thresh,
+                           double o7_off_thresh, int lookback_blocks,
+                           bool require_delay,
                            std::vector<int>* cur_frame_dest)
   : Detector(Action::RecordCurFrame, Action::NoAction, action_queue, cur_frame_dest),
     o1_on_thresh_(o1_on_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
-    ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
-    activated_ewma_alpha_(ewma_alpha_*0.75),
-    one_minus_activated_ewma_alpha_(1.0-activated_ewma_alpha_),
-    require_delay_(require_delay)
+    lookback_blocks_(lookback_blocks), require_delay_(require_delay)
 {}
 
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            Action action_on, Action action_off,
-                           double o1_on_thresh,
-                           double o6_on_thresh, double o6_off_thresh,
-                           double o7_on_thresh, double o7_off_thresh,
-                           double ewma_alpha, bool require_delay)
+                           double o1_on_thresh, double o6_on_thresh,
+                           double o6_off_thresh, double o7_on_thresh,
+                           double o7_off_thresh, int lookback_blocks,
+                           bool require_delay)
   : Detector(action_on, action_off, action_queue),
     o1_on_thresh_(o1_on_thresh),
     o6_on_thresh_(o6_on_thresh), o6_off_thresh_(o6_off_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
-    ewma_alpha_(ewma_alpha), one_minus_ewma_alpha_(1.0-ewma_alpha_),
-    activated_ewma_alpha_(ewma_alpha_*0.75),
-    one_minus_activated_ewma_alpha_(1.0-activated_ewma_alpha_),
-    require_delay_(require_delay)
+    lookback_blocks_(lookback_blocks), require_delay_(require_delay)
 {}
+
+void updateMemory(double cur, double thresh, int* since)
+{
+  if (cur > thresh)
+    *since = 0;
+  else
+  {
+    ++*since;
+    if (*since > kForeverBlocksAgo)
+      *since = kForeverBlocksAgo;
+  }
+}
 
 void BlowDetector::updateState(const fftw_complex* freq_power)
 {
-  double cur_alpha, cur_1minus_alpha;
-  if (on_)
-  {
-    cur_alpha = activated_ewma_alpha_;
-    cur_1minus_alpha = one_minus_activated_ewma_alpha_;
-  }
-  else
-  {
-    cur_alpha = ewma_alpha_;
-    cur_1minus_alpha = one_minus_ewma_alpha_;
-  }
+  o1_cur_ = freq_power[1][0];
 
-  double cur_o1 = freq_power[1][0];
-  o1_ewma_ = o1_ewma_ * cur_1minus_alpha + cur_o1 * cur_alpha;
-
-  double cur_o6 = 0;
+  o6_cur_ = 0;
   for (int i=32; i<64; i++)
-    cur_o6 += freq_power[i][0];
-  o6_ewma_ = o6_ewma_ * cur_1minus_alpha + cur_o6 * cur_alpha;
+    o6_cur_ += freq_power[i][0];
 
-  double cur_o7 = 0;
+  o7_cur_ = 0;
   for (int i=64; i<128; i++)
-    cur_o7 += freq_power[i][0];
-  o7_ewma_ = o7_ewma_ * cur_1minus_alpha + cur_o7 * cur_alpha;
+    o7_cur_ += freq_power[i][0];
+
+  updateMemory(o1_cur_, o1_on_thresh_, &blocks_since_1above_);
+  updateMemory(o6_cur_, o6_on_thresh_, &blocks_since_6above_);
+  updateMemory(o7_cur_, o7_on_thresh_, &blocks_since_7above_);
 }
 
 bool BlowDetector::shouldTransitionOn()
 {
-  if (delay_blocks_left_ < 0 && o1_ewma_ > o1_on_thresh_ &&
-      o6_ewma_ > o6_on_thresh_ && o7_ewma_ > o7_on_thresh_)
+  bool activated = (blocks_since_1above_ <= lookback_blocks_ &&
+                    blocks_since_6above_ <= lookback_blocks_ &&
+                    blocks_since_7above_ <= lookback_blocks_);
+  if (delay_blocks_left_ < 0 && activated)
   {
     delay_blocks_left_ = kBlowDelayBlocks;
   }
@@ -77,16 +74,28 @@ bool BlowDetector::shouldTransitionOn()
 
 bool BlowDetector::shouldTransitionOff() const
 {
-  return o6_ewma_ < o6_off_thresh_ &&
-         o7_ewma_ < o7_off_thresh_;
+  bool under_threshs = o6_cur_ < o6_off_thresh_ && o7_cur_ < o7_off_thresh_;
+
+  if (!under_threshs || deactivate_warmup_blocks_left_ < 0)
+  {
+    deactivate_warmup_blocks_left_ = kBlowDeactivateWarmupBlocks;
+    return false;
+  }
+  if (--deactivate_warmup_blocks_left_ == 0)
+  {
+    deactivate_warmup_blocks_left_ = -1;
+    return true;
+  }
+  return false;
 }
 
-int BlowDetector::refracPeriodLengthBlocks() const { return 10; }
+int BlowDetector::refracPeriodLengthBlocks() const { return 12; }
 
 void BlowDetector::resetEWMAs()
 {
-  o1_ewma_ = 0;
-  o6_ewma_ = 0;
-  o7_ewma_ = 0;
+  blocks_since_1above_ = kForeverBlocksAgo;
+  blocks_since_6above_ = kForeverBlocksAgo;
+  blocks_since_7above_ = kForeverBlocksAgo;
   delay_blocks_left_ = -1;
+  deactivate_warmup_blocks_left_ = -1;
 }

@@ -46,7 +46,7 @@ std::string Config::toString() const
         << "blow_o6_off_thresh: " << blow.o6_off_thresh << "\n"
         << "blow_o7_on_thresh: " << blow.o7_on_thresh << "\n"
         << "blow_o7_off_thresh: " << blow.o7_off_thresh << "\n"
-        << "blow_ewma_alpha: " << blow.ewma_alpha << "\n"
+        << "blow_lookback_blocks: " << blow.lookback_blocks << "\n"
         << "blow_scale: " << blow.scale << "\n";
   }
   if (cat.enabled)
@@ -82,13 +82,13 @@ BlowConfig::BlowConfig(farfetchd::ConfigReader const& cfg)
   o6_off_thresh = cfg.getDouble("blow_o6_off_thresh").value_or(-1);
   o7_on_thresh = cfg.getDouble("blow_o7_on_thresh").value_or(-1);
   o7_off_thresh = cfg.getDouble("blow_o7_off_thresh").value_or(-1);
-  ewma_alpha = cfg.getDouble("blow_ewma_alpha").value_or(-1);
+  lookback_blocks = cfg.getInt("blow_lookback_blocks").value_or(-1);
   scale = cfg.getDouble("blow_scale").value_or(-1);
 
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
              o1_on_thresh >= 0 && o6_on_thresh >= 0 && o6_off_thresh >= 0 &&
              o7_on_thresh >= 0 && o7_off_thresh >= 0 &&
-             ewma_alpha >= 0 && scale >= 0);
+             lookback_blocks >= 0 && scale >= 0);
 }
 
 CatConfig::CatConfig(farfetchd::ConfigReader const& cfg)

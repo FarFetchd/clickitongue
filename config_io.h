@@ -22,7 +22,7 @@ struct BlowConfig
   double o6_off_thresh;
   double o7_on_thresh;
   double o7_off_thresh;
-  double ewma_alpha;
+  int lookback_blocks;
   double scale;
 };
 

@@ -4,6 +4,8 @@
 #include "detector.h"
 
 constexpr int kBlowDelayBlocks = 3;
+constexpr int kBlowDeactivateWarmupBlocks = 6;
+constexpr int kForeverBlocksAgo = 999999999;
 
 class BlowDetector : public Detector
 {
@@ -13,14 +15,14 @@ public:
   BlowDetector(BlockingQueue<Action>* action_queue,
                double o1_on_thresh, double o6_on_thresh,
                double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
-               double ewma_alpha, bool require_delay,
+               int lookback_blocks, bool require_delay,
                std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   BlowDetector(BlockingQueue<Action>* action_queue,
                Action action_on, Action action_off,
                double o1_on_thresh, double o6_on_thresh, double o6_off_thresh,
-               double o7_on_thresh, double o7_off_thresh, double ewma_alpha,
+               double o7_on_thresh, double o7_off_thresh, int lookback_blocks,
                bool require_delay);
 
 protected:
@@ -38,7 +40,6 @@ protected:
   void resetEWMAs() override;
 
 private:
-
   // o1,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
   // ...o1 is bins 16+17+...+31, o6 is 32+...+63, o7 is 64+...+127.
   const double o1_on_thresh_;
@@ -46,19 +47,17 @@ private:
   const double o6_off_thresh_;
   const double o7_on_thresh_;
   const double o7_off_thresh_;
-  const double ewma_alpha_;
-  const double one_minus_ewma_alpha_;
+  // How far in the past (in blocks) counts towards threshold activation.
+  // '1' means only the current block or the previous one can be used.
+  const int lookback_blocks_;
 
-  // When we're in the on state, we use a more conservative alpha - 3/4ths of
-  // normal - to make it harder for the inherent crazy choppiness of the blowing
-  // to accidentally kick us back into the off state (and mess up a
-  // drag-and-drop or text selection).
-  const double activated_ewma_alpha_;
-  const double one_minus_activated_ewma_alpha_;
+  double o1_cur_ = 0;
+  double o6_cur_ = 0;
+  double o7_cur_ = 0;
 
-  double o1_ewma_ = 0;
-  double o6_ewma_ = 0;
-  double o7_ewma_ = 0;
+  int blocks_since_1above_ = kForeverBlocksAgo;
+  int blocks_since_6above_ = kForeverBlocksAgo;
+  int blocks_since_7above_ = kForeverBlocksAgo;
 
   // After exceeding the activation threshold, wait for a little while
   // before actually transitioning to 'on'. This gives the cat detector a
@@ -67,6 +66,10 @@ private:
   int delay_blocks_left_ = -1;
   // Whether the delay_blocks_left_ logic is actually used.
   const bool require_delay_ = false;
+
+  // How many more blocks we need to stay under the off thresholds before we
+  // actually transition to off.
+  mutable int deactivate_warmup_blocks_left_ = -1; // TODO rremove const
 };
 
 #endif // CLICKITONGUE_BLOW_DETECTOR_H_
