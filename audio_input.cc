@@ -126,6 +126,8 @@ int getNumChannels(PaDeviceIndex dev_index)
   return 2;
 }
 
+bool g_forget_input_dev = false;
+
 #ifdef CLICKITONGUE_WINDOWS
 int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
 {
@@ -151,8 +153,8 @@ int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
   }
   return user_choice;
 }
-#else // linux or OSX
-int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
+#else
+int actuallyAskUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
 {
   int user_choice = default_dev_ind;
   PRINTF("\nDevices:\n");
@@ -173,9 +175,22 @@ int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
   }
   return user_choice;
 }
+#endif // linux or osx
+#ifdef CLICKITONGUE_OSX
+int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
+{
+  return actuallyAskUserChoice(dev_names, default_dev_ind);
+}
+#endif // osx
+#ifdef CLICKITONGUE_LINUX
+int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
+{
+  if (g_forget_input_dev)
+    return actuallyAskUserChoice(dev_names, default_dev_ind);
+  return default_dev_ind;
+}
 #endif
 
-bool g_forget_input_dev = false;
 PaDeviceIndex chooseInputDevice()
 {
   static PaDeviceIndex chosen = paNoDevice;
