@@ -63,8 +63,8 @@ public:
     just_one_detector.emplace_back(std::make_unique<CatDetector>(nullptr,
         o5_on_thresh, o6_on_thresh, o7_on_thresh, &event_frames));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector), scale);
-
+    FFTResultDistributor wrapper(std::move(just_one_detector), scale,
+                                 /*training=*/true);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * g_num_channels < samples.size();
          sample_ind += kFourierBlocksize * g_num_channels)

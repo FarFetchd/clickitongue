@@ -75,8 +75,8 @@ public:
         o7_on_thresh, o7_off_thresh, kEwmaAlpha, /*require_delay=*/false,
         &event_frames));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector), scale);
-
+    FFTResultDistributor wrapper(std::move(just_one_detector), scale,
+                                 /*training=*/true);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * g_num_channels < samples.size();
          sample_ind += kFourierBlocksize * g_num_channels)
@@ -424,8 +424,8 @@ public:
       else
         hi_on = cur_on;
     }
-    // pull back from our tuned result by half to be on the safe side
-    cur.o1_on_thresh = hi_on + (start.o1_on_thresh - hi_on) / 2.0;
+    // pull back from our tuned result by 3/4ths to be on the safe side
+    cur.o1_on_thresh = hi_on + (start.o1_on_thresh - hi_on) * 0.75;
 
     cur.computeScore(examples_sets_);
     if (start < cur)
@@ -458,8 +458,8 @@ public:
       else
         hi_on = cur_on;
     }
-    // pull back from our tuned result by half to be on the safe side
-    cur.o6_on_thresh = hi_on + (start.o6_on_thresh - hi_on) / 2.0;
+    // pull back from our tuned result by 3/4ths to be on the safe side
+    cur.o6_on_thresh = hi_on + (start.o6_on_thresh - hi_on) * 0.75;
 
     cur.computeScore(examples_sets_);
     if (start < cur)
@@ -492,8 +492,8 @@ public:
       else
         hi_on = cur_on;
     }
-    // pull back from our tuned result by half to be on the safe side
-    cur.o7_on_thresh = hi_on + (start.o7_on_thresh - hi_on) / 2.0;
+    // pull back from our tuned result by 3/4ths to be on the safe side
+    cur.o7_on_thresh = hi_on + (start.o7_on_thresh - hi_on) * 0.75;
 
     cur.computeScore(examples_sets_);
     if (start < cur)

@@ -269,8 +269,9 @@ void normalOperation(Config config, bool first_time)
   ActionDispatcher action_dispatcher(&action_queue);
   std::thread action_dispatch(actionDispatch, &action_dispatcher);
 
-  FFTResultDistributor fft_distributor(makeDetectorsFromConfig(config, &action_queue),
-                                       loadScaleFromConfig(config));
+  FFTResultDistributor fft_distributor(
+      makeDetectorsFromConfig(config, &action_queue), loadScaleFromConfig(config),
+      /*training=*/false);
   AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
   describeLoadedParams(config, first_time);
 

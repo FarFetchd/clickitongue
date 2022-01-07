@@ -6,10 +6,9 @@ void safelyExit(int exit_code);
 
 FFTResultDistributor::FFTResultDistributor(
     std::vector<std::unique_ptr<Detector>>&& detectors,
-    double scale)
-: detectors_(std::move(detectors)),
-  fft_lease_(g_fourier->borrowWorker()),
-  scale_(scale)
+    double scale, bool training)
+: detectors_(std::move(detectors)), fft_lease_(g_fourier->borrowWorker()),
+  scale_(scale), training_(training)
 {}
 
 bool g_show_debug_info = false;
@@ -37,10 +36,9 @@ void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames
   }
   for (auto& detector : detectors_)
     detector->processFourierOutputBlock(fft_lease_.out);
-  if (g_show_debug_info)
+  if (g_show_debug_info && !training_)
     g_fourier->printOctavesAlreadyFreq(fft_lease_.out);
 }
-
 
 int fftDistributorCallback(const void* input, void* output,
                            unsigned long num_frames,

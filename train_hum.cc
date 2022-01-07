@@ -74,8 +74,8 @@ public:
         nullptr, o1_on_thresh, o1_off_thresh, o2_on_thresh, o3_limit, o6_limit,
         kEwmaAlpha, /*require_delay=*/true, &event_frames));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector), scale);
-
+    FFTResultDistributor wrapper(std::move(just_one_detector), scale,
+                                 /*training=*/true);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * g_num_channels < samples.size();
          sample_ind += kFourierBlocksize * g_num_channels)
