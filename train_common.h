@@ -1,7 +1,41 @@
-// Actual code for direct (careful) inclusion within an anonymous namespace,
-// so no include guard.
+#ifdef CLICKITONGUE_TRAIN_COMMON_H_
+#error "CLICKITONGUE_TRAIN_COMMON_H_ is actual code; must only include once."
+#endif
+#define CLICKITONGUE_TRAIN_COMMON_H_
+// Actual code for direct (careful) inclusion within an anonymous namespace.
 // Hacky, but does clean things up a bit, and I'm not sure there's a clean way
 // to do it the "right" way with an interface base class.
+
+void TrainParamsFactoryCtorCommon(
+    std::vector<std::vector<std::pair<AudioRecording, int>>>* examples_sets,
+    std::vector<std::pair<AudioRecording, int>> const& raw_examples, double scale)
+{
+  std::vector<AudioRecording> noises;
+  noises.emplace_back("data/noise1.pcm");
+  noises.back().scale(1.0 / scale);
+  noises.emplace_back("data/noise2.pcm");
+  noises.back().scale(1.0 / scale);
+  noises.emplace_back("data/noise3.pcm");
+  noises.back().scale(1.0 / scale);
+
+  // (first, add the base examples, without any noise)
+  examples_sets->push_back(raw_examples);
+
+  for (auto const& noise : noises) // now a set of our examples for each noise
+  {
+    std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
+    for (auto& x : examples)
+      x.first += noise;
+    examples_sets->push_back(examples);
+  }
+  // finally, a quiet version, for a challenge/tie breaker
+  {
+    std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
+    for (auto& x : examples)
+      x.first.scale(0.75);
+    examples_sets->push_back(examples);
+  }
+}
 
 void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
                            int max_length)

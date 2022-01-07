@@ -209,33 +209,7 @@ class TrainParamsFactory
 {
 public:
   TrainParamsFactory(std::vector<std::pair<AudioRecording, int>> const& raw_examples,
-                     std::vector<std::string> const& noise_fnames, double scale)
-    : scale_(scale)
-  {
-    std::vector<AudioRecording> noises;
-    for (auto name : noise_fnames)
-    {
-      noises.emplace_back(name);
-      noises.back().scale(1.0 / scale_);
-    }
-
-    // (first, add the base examples, without any noise)
-    examples_sets_.push_back(raw_examples);
-    for (auto const& noise : noises) // now a set of our examples for each noise
-    {
-      std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
-      for (auto& x : examples)
-        x.first += noise;
-      examples_sets_.push_back(examples);
-    }
-    // finally, a quiet version, for a challenge/tie breaker
-    {
-      std::vector<std::pair<AudioRecording, int>> examples = raw_examples;
-      for (auto& x : examples)
-        x.first.scale(0.75);
-      examples_sets_.push_back(examples);
-    }
-  }
+                     double scale);
 
   bool emplaceIfValid(std::vector<TrainParamsCocoon>& ret, double o1_on_thresh,
                       double o1_off_thresh, double o2_on_thresh,
@@ -429,6 +403,13 @@ private:
 // the following is actual code, not just a header:
 #include "train_common.h"
 
+TrainParamsFactory::TrainParamsFactory(
+    std::vector<std::pair<AudioRecording, int>> const& raw_examples, double scale)
+  : scale_(scale)
+{
+  TrainParamsFactoryCtorCommon(&examples_sets_, raw_examples, scale);
+}
+
 } // namespace
 
 double pickHumScalingFactor(std::vector<std::pair<AudioRecording, int>>
@@ -497,10 +478,7 @@ AudioRecording recordExampleHum(int desired_events, bool prolonged)
 HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_examples,
                    double scale)
 {
-  std::vector<std::string> noise_fnames =
-      {"data/noise1.pcm", "data/noise2.pcm", "data/noise3.pcm"};
-
-  TrainParamsFactory factory(audio_examples, noise_fnames, scale);
+  TrainParamsFactory factory(audio_examples, scale);
   TrainParams best = patternSearch(factory);
 
   best = factory.tuneLimit3(best, kMinO3Limit, best.o3_limit);
