@@ -19,6 +19,7 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
     {
       on_ = false;
       kickoffAction(action_off_);
+      resetEWMAs();
     }
   }
   else // off
