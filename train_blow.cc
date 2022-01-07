@@ -17,7 +17,7 @@ namespace {
 constexpr double kEwmaAlpha = 0.5;
 
 constexpr double kMinO1On = 50;
-constexpr double kMaxO1On = 1000;
+constexpr double kMaxO1On = 10000;
 constexpr double kMinO6On = 50;
 constexpr double kMaxO6On = 500;
 constexpr double kMinO6Off = 10;
