@@ -37,6 +37,7 @@ struct CatConfig
   double o5_on_thresh;
   double o6_on_thresh;
   double o7_on_thresh;
+  double o1_limit;
   double scale;
 };
 

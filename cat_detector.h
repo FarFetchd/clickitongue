@@ -10,12 +10,14 @@ public:
   // cur_frame_dest, and does nothing else.
   CatDetector(BlockingQueue<Action>* action_queue,
               double o5_on_thresh, double o6_on_thresh,
-              double o7_on_thresh, std::vector<int>* cur_frame_dest);
+              double o7_on_thresh, double o1_limit,
+              std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   CatDetector(BlockingQueue<Action>* action_queue,
               Action action_on, Action action_off,
-              double o5_on_thresh, double o6_on_thresh, double o7_on_thresh);
+              double o5_on_thresh, double o6_on_thresh, double o7_on_thresh,
+              double o1_limit);
 
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
@@ -37,6 +39,7 @@ private:
   const double o5_on_thresh_;
   const double o6_on_thresh_;
   const double o7_on_thresh_;
+  const double o1_limit_;
 
   double o5_cur_ = 0;
   double o6_cur_ = 0;
@@ -44,6 +47,8 @@ private:
 
   // Require satisfying activation criteria for two blocks in a row
   bool warmed_up_ = false;
+
+  int o1_cooldown_blocks_ = 0;
 };
 
 #endif // CLICKITONGUE_CAT_DETECTOR_H_
