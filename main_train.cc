@@ -237,14 +237,6 @@ bool afterTraining(Config* config, int success_count)
   ASSIGN_LEFT_OR_RIGHT_CLICK(hum);
   assert(success_count <= 3);
 
-#ifdef CLICKITONGUE_WINDOWS
-  promptInfo(
-"A note on admin privileges:\n\nWindows does not allow lesser privileged "
-"processes to send clicks to processes running as admin. If you ever find that "
-"just one particular window refuses to listen to Clickitongue's clicks, try "
-"running Clickitongue as admin. (But you might never encounter this problem.)");
-#endif
-
   std::string attempted_filepath;
   if (!writeConfig(*config, kDefaultConfig, &attempted_filepath))
   {

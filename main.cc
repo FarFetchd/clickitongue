@@ -188,7 +188,14 @@ void describeLoadedParams(Config config, bool first_time)
     promptInfo(msg.c_str());
   else
     PRINTF("%s", msg.c_str());
-  //PRINTF("\ndetection parameters:\n%s\n", config.toString().c_str());
+
+#ifdef CLICKITONGUE_WINDOWS
+  PRINTF(
+"A note on admin privileges:\n"
+"Windows does not allow lesser privileged processes to send clicks to processes\n"
+"running as admin. If you ever find that just one particular window refuses to\n"
+"listen to Clickitongue's clicks, try running Clickitongue as admin.\n");
+#endif
 }
 
 std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
