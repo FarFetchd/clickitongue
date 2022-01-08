@@ -141,3 +141,62 @@ AudioRecording recordExampleCommon(int desired_events,
 
   return recorder;
 }
+
+// member_of_obj must point to a member of 'obj' - the one to be tuned.
+// pullback_fraction: pull back this fraction of the distance from our tuned
+//                    result towards the value it started at.
+//                    e.g. 0.75 to pull back by 3/4ths.
+void tune(
+    TrainParams* obj, double* member_of_obj, bool tune_up,
+    double min_val, double max_val, double pullback_fraction, std::string var_name,
+    std::vector<std::vector<std::pair<AudioRecording, int>>> const& examples_sets)
+{
+  double lo_val = min_val;
+  double hi_val = max_val;
+  TrainParams start = *obj;
+  double start_val = *member_of_obj;
+  int iterations = 0;
+  while (hi_val - lo_val > 0.02 * (max_val - min_val))
+  {
+    if (++iterations > 40)
+      break;
+    double cur_val = (lo_val + hi_val) / 2.0;
+    *member_of_obj = cur_val;
+    obj->computeScore(examples_sets);
+    if (tune_up)
+    {
+      if (start < *obj)
+      {
+        hi_val = (cur_val - min_val) / 2.0;
+        lo_val = min_val;
+      }
+      else
+        lo_val = cur_val;
+    }
+    else // tuning down
+    {
+      if (start < *obj)
+      {
+        lo_val = (max_val - cur_val) / 2.0;
+        hi_val = max_val;
+      }
+      else
+        hi_val = cur_val;
+    }
+  }
+  // pull back from our tuned result by pullback_fraction to be on the safe side
+  if (tune_up)
+    *member_of_obj = start_val + (lo_val - start_val) * (1.0 - pullback_fraction);
+  else
+    *member_of_obj = hi_val + (start_val - hi_val) * pullback_fraction;
+
+  obj->computeScore(examples_sets);
+  if (start < *obj)
+  {
+    PRINTF("%s tuning unsuccessful; leaving it alone\n", var_name.c_str());
+    *obj = start;
+    return;
+  }
+  PRINTF("tuned %s from %g %s to %g\n",
+         var_name.c_str(), start_val, tune_up ? "up" : "down", *member_of_obj);
+}

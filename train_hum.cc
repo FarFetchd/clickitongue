@@ -323,78 +323,14 @@ public:
     return ret;
   }
 
-  TrainParams tuneLimit3(TrainParams start, double min_lim, double max_lim)
-  {
-    double lo_lim = min_lim;
-    double hi_lim = max_lim;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_lim - lo_lim > 0.02 * (max_lim - min_lim))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_lim = (lo_lim + hi_lim) / 2.0;
-      cur.o3_limit = cur_lim;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        lo_lim = (max_lim - cur_lim) / 2.0;
-        hi_lim = max_lim;
-      }
-      else
-        hi_lim = cur_lim;
-    }
-    cur.o3_limit = (start.o3_limit + hi_lim) / 2.0;
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o3_limit tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o3_limit from %g down to %g\n", start.o3_limit, cur.o3_limit);
-    return cur;
-  }
-
-  TrainParams tuneLimit6(TrainParams start, double min_lim, double max_lim)
-  {
-    double lo_lim = min_lim;
-    double hi_lim = max_lim;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_lim - lo_lim > 0.02 * (max_lim - min_lim))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_lim = (lo_lim + hi_lim) / 2.0;
-      cur.o6_limit = cur_lim;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        lo_lim = (max_lim - cur_lim) / 2.0;
-        hi_lim = max_lim;
-      }
-      else
-        hi_lim = cur_lim;
-    }
-    cur.o6_limit = (start.o6_limit + hi_lim) / 2.0;
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o6_limit tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o6_limit from %g down to %g\n", start.o6_limit, cur.o6_limit);
-    return cur;
-  }
-
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
-private:
-  // The factor that all Fourier power outputs will be multiplied by.
-  const double scale_;
   // A vector of example-sets. Each example-set is a vector of samples of audio,
   // paired with how many events are expected to be in that audio.
   std::vector<std::vector<std::pair<AudioRecording, int>>> examples_sets_;
+private:
+  // The factor that all Fourier power outputs will be multiplied by.
+  const double scale_;
   // Each variable's offset will be (kVarMax-kVarMin)/pattern_divisor_
   double pattern_divisor_ = 4.0;
 };
@@ -481,8 +417,10 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
-  best = factory.tuneLimit3(best, kMinO3Limit, best.o3_limit);
-  best = factory.tuneLimit6(best, kMinO6Limit, best.o6_limit);
+  tune(&best, &best.o3_limit, /*tune_up=*/false,
+       kMinO3Limit, best.o3_limit, 0.5, "o3_limit", factory.examples_sets_);
+  tune(&best, &best.o6_limit, /*tune_up=*/false,
+       kMinO6Limit, best.o6_limit, 0.5, "o6_limit", factory.examples_sets_);
 
   HumConfig ret;
   ret.scale = scale;

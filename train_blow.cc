@@ -360,176 +360,6 @@ public:
     return ret;
   }
 
-  TrainParams tuneOff6(TrainParams start, double min_off, double max_off)
-  {
-    double lo_off = min_off;
-    double hi_off = max_off;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_off - lo_off > 0.02 * (max_off - min_off))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_off = (lo_off + hi_off) / 2.0;
-      cur.o6_off_thresh = cur_off;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        lo_off = (max_off - cur_off) / 2.0;
-        hi_off = max_off;
-      }
-      else
-        hi_off = cur_off;
-    }
-    // pull back from our tuned result by 1/4th to be on the safe side
-    cur.o6_off_thresh = hi_off + (start.o6_off_thresh - hi_off) / 4.0;
-
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o6_off tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o6_off from %g down to %g\n", start.o6_off_thresh, cur.o6_off_thresh);
-    return cur;
-  }
-
-  TrainParams tuneOff7(TrainParams start, double min_off, double max_off)
-  {
-    double lo_off = min_off;
-    double hi_off = max_off;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_off - lo_off > 0.02 * (max_off - min_off))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_off = (lo_off + hi_off) / 2.0;
-      cur.o7_off_thresh = cur_off;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        lo_off = (max_off - cur_off) / 2.0;
-        hi_off = max_off;
-      }
-      else
-        hi_off = cur_off;
-    }
-    // pull back from our tuned result by 1/4th to be on the safe side
-    cur.o7_off_thresh = hi_off + (start.o7_off_thresh - hi_off) / 4.0;
-
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o7_off tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o7_off from %g down to %g\n", start.o7_off_thresh, cur.o7_off_thresh);
-    return start < cur ? start : cur;
-  }
-
-  TrainParams tuneOn1(TrainParams start, double min_on, double max_on)
-  {
-    double lo_on = min_on;
-    double hi_on = max_on;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_on - lo_on > 0.02 * (max_on - min_on))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_on = (lo_on + hi_on) / 2.0;
-      cur.o1_on_thresh = cur_on;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        lo_on = (max_on - cur_on) / 2.0;
-        hi_on = max_on;
-      }
-      else
-        hi_on = cur_on;
-    }
-    // pull back from our tuned result by 3/4ths to be on the safe side
-    cur.o1_on_thresh = hi_on + (start.o1_on_thresh - hi_on) * 0.75;
-
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o1_on tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o1_on from %g down to %g\n", start.o1_on_thresh, cur.o1_on_thresh);
-    return start < cur ? start : cur;
-  }
-
-  TrainParams tuneOn6(TrainParams start, double min_on, double max_on)
-  {
-    double lo_on = min_on;
-    double hi_on = max_on;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_on - lo_on > 0.02 * (max_on - min_on))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_on = (lo_on + hi_on) / 2.0;
-      cur.o6_on_thresh = cur_on;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        lo_on = (max_on - cur_on) / 2.0;
-        hi_on = max_on;
-      }
-      else
-        hi_on = cur_on;
-    }
-    // pull back from our tuned result by 3/4ths to be on the safe side
-    cur.o6_on_thresh = hi_on + (start.o6_on_thresh - hi_on) * 0.75;
-
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o6_on tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o6_on from %g down to %g\n", start.o6_on_thresh, cur.o6_on_thresh);
-    return start < cur ? start : cur;
-  }
-
-  TrainParams tuneOn7(TrainParams start, double min_on, double max_on)
-  {
-    double lo_on = min_on;
-    double hi_on = max_on;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_on - lo_on > 0.02 * (max_on - min_on))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_on = (lo_on + hi_on) / 2.0;
-      cur.o7_on_thresh = cur_on;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        lo_on = (max_on - cur_on) / 2.0;
-        hi_on = max_on;
-      }
-      else
-        hi_on = cur_on;
-    }
-    // pull back from our tuned result by 3/4ths to be on the safe side
-    cur.o7_on_thresh = hi_on + (start.o7_on_thresh - hi_on) * 0.75;
-
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o7_on tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o7_on from %g down to %g\n", start.o7_on_thresh, cur.o7_on_thresh);
-    return start < cur ? start : cur;
-  }
-
   TrainParams tuneLookback(TrainParams start)
   {
     int start_lb = start.lookback_blocks - 1;
@@ -568,12 +398,12 @@ public:
 
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
-private:
-  // The factor that all Fourier power outputs will be multiplied by.
-  const double scale_;
   // A vector of example-sets. Each example-set is a vector of samples of audio,
   // paired with how many events are expected to be in that audio.
   std::vector<std::vector<std::pair<AudioRecording, int>>> examples_sets_;
+private:
+  // The factor that all Fourier power outputs will be multiplied by.
+  const double scale_;
   // Each variable's offset will be (kVarMax-kVarMin)/pattern_divisor_
   double pattern_divisor_ = 4.0;
 };
@@ -679,11 +509,16 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
-  best = factory.tuneOff6(best, kMinO6Off, best.o6_off_thresh);
-  best = factory.tuneOff7(best, kMinO7Off, best.o7_off_thresh);
-  best = factory.tuneOn1(best, kMinO1On, best.o1_on_thresh);
-  best = factory.tuneOn6(best, kMinO6On, best.o6_on_thresh);
-  best = factory.tuneOn7(best, kMinO7On, best.o7_on_thresh);
+  tune(&best, &best.o6_off_thresh, /*tune_up=*/false,
+       kMinO6Off, best.o6_off_thresh, 0.25, "o6_off", factory.examples_sets_);
+  tune(&best, &best.o7_off_thresh, /*tune_up=*/false,
+       kMinO7Off, best.o7_off_thresh, 0.25, "o7_off", factory.examples_sets_);
+  tune(&best, &best.o1_on_thresh, /*tune_up=*/false,
+       kMinO1On, best.o1_on_thresh, 0.75, "o1_on", factory.examples_sets_);
+  tune(&best, &best.o6_on_thresh, /*tune_up=*/false,
+       kMinO6On, best.o6_on_thresh, 0.75, "o6_on", factory.examples_sets_);
+  tune(&best, &best.o7_on_thresh, /*tune_up=*/false,
+       kMinO7On, best.o7_on_thresh, 0.75, "o7_on", factory.examples_sets_);
   best = factory.tuneLookback(best);
 
   BlowConfig ret;

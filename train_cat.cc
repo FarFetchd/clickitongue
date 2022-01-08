@@ -296,116 +296,14 @@ public:
     return ret;
   }
 
-  TrainParams tuneOn5(TrainParams start, double min_on, double max_on)
-  {
-    double lo_on = min_on;
-    double hi_on = max_on;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_on - lo_on > 0.02 * (max_on - min_on))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_on = (lo_on + hi_on) / 2.0;
-      cur.o5_on_thresh = cur_on;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        hi_on = (cur_on - min_on) / 2.0;
-        lo_on = min_on;
-      }
-      else
-        lo_on = cur_on;
-    }
-    // pull back from our tuned result by half to be on the safe side
-    cur.o5_on_thresh = lo_on + (lo_on - start.o5_on_thresh) / 2.0;
-
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o5_on tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o5_on from %g up to %g\n", start.o5_on_thresh, cur.o5_on_thresh);
-    return cur;
-  }
-
-  TrainParams tuneOn6(TrainParams start, double min_on, double max_on)
-  {
-    double lo_on = min_on;
-    double hi_on = max_on;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_on - lo_on > 0.02 * (max_on - min_on))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_on = (lo_on + hi_on) / 2.0;
-      cur.o6_on_thresh = cur_on;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        hi_on = (cur_on - min_on) / 2.0;
-        lo_on = min_on;
-      }
-      else
-        lo_on = cur_on;
-    }
-    // pull back from our tuned result by half to be on the safe side
-    cur.o6_on_thresh = lo_on + (lo_on - start.o6_on_thresh) / 2.0;
-
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o6_on tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o6_on from %g up to %g\n", start.o6_on_thresh, cur.o6_on_thresh);
-    return cur;
-  }
-
-  TrainParams tuneOn7(TrainParams start, double min_on, double max_on)
-  {
-    double lo_on = min_on;
-    double hi_on = max_on;
-    TrainParams cur = start;
-    int iterations = 0;
-    while (hi_on - lo_on > 0.02 * (max_on - min_on))
-    {
-      if (++iterations > 40)
-        break;
-      double cur_on = (lo_on + hi_on) / 2.0;
-      cur.o7_on_thresh = cur_on;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        hi_on = (cur_on - min_on) / 2.0;
-        lo_on = min_on;
-      }
-      else
-        lo_on = cur_on;
-    }
-    // pull back from our tuned result by half to be on the safe side
-    cur.o7_on_thresh = lo_on + (lo_on - start.o7_on_thresh) / 2.0;
-
-    cur.computeScore(examples_sets_);
-    if (start < cur)
-    {
-      PRINTF("o7_on tuning unsuccessful; leaving it alone\n");
-      return start;
-    }
-    PRINTF("tuned o7_on from %g up to %g\n", start.o7_on_thresh, cur.o7_on_thresh);
-    return cur;
-  }
-
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
-private:
-  // The factor that all Fourier power outputs will be multiplied by.
-  const double scale_;
   // A vector of example-sets. Each example-set is a vector of samples of audio,
   // paired with how many events are expected to be in that audio.
   std::vector<std::vector<std::pair<AudioRecording, int>>> examples_sets_;
+private:
+  // The factor that all Fourier power outputs will be multiplied by.
+  const double scale_;
   // Each variable's offset will be (kVarMax-kVarMin)/pattern_divisor_
   double pattern_divisor_ = 4.0;
 };
@@ -435,9 +333,12 @@ CatConfig trainCat(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
-  best = factory.tuneOn5(best, best.o5_on_thresh, kMaxO5On);
-  best = factory.tuneOn6(best, best.o6_on_thresh, kMaxO6On);
-  best = factory.tuneOn7(best, best.o7_on_thresh, kMaxO7On);
+  tune(&best, &best.o5_on_thresh, /*tune_up=*/true,
+       best.o5_on_thresh, kMaxO5On, 0.5, "o5_on", factory.examples_sets_);
+  tune(&best, &best.o6_on_thresh, /*tune_up=*/true,
+       best.o6_on_thresh, kMaxO6On, 0.5, "o6_on", factory.examples_sets_);
+  tune(&best, &best.o7_on_thresh, /*tune_up=*/true,
+       best.o7_on_thresh, kMaxO7On, 0.5, "o7_on", factory.examples_sets_);
 
   CatConfig ret;
   ret.scale = scale;
