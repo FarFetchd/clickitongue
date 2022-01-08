@@ -35,7 +35,7 @@ protected:
   virtual void updateState(const fftw_complex* freq_power) = 0;
 
   virtual bool shouldTransitionOn() = 0;
-  virtual bool shouldTransitionOff() const = 0;
+  virtual bool shouldTransitionOff() = 0;
 
   // How long (in units of kFourierBlocksize) we must observe low energy after
   // an event before being willing to declare an event of this type.

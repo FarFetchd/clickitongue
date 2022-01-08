@@ -34,7 +34,7 @@ protected:
   void updateState(const fftw_complex* freq_power) override;
 
   bool shouldTransitionOn() override;
-  bool shouldTransitionOff() const override;
+  bool shouldTransitionOff() override;
   int refracPeriodLengthBlocks() const override;
 
   void resetEWMAs() override;
@@ -69,7 +69,7 @@ private:
 
   // How many more blocks we need to stay under the off thresholds before we
   // actually transition to off.
-  mutable int deactivate_warmup_blocks_left_ = kBlowDeactivateWarmupBlocks; // TODO rremove const
+  int deactivate_warmup_blocks_left_ = kBlowDeactivateWarmupBlocks;
 };
 
 #endif // CLICKITONGUE_BLOW_DETECTOR_H_

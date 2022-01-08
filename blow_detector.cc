@@ -72,7 +72,7 @@ bool BlowDetector::shouldTransitionOn()
   return false;
 }
 
-bool BlowDetector::shouldTransitionOff() const
+bool BlowDetector::shouldTransitionOff()
 {
   bool under_threshs = o6_cur_ < o6_off_thresh_ && o7_cur_ < o7_off_thresh_;
 

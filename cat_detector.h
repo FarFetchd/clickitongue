@@ -28,7 +28,7 @@ protected:
   void updateState(const fftw_complex* freq_power) override;
 
   bool shouldTransitionOn() override;
-  bool shouldTransitionOff() const override;
+  bool shouldTransitionOff() override;
   int refracPeriodLengthBlocks() const override;
 
   void resetEWMAs() override;

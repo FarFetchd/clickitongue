@@ -56,7 +56,7 @@ bool CatDetector::shouldTransitionOn()
   return false;
 }
 
-bool CatDetector::shouldTransitionOff() const
+bool CatDetector::shouldTransitionOff()
 {
   return o5_cur_ < o5_on_thresh_ &&
          o6_cur_ < o6_on_thresh_ &&
