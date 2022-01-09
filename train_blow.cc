@@ -15,10 +15,10 @@
 namespace {
 
 constexpr double kMinO1On = 50;
-constexpr double kMaxO1On = 10000;
+constexpr double kMaxO1On = 15000;
 constexpr double kMinO7On = 20;
 constexpr double kMaxO7On = 200;
-constexpr double kMinO7Off = 5;
+constexpr double kMinO7Off = 1;
 constexpr double kMaxO7Off = 50;
 constexpr int kMinLookbackBlocks = 1;
 constexpr int kMaxLookbackBlocks = 10;
