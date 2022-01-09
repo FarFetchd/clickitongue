@@ -16,10 +16,6 @@ namespace {
 
 constexpr double kMinO1On = 50;
 constexpr double kMaxO1On = 10000;
-constexpr double kMinO6On = 50;
-constexpr double kMaxO6On = 500;
-constexpr double kMinO6Off = 10;
-constexpr double kMaxO6Off = 200;
 constexpr double kMinO7On = 20;
 constexpr double kMaxO7On = 200;
 constexpr double kMinO7Off = 5;
@@ -30,16 +26,13 @@ constexpr int kMaxLookbackBlocks = 10;
 class TrainParams
 {
 public:
-  TrainParams(double o1on, double o6on, double o6off,
-              double o7on, double o7off, int lb, double scl)
-  : o1_on_thresh(o1on), o6_on_thresh(o6on), o6_off_thresh(o6off),
-    o7_on_thresh(o7on), o7_off_thresh(o7off), lookback_blocks(lb), scale(scl) {}
+  TrainParams(double o1on, double o7on, double o7off, int lb, double scl)
+  : o1_on_thresh(o1on), o7_on_thresh(o7on), o7_off_thresh(o7off),
+    lookback_blocks(lb), scale(scl) {}
 
   bool operator==(TrainParams const& other) const
   {
     return o1_on_thresh == other.o1_on_thresh &&
-           o6_on_thresh == other.o6_on_thresh &&
-           o6_off_thresh == other.o6_off_thresh &&
            o7_on_thresh == other.o7_on_thresh &&
            o7_off_thresh == other.o7_off_thresh &&
            lookback_blocks == other.lookback_blocks;
@@ -72,9 +65,8 @@ public:
     std::vector<int> event_frames;
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<BlowDetector>(
-        nullptr, o1_on_thresh, o6_on_thresh, o6_off_thresh,
-        o7_on_thresh, o7_off_thresh, lookback_blocks, /*require_delay=*/false,
-        &event_frames));
+        nullptr, o1_on_thresh, o7_on_thresh, o7_off_thresh,
+        lookback_blocks, /*require_delay=*/false, &event_frames));
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale,
                                  /*training=*/true);
@@ -115,15 +107,12 @@ public:
   }
   void printParams()
   {
-    PRINTF("blow_o1_on_thresh: %g blow_o6_on_thresh: %g blow_o6_off_thresh: %g "
-           "blow_o7_on_thresh: %g blow_o7_off_thresh: %g lookback_blocks: %d\n",
-           o1_on_thresh, o6_on_thresh, o6_off_thresh,
-           o7_on_thresh, o7_off_thresh, lookback_blocks);
+    PRINTF("blow_o1_on_thresh: %g blow_o7_on_thresh: %g blow_o7_off_thresh: %g "
+           " lookback_blocks: %d\n",
+           o1_on_thresh, o7_on_thresh, o7_off_thresh, lookback_blocks);
   }
 
   double o1_on_thresh;
-  double o6_on_thresh;
-  double o6_off_thresh;
   double o7_on_thresh;
   double o7_off_thresh;
   int lookback_blocks;
@@ -156,16 +145,6 @@ double randomO1On()
   static RandomStuff* r = new RandomStuff(kMinO1On, kMaxO1On);
   return r->random();
 }
-double randomO6On()
-{
-  static RandomStuff* r = new RandomStuff(kMinO6On, kMaxO6On);
-  return r->random();
-}
-double randomO6Off()
-{
-  static RandomStuff* r = new RandomStuff(kMinO6Off, kMaxO6Off);
-  return r->random();
-}
 double randomO7On()
 {
   static RandomStuff* r = new RandomStuff(kMinO7On, kMaxO7On);
@@ -193,12 +172,10 @@ class TrainParamsCocoon
 {
 public:
   TrainParamsCocoon(
-      double o1_on_thresh, double o6_on_thresh,
-      double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
+      double o1_on_thresh, double o7_on_thresh, double o7_off_thresh,
       int lookback_blocks, double scale,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
-  : pupa_(std::make_unique<TrainParams>(o1_on_thresh, o6_on_thresh, o6_off_thresh,
-                                        o7_on_thresh, o7_off_thresh,
+  : pupa_(std::make_unique<TrainParams>(o1_on_thresh, o7_on_thresh, o7_off_thresh,
                                         lookback_blocks, scale)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
                                                   example_sets)) {}
@@ -222,13 +199,11 @@ public:
 
   bool emplaceIfValid(
       std::vector<TrainParamsCocoon>& ret, double o1_on_thresh,
-      double o6_on_thresh, double o6_off_thresh, double o7_on_thresh,
-      double o7_off_thresh, int lookback_blocks)
+      double o7_on_thresh, double o7_off_thresh, int lookback_blocks)
   {
-    if (o6_off_thresh < o6_on_thresh && o7_off_thresh < o7_on_thresh)
+    if (o7_off_thresh < o7_on_thresh)
     {
-      ret.emplace_back(o1_on_thresh, o6_on_thresh, o6_off_thresh,
-                       o7_on_thresh, o7_off_thresh, lookback_blocks,
+      ret.emplace_back(o1_on_thresh, o7_on_thresh, o7_off_thresh, lookback_blocks,
                        scale_, examples_sets_);
       return true;
     }
@@ -240,13 +215,11 @@ public:
     while (true)
     {
       double o1_on_thresh = randomO1On();
-      double o6_on_thresh = randomO6On();
-      double o6_off_thresh = randomO6Off();
       double o7_on_thresh = randomO7On();
       double o7_off_thresh = randomO7Off();
       int lookback_blocks = randomLookbackBlocks();
-      if (emplaceIfValid(ret, o1_on_thresh, o6_on_thresh, o6_off_thresh,
-                         o7_on_thresh, o7_off_thresh, lookback_blocks))
+      if (emplaceIfValid(ret, o1_on_thresh, o7_on_thresh, o7_off_thresh,
+                         lookback_blocks))
       {
         break;
       }
@@ -259,19 +232,15 @@ public:
   {
     std::vector<TrainParamsCocoon> ret;
     HIDEOUS_FOR(o1_on_thresh, kMinO1On, kMaxO1On)
-    HIDEOUS_FOR(o6_on_thresh, kMinO6On, kMaxO6On)
-    HIDEOUS_FOR(o6_off_thresh, kMinO6Off, kMaxO6Off)
     HIDEOUS_FOR(o7_on_thresh, kMinO7On, kMaxO7On)
     HIDEOUS_FOR(o7_off_thresh, kMinO7Off, kMaxO7Off)
     for (int lookback_blocks = 3; lookback_blocks <= 6; lookback_blocks += 3)
     {
-      emplaceIfValid(ret, o1_on_thresh, o6_on_thresh, o6_off_thresh,
-                     o7_on_thresh, o7_off_thresh, lookback_blocks);
+      emplaceIfValid(ret, o1_on_thresh, o7_on_thresh, o7_off_thresh,
+                     lookback_blocks);
     }
 
     ret.emplace_back(0.5*(kMaxO1On-kMinO1On),
-                     0.5*(kMaxO6On-kMinO6On),
-                     0.5*(kMaxO6Off-kMinO6Off),
                      0.5*(kMaxO7On-kMinO7On),
                      0.5*(kMaxO7Off-kMinO7Off),
                      0.5*(kMaxLookbackBlocks-kMinLookbackBlocks),
@@ -289,57 +258,31 @@ public:
 
     double left_o1_on_thresh = x.o1_on_thresh - (kMaxO1On-kMinO1On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO1On, left_o1_on_thresh, kMaxO1On);
-    emplaceIfValid(ret, left_o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
+    emplaceIfValid(ret, left_o1_on_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
     double rite_o1_on_thresh = x.o1_on_thresh + (kMaxO1On-kMinO1On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO1On, rite_o1_on_thresh, kMaxO1On);
-    emplaceIfValid(ret, rite_o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
-
-    double left_o6_on_thresh = x.o6_on_thresh - (kMaxO6On-kMinO6On)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO6On, left_o6_on_thresh, kMaxO6On);
-    emplaceIfValid(ret, x.o1_on_thresh, left_o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
-    double rite_o6_on_thresh = x.o6_on_thresh + (kMaxO6On-kMinO6On)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO6On, rite_o6_on_thresh, kMaxO6On);
-    emplaceIfValid(ret, x.o1_on_thresh, rite_o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
-
-    double left_o6_off_thresh = x.o6_off_thresh - (kMaxO6Off-kMinO6Off)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO6Off, left_o6_off_thresh, kMaxO6Off);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   left_o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
-    double rite_o6_off_thresh = x.o6_off_thresh + (kMaxO6Off-kMinO6Off)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO6Off, rite_o6_off_thresh, kMaxO6Off);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   rite_o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
+    emplaceIfValid(ret, rite_o1_on_thresh, x.o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
 
     double left_o7_on_thresh = x.o7_on_thresh - (kMaxO7On-kMinO7On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7On, left_o7_on_thresh, kMaxO7On);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, left_o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
+    emplaceIfValid(ret, x.o1_on_thresh, left_o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
     double rite_o7_on_thresh = x.o7_on_thresh + (kMaxO7On-kMinO7On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7On, rite_o7_on_thresh, kMaxO7On);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, rite_o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
+    emplaceIfValid(ret, x.o1_on_thresh, rite_o7_on_thresh, x.o7_off_thresh, x.lookback_blocks);
 
     double left_o7_off_thresh = x.o7_off_thresh - (kMaxO7Off-kMinO7Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7Off, left_o7_off_thresh, kMaxO7Off);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, left_o7_off_thresh, x.lookback_blocks);
+    emplaceIfValid(ret, x.o1_on_thresh, x.o7_on_thresh, left_o7_off_thresh, x.lookback_blocks);
     double rite_o7_off_thresh = x.o7_off_thresh + (kMaxO7Off-kMinO7Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO7Off, rite_o7_off_thresh, kMaxO7Off);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, rite_o7_off_thresh, x.lookback_blocks);
+    emplaceIfValid(ret, x.o1_on_thresh, x.o7_on_thresh, rite_o7_off_thresh, x.lookback_blocks);
 
     int left_lookback_blocks = x.lookback_blocks - 1;
     if (left_lookback_blocks < kMinLookbackBlocks) left_lookback_blocks = kMinLookbackBlocks;
-    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, left_lookback_blocks);
+    emplaceIfValid(ret, x.o1_on_thresh, x.o7_on_thresh, x.o7_off_thresh, left_lookback_blocks);
     double rite_lookback_blocks = x.lookback_blocks + 1;
     if (rite_lookback_blocks > kMaxLookbackBlocks) rite_lookback_blocks = kMaxLookbackBlocks;
-    emplaceIfValid(ret, x.o1_on_thresh, x.o6_on_thresh,
-                   x.o6_off_thresh, x.o7_on_thresh, x.o7_off_thresh, rite_lookback_blocks);
+    emplaceIfValid(ret, x.o1_on_thresh, x.o7_on_thresh, x.o7_off_thresh, rite_lookback_blocks);
 
     // and some random points within the pattern grid, the idea being that if
     // there are two params that only improve when changed together, pattern
@@ -347,11 +290,9 @@ public:
     for (int i=0; i<10; i++)
     {
       double o1on = randomBetween(left_o1_on_thresh, rite_o1_on_thresh);
-      double o6on = randomBetween(left_o6_on_thresh, rite_o6_on_thresh);
-      double o6off = randomBetween(left_o6_off_thresh, rite_o6_off_thresh);
       double o7on = randomBetween(left_o7_on_thresh, rite_o7_on_thresh);
       double o7off = randomBetween(left_o7_off_thresh, rite_o7_off_thresh);
-      emplaceIfValid(ret, o1on, o6on, o6off, o7on, o7off, x.lookback_blocks);
+      emplaceIfValid(ret, o1on, o7on, o7off, x.lookback_blocks);
     }
     // and also just some random ones for extra exploration
     for (int i = 0; i < 5; i++)
@@ -509,14 +450,10 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
-  tune(&best, &best.o6_off_thresh, /*tune_up=*/false,
-       kMinO6Off, best.o6_off_thresh, 0.25, "o6_off", factory.examples_sets_);
   tune(&best, &best.o7_off_thresh, /*tune_up=*/false,
        kMinO7Off, best.o7_off_thresh, 0.25, "o7_off", factory.examples_sets_);
   tune(&best, &best.o1_on_thresh, /*tune_up=*/false,
        kMinO1On, best.o1_on_thresh, 0.75, "o1_on", factory.examples_sets_);
-  tune(&best, &best.o6_on_thresh, /*tune_up=*/false,
-       kMinO6On, best.o6_on_thresh, 0.75, "o6_on", factory.examples_sets_);
   tune(&best, &best.o7_on_thresh, /*tune_up=*/false,
        kMinO7On, best.o7_on_thresh, 0.75, "o7_on", factory.examples_sets_);
   best = factory.tuneLookback(best);
@@ -526,8 +463,6 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.action_on = Action::NoAction;
   ret.action_off = Action::NoAction;
   ret.o1_on_thresh = best.o1_on_thresh;
-  ret.o6_on_thresh = best.o6_on_thresh;
-  ret.o6_off_thresh = best.o6_off_thresh;
   ret.o7_on_thresh = best.o7_on_thresh;
   ret.o7_off_thresh = best.o7_off_thresh;
   ret.lookback_blocks = best.lookback_blocks;

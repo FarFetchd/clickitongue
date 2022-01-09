@@ -13,17 +13,15 @@ public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
   BlowDetector(BlockingQueue<Action>* action_queue,
-               double o1_on_thresh, double o6_on_thresh,
-               double o6_off_thresh, double o7_on_thresh, double o7_off_thresh,
+               double o1_on_thresh, double o7_on_thresh, double o7_off_thresh,
                int lookback_blocks, bool require_delay,
                std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   BlowDetector(BlockingQueue<Action>* action_queue,
                Action action_on, Action action_off,
-               double o1_on_thresh, double o6_on_thresh, double o6_off_thresh,
-               double o7_on_thresh, double o7_off_thresh, int lookback_blocks,
-               bool require_delay);
+               double o1_on_thresh, double o7_on_thresh, double o7_off_thresh,
+               int lookback_blocks, bool require_delay);
 
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
@@ -43,8 +41,6 @@ private:
   // o1,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
   // ...o1 is bins 16+17+...+31, o6 is 32+...+63, o7 is 64+...+127.
   const double o1_on_thresh_;
-  const double o6_on_thresh_;
-  const double o6_off_thresh_;
   const double o7_on_thresh_;
   const double o7_off_thresh_;
   // How far in the past (in blocks) counts towards threshold activation.
@@ -52,11 +48,9 @@ private:
   const int lookback_blocks_;
 
   double o1_cur_ = 0;
-  double o6_cur_ = 0;
   double o7_cur_ = 0;
 
   int blocks_since_1above_ = kForeverBlocksAgo;
-  int blocks_since_6above_ = kForeverBlocksAgo;
   int blocks_since_7above_ = kForeverBlocksAgo;
 
   // After exceeding the activation threshold, wait for a little while
