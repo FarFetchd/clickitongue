@@ -39,6 +39,14 @@ void TrainParamsFactoryCtorCommon(
       x.first += noise;
     examples_sets->push_back(examples);
   }
+  // A loud version of the base examples, to make one type less likely to cause
+  // false positives for another.
+  {
+    std::vector<std::pair<AudioRecording, int>> examples = base_examples;
+    for (auto& x : examples)
+      x.first.scale(1.25);
+    examples_sets->push_back(examples);
+  }
   // Finally, a quiet version, for a challenge/tie breaker.
   {
     std::vector<std::pair<AudioRecording, int>> examples = base_examples;
