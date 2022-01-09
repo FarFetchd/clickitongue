@@ -1,94 +1,17 @@
 
 wishlist
 * cumulative training examples, across multiple sessions
+* idea for easy manual tuning: the tuning algorithm in there now might be good for
+  "user clicked a button saying make it more/less sensitive". maybe have a standard
+  pullback of like 0.8 so they can do it once for a little, or repeatedly for more.
 * have some buttons/input during running that allows users to easily apply what's described in the "Manual Tuning" section of the readme.
   the idea is it would look like "make left clicking easier" "make left clicking harder" etc.
-* easy selection among multiple profiles: it seems different rooms can have different enough acoustics to cause problems.
-* fun idea: ascending and descending whistles to control scroll wheel. need to track frequencies at a finer resolution; try
+* fun idea: ascending and descending whistles or humming to control scroll wheel.
+  need to track frequencies at a finer resolution; try
   "zoom FFT" (https://2015fallhw.github.io/arcidau/ZoomFFT.html)
-* translate into all languages we can get translators for
 * debian package
-
-
-
-
-* whistle (breathing in): single massive peak, low freqs should have little energy
-interesting: when the mic is close enough to your mouth, the odd overtones show up. also a bit of the evens, but not nearly as much.
-is this just me/my mic/my environment, or more universal? sounds universal, that's cool!
-example:
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     0                     0
-          0                     00                    0
-          0                     00                    0
-          00                    00                    0
-          00                    00                    0
-          00                    00                    0
-          00                    00                    0
-          00                    00                    0
-          00                    00                    0
-          00                    00                    0
-          000                   00                    0
-          000                   00                    0
-          000                   00                    00
-          000                   00                    00
-          000                   00                    00
-          000                   000                   00
-        0 000                   000                   00
-        00000                   000                   00
-        00000                   000                   00
-        00000                   000                   00
-        00000                   000                   00
-        00000                   000                   00
-        00000                   000                   00
-        00000                   000                   00
-        00000                   000                   00
-        00000                   000                   00
-        00000                   000                   000
-        00000                   000                   000                    0
-        00000                 0 000                   000                    0
-        00000                 0 000                   000                    0
-        00000                 0 000                   000                    0
-        000000                00000                   000                    0
-       0000000       0        00000                   000                    0
-       0000000       0        00000                   000                   00
-       0000000       0        000000                  000                   00
-      000000000      0        000000                  000                   000
-      000000000      0       0000000       0        0 000                   000
-      000000000      0      000000000      0        0 0000                  000
-     0000000000      0     0000000000      0        0 0000                  000
-  0000000000000000 0 0   000000000000 0  0 0     000000000       0          0000
-
-
-
-
-
+* brew install
 
 # CONFIG NOTES
 
-audio profile should be "Analog Stereo Duplex"
-
-
-
-
-
-
-
-# USABILITY NOTES
-
-We have 3 good candidates: whistling, humming, up-close blowing. Not everybody can whistle. Humming may be hard to distinguish from talking. Not everybody can have a mic close enough for blowing.
-
-Ideal (if want to be robust to talking): up-close blowing for left click, whistle for right
-Ideal (if don't need to be talking, since humming is easier): blow left, hum right
-***if only talking sometimes: whistle to pause/unpause
-
-
-looks like humming will be the least common denom here. (is fem humming much different?)
+(kubuntu combo mic+headphones headset) audio profile should be "Analog Stereo Duplex"
