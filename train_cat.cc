@@ -333,12 +333,8 @@ CatConfig trainCat(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
-  tune(&best, &best.o5_on_thresh, /*tune_up=*/true,
-       best.o5_on_thresh, kMaxO5On, 0.5, "o5_on", factory.examples_sets_);
-  tune(&best, &best.o6_on_thresh, /*tune_up=*/true,
-       best.o6_on_thresh, kMaxO6On, 0.5, "o6_on", factory.examples_sets_);
-  tune(&best, &best.o7_on_thresh, /*tune_up=*/true,
-       best.o7_on_thresh, kMaxO7On, 0.5, "o7_on", factory.examples_sets_);
+  tune(&best, &best.o1_limit, /*tune_up=*/true,
+       best.o1_limit, kMaxO1Limit, 0.75, "o1_limit", factory.examples_sets_);
 
   CatConfig ret;
   ret.scale = scale;
