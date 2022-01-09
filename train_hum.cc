@@ -16,31 +16,23 @@ namespace {
 
 constexpr double kEwmaAlpha = 0.3;
 
-constexpr double kMinO1On = 1000;
+constexpr double kMinO1On = 100;
 constexpr double kMaxO1On = 10000;
 constexpr double kMinO1Off = 10;
 constexpr double kMaxO1Off = 1000;
-constexpr double kMinO2On = 200;
-constexpr double kMaxO2On = 2000;
-constexpr double kMinO3Limit = 20;
-constexpr double kMaxO3Limit = 1000;
 constexpr double kMinO6Limit = 10;
 constexpr double kMaxO6Limit = 500;
 
 class TrainParams
 {
 public:
-  TrainParams(double o1on, double o1off, double o2on, double o3lim, double o6lim,
-              double scl)
-  : o1_on_thresh(o1on), o1_off_thresh(o1off), o2_on_thresh(o2on),
-    o3_limit(o3lim), o6_limit(o6lim), scale(scl) {}
+  TrainParams(double o1on, double o1off, double o6lim, double scl)
+  : o1_on_thresh(o1on), o1_off_thresh(o1off), o6_limit(o6lim), scale(scl) {}
 
   bool operator==(TrainParams const& other) const
   {
     return o1_on_thresh == other.o1_on_thresh &&
            o1_off_thresh == other.o1_off_thresh &&
-           o2_on_thresh == other.o2_on_thresh &&
-           o3_limit == other.o3_limit &&
            o6_limit == other.o6_limit;
   }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
@@ -71,8 +63,8 @@ public:
     std::vector<int> event_frames;
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<HumDetector>(
-        nullptr, o1_on_thresh, o1_off_thresh, o2_on_thresh, o3_limit, o6_limit,
-        kEwmaAlpha, /*require_delay=*/true, &event_frames));
+        nullptr, o1_on_thresh, o1_off_thresh, o6_limit, kEwmaAlpha,
+        /*require_delay=*/true, &event_frames));
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale,
                                  /*training=*/true);
@@ -111,15 +103,12 @@ public:
   }
   void printParams()
   {
-    PRINTF("hum_o1_on_thresh: %g hum_o1_off_thresh: %g hum_o2_on_thresh: %g "
-           "hum_o3_limit: %g hum_o6_limit: %g\n",
-           o1_on_thresh, o1_off_thresh, o2_on_thresh, o3_limit, o6_limit);
+    PRINTF("hum_o1_on_thresh: %g hum_o1_off_thresh: %g hum_o6_limit: %g\n",
+           o1_on_thresh, o1_off_thresh, o6_limit);
   }
 
   double o1_on_thresh;
   double o1_off_thresh;
-  double o2_on_thresh;
-  double o3_limit;
   double o6_limit;
   double scale;
 
@@ -155,16 +144,6 @@ double randomO1Off()
   static RandomStuff* r = new RandomStuff(kMinO1Off, kMaxO1Off);
   return r->random();
 }
-double randomO2On()
-{
-  static RandomStuff* r = new RandomStuff(kMinO2On, kMaxO2On);
-  return r->random();
-}
-double randomO3Limit()
-{
-  static RandomStuff* r = new RandomStuff(kMinO3Limit, kMaxO3Limit);
-  return r->random();
-}
 double randomO6Limit()
 {
   static RandomStuff* r = new RandomStuff(kMinO6Limit, kMaxO6Limit);
@@ -182,11 +161,9 @@ class TrainParamsCocoon
 {
 public:
   TrainParamsCocoon(
-      double o1_on_thresh, double o1_off_thresh, double o2_on_thresh,
-      double o3_limit, double o6_limit, double scale,
+      double o1_on_thresh, double o1_off_thresh, double o6_limit, double scale,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
-  : pupa_(std::make_unique<TrainParams>(o1_on_thresh, o1_off_thresh, o2_on_thresh,
-                                        o3_limit, o6_limit, scale)),
+  : pupa_(std::make_unique<TrainParams>(o1_on_thresh, o1_off_thresh, o6_limit, scale)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
                                                   example_sets)) {}
   TrainParams awaitHatch()
@@ -208,13 +185,12 @@ public:
                      double scale, bool mic_near_mouth);
 
   bool emplaceIfValid(std::vector<TrainParamsCocoon>& ret, double o1_on_thresh,
-                      double o1_off_thresh, double o2_on_thresh,
-                      double o3_limit, double o6_limit)
+                      double o1_off_thresh, double o6_limit)
   {
     if (o1_off_thresh < o1_on_thresh)
     {
-      ret.emplace_back(o1_on_thresh, o1_off_thresh, o2_on_thresh, o3_limit,
-                       o6_limit, scale_, examples_sets_);
+      ret.emplace_back(o1_on_thresh, o1_off_thresh, o6_limit,
+                       scale_, examples_sets_);
       return true;
     }
     return false;
@@ -226,14 +202,9 @@ public:
     {
       double o1_on_thresh = randomO1On();
       double o1_off_thresh = randomO1Off();
-      double o2_on_thresh = randomO2On();
-      double o3_limit = randomO3Limit();
       double o6_limit = randomO6Limit();
-      if (emplaceIfValid(ret, o1_on_thresh, o1_off_thresh, o2_on_thresh,
-                         o3_limit, o6_limit))
-      {
+      if (emplaceIfValid(ret, o1_on_thresh, o1_off_thresh, o6_limit))
         break;
-      }
     }
   }
 
@@ -244,18 +215,13 @@ public:
     std::vector<TrainParamsCocoon> ret;
     HIDEOUS_FOR(o1_on_thresh, kMinO1On, kMaxO1On)
     HIDEOUS_FOR(o1_off_thresh, kMinO1Off, kMaxO1Off)
-    HIDEOUS_FOR(o2_on_thresh, kMinO2On, kMaxO2On)
-    HIDEOUS_FOR(o3_limit, kMinO3Limit, kMaxO3Limit)
     HIDEOUS_FOR(o6_limit, kMinO6Limit, kMaxO6Limit)
     {
-      emplaceIfValid(ret, o1_on_thresh, o1_off_thresh, o2_on_thresh,
-                     o3_limit, o6_limit);
+      emplaceIfValid(ret, o1_on_thresh, o1_off_thresh, o6_limit);
     }
 
     ret.emplace_back(0.5*(kMaxO1On-kMinO1On),
                      0.5*(kMaxO1Off-kMinO1Off),
-                     0.5*(kMaxO2On-kMinO2On),
-                     0.5*(kMaxO3Limit-kMinO3Limit),
                      0.5*(kMaxO6Limit-kMinO6Limit),
                      scale_, examples_sets_);
     for (int i = 0; i < 20; i++)
@@ -271,38 +237,24 @@ public:
 
     double left_o1_on_thresh = x.o1_on_thresh - (kMaxO1On-kMinO1On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO1On, left_o1_on_thresh, kMaxO1On);
-    emplaceIfValid(ret, left_o1_on_thresh, x.o1_off_thresh, x.o2_on_thresh, x.o3_limit, x.o6_limit);
+    emplaceIfValid(ret, left_o1_on_thresh, x.o1_off_thresh, x.o6_limit);
     double rite_o1_on_thresh = x.o1_on_thresh + (kMaxO1On-kMinO1On)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO1On, rite_o1_on_thresh, kMaxO1On);
-    emplaceIfValid(ret, rite_o1_on_thresh, x.o1_off_thresh, x.o2_on_thresh, x.o3_limit, x.o6_limit);
+    emplaceIfValid(ret, rite_o1_on_thresh, x.o1_off_thresh, x.o6_limit);
 
     double left_o1_off_thresh = x.o1_off_thresh - (kMaxO1Off-kMinO1Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO1Off, left_o1_off_thresh, kMaxO1Off);
-    emplaceIfValid(ret, x.o1_on_thresh, left_o1_off_thresh, x.o2_on_thresh, x.o3_limit, x.o6_limit);
+    emplaceIfValid(ret, x.o1_on_thresh, left_o1_off_thresh, x.o6_limit);
     double rite_o1_off_thresh = x.o1_off_thresh + (kMaxO1Off-kMinO1Off)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO1Off, rite_o1_off_thresh, kMaxO1Off);
-    emplaceIfValid(ret, x.o1_on_thresh, rite_o1_off_thresh, x.o2_on_thresh, x.o3_limit, x.o6_limit);
-
-    double left_o2_on_thresh = x.o2_on_thresh - (kMaxO2On-kMinO2On)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO2On, left_o2_on_thresh, kMaxO2On);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, left_o2_on_thresh, x.o3_limit, x.o6_limit);
-    double rite_o2_on_thresh = x.o2_on_thresh + (kMaxO2On-kMinO2On)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO2On, rite_o2_on_thresh, kMaxO2On);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, rite_o2_on_thresh, x.o3_limit, x.o6_limit);
-
-    double left_o3_limit = x.o3_limit - (kMaxO3Limit-kMinO3Limit)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO3Limit, left_o3_limit, kMaxO3Limit);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o2_on_thresh, left_o3_limit, x.o6_limit);
-    double rite_o3_limit = x.o3_limit + (kMaxO3Limit-kMinO3Limit)/pattern_divisor_;
-    KEEP_IN_BOUNDS(kMinO3Limit, rite_o3_limit, kMaxO3Limit);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o2_on_thresh, rite_o3_limit, x.o6_limit);
+    emplaceIfValid(ret, x.o1_on_thresh, rite_o1_off_thresh, x.o6_limit);
 
     double left_o6_limit = x.o6_limit - (kMaxO6Limit-kMinO6Limit)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6Limit, left_o6_limit, kMaxO6Limit);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o2_on_thresh, x.o3_limit, left_o6_limit);
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, left_o6_limit);
     double rite_o6_limit = x.o6_limit + (kMaxO6Limit-kMinO6Limit)/pattern_divisor_;
     KEEP_IN_BOUNDS(kMinO6Limit, rite_o6_limit, kMaxO6Limit);
-    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, x.o2_on_thresh, x.o3_limit, rite_o6_limit);
+    emplaceIfValid(ret, x.o1_on_thresh, x.o1_off_thresh, rite_o6_limit);
 
     // and some random points within the pattern grid, the idea being that if
     // there are two params that only improve when changed together, pattern
@@ -311,10 +263,8 @@ public:
     {
       double o1on = randomBetween(left_o1_on_thresh, rite_o1_on_thresh);
       double o1off = randomBetween(left_o1_off_thresh, rite_o1_off_thresh);
-      double o2on = randomBetween(left_o2_on_thresh, rite_o2_on_thresh);
-      double o3lim = randomBetween(left_o3_limit, rite_o3_limit);
       double o6lim = randomBetween(left_o6_limit, rite_o6_limit);
-      emplaceIfValid(ret, o1on, o1off, o2on, o3lim, o6lim);
+      emplaceIfValid(ret, o1on, o1off, o6lim);
     }
     // and also just some random ones for extra exploration
     for (int i = 0; i < 5; i++)
@@ -417,8 +367,6 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
-  tune(&best, &best.o3_limit, /*tune_up=*/false,
-       kMinO3Limit, best.o3_limit, 0.5, "o3_limit", factory.examples_sets_);
   tune(&best, &best.o6_limit, /*tune_up=*/false,
        kMinO6Limit, best.o6_limit, 0.5, "o6_limit", factory.examples_sets_);
 
@@ -428,8 +376,6 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   ret.action_off = Action::NoAction;
   ret.o1_on_thresh = best.o1_on_thresh;
   ret.o1_off_thresh = best.o1_off_thresh;
-  ret.o2_on_thresh = best.o2_on_thresh;
-  ret.o3_limit = best.o3_limit;
   ret.o6_limit = best.o6_limit;
   ret.ewma_alpha = kEwmaAlpha;
 
