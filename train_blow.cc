@@ -16,8 +16,8 @@ namespace {
 
 constexpr double kMinO1On = 50;
 constexpr double kMaxO1On = 15000;
-constexpr double kMinO7On = 20;
-constexpr double kMaxO7On = 200;
+constexpr double kMinO7On = 10;
+constexpr double kMaxO7On = 1000;
 constexpr double kMinO7Off = 1;
 constexpr double kMaxO7Off = 50;
 constexpr int kMinLookbackBlocks = 1;
