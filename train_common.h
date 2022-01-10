@@ -216,10 +216,30 @@ void tune(
   obj->computeScore(examples_sets);
   if (start < *obj)
   {
-    PRINTF("%s tuning unsuccessful; leaving it alone\n", var_name.c_str());
+    if (!var_name.empty())
+      PRINTF("%s tuning unsuccessful; leaving it alone\n", var_name.c_str());
     *obj = start;
     return;
   }
-  PRINTF("tuned %s from %g %s to %g\n", var_name.c_str(),
-         true_orig_start_val, tune_up ? "up" : "down", *member_of_obj);
+  if (!var_name.empty())
+  {
+    PRINTF("tuned %s from %g %s to %g\n", var_name.c_str(),
+           true_orig_start_val, tune_up ? "up" : "down", *member_of_obj);
+  }
 }
+
+// obj should be normal, not pointer
+#define MIDDLETUNE(obj, VARNAME, var_string_name, min_val, max_val) do \
+{                                                              \
+  double start_val = obj.VARNAME;                              \
+  TrainParams lower = obj;                                     \
+  TrainParams upper = obj;                                     \
+  tune(&lower, &lower.VARNAME, false,                          \
+       min_val, lower.VARNAME, 0, "", factory.examples_sets_); \
+  tune(&upper, &upper.VARNAME, true,                           \
+       upper.VARNAME, max_val, 0, "", factory.examples_sets_); \
+  obj.VARNAME = (lower.VARNAME + upper.VARNAME) / 2.0;         \
+  obj.computeScore(factory.examples_sets_);                    \
+                                                               \
+  PRINTF("tuned %s from %g to %g\n", var_string_name, start_val, obj.VARNAME); \
+} while(false);

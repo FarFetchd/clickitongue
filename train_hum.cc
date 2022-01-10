@@ -367,8 +367,7 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
-  tune(&best, &best.o6_limit, /*tune_up=*/false,
-       kMinO6Limit, best.o6_limit, 0.5, "o6_limit", factory.examples_sets_);
+  MIDDLETUNE(best, o6_limit, "o6_limit", kMinO6Limit, kMaxO6Limit);
 
   HumConfig ret;
   ret.scale = scale;

@@ -450,6 +450,9 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
+  // Shouldn't use MIDDLETUNE here because we have only one long blow example,
+  // and it's not even that long. We could use it if we had more long blowing
+  // time to go on.
   tune(&best, &best.o7_off_thresh, /*tune_up=*/false,
        kMinO7Off, best.o7_off_thresh, 0.25, "o7_off", factory.examples_sets_);
   best = factory.tuneLookback(best);

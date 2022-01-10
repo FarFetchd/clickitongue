@@ -299,6 +299,8 @@ CatConfig trainCat(std::vector<std::pair<AudioRecording, int>> const& audio_exam
       best = no_limit;
   }
 
+  MIDDLETUNE(best, o7_on_thresh, "o7_on_thresh", kMinO7On, kMaxO7On);
+
   CatConfig ret;
   ret.scale = scale;
   ret.action_on = Action::NoAction;
