@@ -130,9 +130,11 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
 {
   collectAnyMissingExamples(blow_examples, cat_examples, hum_examples);
 
-  // all examples of one are negative examples for the other
+  // all examples of one are negative examples for the other...
+  // ...except cat aren't shown to blow, because they look too much like blow,
+  // and we're already handling the confusion by having cat inhibit blow.
   TaggedExamples blow_examples_plus_neg = combinePositiveAndNegative(
-      blow_examples, {cat_examples, hum_examples});
+      blow_examples, {hum_examples});
   TaggedExamples cat_examples_plus_neg = combinePositiveAndNegative(
       cat_examples, {blow_examples, hum_examples});
   TaggedExamples hum_examples_plus_neg = combinePositiveAndNegative(

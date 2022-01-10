@@ -53,6 +53,7 @@ std::string Config::toString() const
         << "cat_action_off: " << actionString(cat.action_off) << "\n"
         << "cat_o7_on_thresh: " << cat.o7_on_thresh << "\n"
         << "cat_o1_limit: " << cat.o1_limit << "\n"
+        << "cat_use_limit: " << (cat.use_limit ? "true" : "false") << "\n"
         << "cat_scale: " << cat.scale << "\n";
   }
   if (hum.enabled)
@@ -89,6 +90,7 @@ CatConfig::CatConfig(farfetchd::ConfigReader const& cfg)
   action_off = parseAction(cfg.getString("cat_action_off").value_or("x"));
   o7_on_thresh = cfg.getDouble("cat_o7_on_thresh").value_or(-1);
   o1_limit = cfg.getDouble("cat_o1_limit").value_or(-1);
+  use_limit = (cfg.getString("cat_use_limit").value_or("false") == "true");
   scale = cfg.getDouble("cat_scale").value_or(-1);
 
   enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&

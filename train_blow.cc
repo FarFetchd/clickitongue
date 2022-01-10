@@ -452,10 +452,6 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
 
   tune(&best, &best.o7_off_thresh, /*tune_up=*/false,
        kMinO7Off, best.o7_off_thresh, 0.25, "o7_off", factory.examples_sets_);
-  tune(&best, &best.o1_on_thresh, /*tune_up=*/false,
-       kMinO1On, best.o1_on_thresh, 0.75, "o1_on", factory.examples_sets_);
-  tune(&best, &best.o7_on_thresh, /*tune_up=*/false,
-       kMinO7On, best.o7_on_thresh, 0.75, "o7_on", factory.examples_sets_);
   best = factory.tuneLookback(best);
 
   BlowConfig ret;
