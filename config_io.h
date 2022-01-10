@@ -34,6 +34,7 @@ struct CatConfig
   Action action_off;
   double o7_on_thresh;
   double o1_limit;
+  bool use_limit;
   double scale;
 };
 

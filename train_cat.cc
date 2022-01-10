@@ -22,13 +22,14 @@ constexpr double kMaxO1Limit = 2000;
 class TrainParams
 {
 public:
-  TrainParams(double o7on, double o1lim, double scl)
-  : o7_on_thresh(o7on), o1_limit(o1lim), scale(scl) {}
+  TrainParams(double o7on, double o1lim, bool use_lim, double scl)
+  : o7_on_thresh(o7on), o1_limit(o1lim), use_limit(use_lim), scale(scl) {}
 
   bool operator==(TrainParams const& other) const
   {
     return o7_on_thresh == other.o7_on_thresh &&
-           o1_limit == other.o1_limit;
+           o1_limit == other.o1_limit &&
+           use_limit == other.use_limit;
   }
   friend bool operator<(TrainParams const& l, TrainParams const& r)
   {
@@ -58,7 +59,7 @@ public:
     std::vector<int> event_frames;
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<CatDetector>(nullptr,
-        o7_on_thresh, o1_limit, &event_frames));
+        o7_on_thresh, o1_limit, use_limit, &event_frames));
 
     FFTResultDistributor wrapper(std::move(just_one_detector), scale,
                                  /*training=*/true);
@@ -99,11 +100,13 @@ public:
   }
   void printParams()
   {
-    PRINTF("cat_o7_on_thresh: %g cat_o1_limit: %g\n", o7_on_thresh, o1_limit);
+    PRINTF("cat_o7_on_thresh: %g cat_o1_limit: %g use_limit: %s\n",
+           o7_on_thresh, o1_limit, use_limit ? "true" : "false");
   }
 
   double o7_on_thresh;
   double o1_limit;
+  bool use_limit;
   double scale;
 
   std::vector<int> score;
@@ -150,9 +153,9 @@ class TrainParamsCocoon
 {
 public:
   TrainParamsCocoon(
-      double o7_on_thresh, double o1_limit, double scale,
+      double o7_on_thresh, double o1_limit, bool use_limit, double scale,
       std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
-  : pupa_(std::make_unique<TrainParams>(o7_on_thresh, o1_limit, scale)),
+  : pupa_(std::make_unique<TrainParams>(o7_on_thresh, o1_limit, use_limit, scale)),
     score_computer_(std::make_unique<std::thread>(runComputeScore, pupa_.get(),
                                                   example_sets)) {}
   TrainParams awaitHatch()
@@ -178,7 +181,8 @@ public:
   {
     if (true)
     {
-      ret.emplace_back(o7_on_thresh, o1_limit, scale_, examples_sets_);
+      ret.emplace_back(o7_on_thresh, o1_limit, true, scale_, examples_sets_);
+      ret.emplace_back(o7_on_thresh, o1_limit, false, scale_, examples_sets_);
       return true;
     }
   }
@@ -205,9 +209,8 @@ public:
       emplaceIfValid(ret, o7_on_thresh, o1_limit);
     }
 
-    ret.emplace_back(0.5*(kMaxO7On-kMinO7On),
-                     0.5*(kMaxO1Limit-kMinO1Limit),
-                     scale_, examples_sets_);
+    emplaceIfValid(ret, 0.5*(kMaxO7On-kMinO7On),
+                        0.5*(kMaxO1Limit-kMinO1Limit));
     for (int i = 0; i < 15; i++)
       emplaceRandomParams(ret);
     return ret;
@@ -286,12 +289,23 @@ CatConfig trainCat(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
   TrainParams best = patternSearch(factory);
 
+  // prefer not to use limit if same scores
+  if (best.use_limit)
+  {
+    TrainParams no_limit = best;
+    no_limit.use_limit = false;
+    no_limit.computeScore(factory.examples_sets_);
+    if (!(best < no_limit))
+      best = no_limit;
+  }
+
   CatConfig ret;
   ret.scale = scale;
   ret.action_on = Action::NoAction;
   ret.action_off = Action::NoAction;
   ret.o7_on_thresh = best.o7_on_thresh;
   ret.o1_limit = best.o1_limit;
+  ret.use_limit = best.use_limit;
 
   ret.enabled = (best.score[0] <= 1);
   return ret;

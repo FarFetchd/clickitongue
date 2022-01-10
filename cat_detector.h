@@ -9,13 +9,13 @@ public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
   CatDetector(BlockingQueue<Action>* action_queue,
-              double o7_on_thresh, double o1_limit,
+              double o7_on_thresh, double o1_limit, bool use_limit,
               std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   CatDetector(BlockingQueue<Action>* action_queue,
               Action action_on, Action action_off,
-              double o7_on_thresh, double o1_limit);
+              double o7_on_thresh, double o1_limit, bool use_limit);
 
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
@@ -32,10 +32,17 @@ protected:
   void resetEWMAs() override;
 
 private:
-  // o1,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
-  // ...o1 is bins 16+17+...+31, o6 is 32+...+63, o7 is 64+...+127.
+  // Normal activation threshold for octave 7. When we have recently seen o1's
+  // limit get exceeded, we boost this threshold, and then decay it back down
+  // in units of o7_on_thresh_.
   const double o7_on_thresh_;
   const double o1_limit_;
+
+  // Whether the o1_limit_ logic actually applies.
+  const bool use_limit_;
+
+  // =o7_on_thresh_ normally, or a multiple of it if o1_limit recently exceeded.
+  double cur_o7_thresh_;
 
   double o7_cur_ = 0;
 

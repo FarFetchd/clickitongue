@@ -206,7 +206,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
   {
     cat_detector = std::make_unique<CatDetector>(
         action_queue, config.cat.action_on, config.cat.action_off,
-        config.cat.o7_on_thresh, config.cat.o1_limit);
+        config.cat.o7_on_thresh, config.cat.o1_limit, config.cat.use_limit);
   }
 
   std::unique_ptr<Detector> blow_detector;
