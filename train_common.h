@@ -163,6 +163,7 @@ void tune(
   double hi_val = max_val;
   TrainParams start = *obj;
   double start_val = *member_of_obj;
+  double true_orig_start_val = start_val;
   int iterations = 0;
   while (hi_val - lo_val > 0.02 * (max_val - min_val))
   {
@@ -179,7 +180,14 @@ void tune(
         lo_val = min_val;
       }
       else
+      {
+        if (*obj < start)
+        {
+          start = *obj;
+          start_val = cur_val;
+        }
         lo_val = cur_val;
+      }
     }
     else // tuning down
     {
@@ -189,7 +197,14 @@ void tune(
         hi_val = max_val;
       }
       else
+      {
+        if (*obj < start)
+        {
+          start = *obj;
+          start_val = cur_val;
+        }
         hi_val = cur_val;
+      }
     }
   }
   // pull back from our tuned result by pullback_fraction to be on the safe side
@@ -205,6 +220,6 @@ void tune(
     *obj = start;
     return;
   }
-  PRINTF("tuned %s from %g %s to %g\n",
-         var_name.c_str(), start_val, tune_up ? "up" : "down", *member_of_obj);
+  PRINTF("tuned %s from %g %s to %g\n", var_name.c_str(),
+         true_orig_start_val, tune_up ? "up" : "down", *member_of_obj);
 }
