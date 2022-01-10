@@ -17,5 +17,3 @@ For more detailed instructions and usage tips, [read Clickitongue's README](http
 On Windows, [download the latest Windows release](https://github.com/FarFetchd/clickitongue/releases/latest), unzip it, and run the .exe.
 
 On Linux or OSX, `git clone https://github.com/FarFetchd/clickitongue`, and follow [the installation instructions for Linux](https://github.com/FarFetchd/clickitongue#installing-on-linux) or [for OSX](https://github.com/FarFetchd/clickitongue#installing-on-osx).
-
-ignore this line
