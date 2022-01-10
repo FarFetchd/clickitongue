@@ -21,9 +21,6 @@ On Linux, clickitongue must be run as root: `sudo ./clickitongue`.
 
 Download the Windows release .zip, unzip it, and run clickitongue.exe.
 
-If you want to click any windows belonging to run-as-admin programs, you'll
-have to run clickitongue.exe as admin. (But that should be rare).
-
 # Installing on OSX
 
 `brew install portaudio fftw`, and then in the clickitongue directory
@@ -36,71 +33,69 @@ of a second).
 # Usage
 
 The first time you run Clickitongue, it will have you train it to detect your
-particular blowing and humming sounds, in your particular acoustic environment.
+particular blowing/'tchk'-ing/humming sounds, in your particular acoustic
+environment. This should take about two to five minutes total. If the training
+does not leave Clickitongue confident in its ability to detect your sounds, it
+will give you a chance to redo part or all of the training.
 
-If you have a microphone that you can position about 1cm in front of your mouth,
-you'll be able to use both blowing and humming, allowing both left and right
-clicks. If you can't keep the mic that close, humming will still work.
-Don't worry about mic quality - even the built-in mic of an X1 Carbon ThinkPad
-works for humming, and any mic positioned (very) near your mouth should work for
-blowing. Remove any spongy/fuzzy windscreens for best blowing results!
+After that first run, whenever you start Clickitongue it will remember the
+configuration it learned the first time, and begin clicking for you immediately.
 
-If you ever want to redo the training procedure, or change the selected audio
+If you ever want to redo the training procedure, or select a different audio
 input device: On Linux or OSX run Clickitongue with the --retrain or
---forget_input_dev flag. On Windows, use the buttons in the main GUI.
+--forget_input_dev flag. On Windows, use the buttons in the GUI.
 
-For long-term use, you'll probably settle into using the gentlest blows
-possible, to avoid fatigue. However, when attempting fast double-clicks,
-these gentle blows tend to smear into each other, making it hard for
-Clickitongue to differentiate them. So, when double-clicking, try making a
-more well-defined plosive sound, like "puh-puh".
+If none of the sound types work, or if just blowing doesn't work despite having
+the mic setup described in the next section, Clickitongue might not have
+selected the right audio input device. (Or your OS might be doing something
+weird; e.g. Kubuntu needs "audio profile" changed to "Analog Stereo Duplex" in
+order to hear the mic of a headset). A good sanity check is to see what sort of
+audio [Audacity](https://github.com/audacity/audacity) is able to record from
+you, since Audacity uses the same audio abstraction library (PortAudio) as
+Clickitongue.
 
 # Mic Advice
 
-Humming works, but for really smooth non-annoying long-term use you want your
-left-clicks to be controlled by blowing. Clickitongue wants yours blows to be
-directly hitting the mic, so that playing back the recording would sound like a
-massive hurricane.
+Depending on your mic setup, Clickitongue will use two of three sounds: softly
+blowing on the mic, making 'tchk' sounds like trying to get a cat's attention,
+or humming.
 
-As you might imagine, good headset mic designers will specifically try to
-prevent their mic from recording this particular kind of audio. Spongy/fuzzy
-windscreens are one technique, which you can of course just remove.
+Based on users' experiences so far, soft blowing is effortlessly smooth even for
+hours of use at a time, cat 'tchk's work extremely well but are a bit annoying
+for long-term frequent use, and humming is quite annoying indeed for long-term
+frequent use. Therefore, Clickitongue assigns blowing to the left-click and
+'tchk'-ing to the much rarer right-click when possible; 'tchk' to left and
+humming to right otherwise.
+
+So, you ideally want to use blowing. The soft blows can only be picked up if the
+mic is directly in front of your mouth, and very close - about 2cm.
+In that position, your soft blows will sound like a hurricane to the mic, easily
+noticed by Clickitongue.
+
+As you might imagine, headset mic designers will specifically try to prevent
+moderate exhales from sounding like a hurricane. Spongy/fuzzy windscreens are
+one technique, which you can of course just remove.
 
 Another technique, much worse for Clickitongue, is to put the mic on a stiff arm
-limited to rotating in a fixed arc, far enough from the mouth so that moderate
-exhalations (like what Clickitongue wants) won't be registered. This type of
-headset is generally unusable for long-term comfortable Clickitongue blowing.
-Get one with a long flexible arm, instead. For an example, I've been using the
-Nubwo N7 with Clickitongue, and it works quite nicely. (Comfy, too!)
+limited to rotating in a fixed arc, far enough to the side of the mouth that
+moderate exhalations won't be registered. You can only do Clickitongue's blows
+by "aiming" your mouth at such a mic, which gets unacceptably uncomfortable
+within like a minute of use.
 
-# Manual Tuning
+So, get a headset with a long flexible arm, and a removable windscreen. For an
+example, I've been using the
+[Nubwo N7](https://www.amazon.com/NUBWO-headsets-Headset-Headphones-Canceling/dp/B07KXMMXKP)
+with Clickitongue, and it works great. It's really comfy, too! (This is just a
+personal recommendation, not a paid ad, and that is not an affiliate link.)
 
-The following is highly user-unfriendly, and should ideally never be needed
-for smooth usage of Clickitongue. However, for determined users who find the
-automatic training almost but not quite good enough, here is how to manually
-tune Clickitongue. First exit Clickitongue, then edit the default.clickitongue
-config file (find it alongside clickitongue.exe for Windows, in ~/.config/
-for Linux and OSX).
-
-For blowing, there are "on" and "off" thresholds for each of three octaves.
-When tweaking a threshold, do so for all three octaves, proportionately - e.g.
-increase all three by 5% each.
-
-* If Clickitongue is making you blow too hard to start a click, reduce the "on"
-  thresholds, and/or increase the EWMA alpha.
-* If Clickitongue is leaving the mouse clicked too long after you stop blowing,
-  increase the "off" thresholds, and/or increase the EWMA alpha.
-* If Clickitongue is issuing spurious clicks, increase the "on" thresholds,
-  and/or decrease the EWMA alpha.
-* If Clickitongue is spuriously releasing long clicks (flakey drag+drop /
-  selection), decrease the "off" thresholds, and/or decrease the EWMA alpha.
-
-For humming, there are on and off thresholds like blowing, and also two
-"limits". These limits suppress the off->on transition when either is exceeded,
-but do not affect the on->off transition. Increasing them may make it easier to
-trigger hum detection. However, their purpose is to prevent even extremely light
-mouth exhalations from being confused with humming, so increasing them too much
-is likely to cause problems.
+Clickitongue does still work even without its preferred mic-near-mouth setup, if
+you're willing to settle for 'tchk'-ing and humming (which at the very least can
+be a "free trial" to see if it's worth buying a headset for). In fact, if you
+aren't trying to use blowing, Clickitongue actually doesn't require a headset at
+all: for instance, a random decade old Logitech webcam plugged into a desktop,
+and the built-in mics of an X1 Carbon ThinkPad and a recent Macbook, all work.
+In general, any audio setup that allows someone on the other end of a video call
+to hear what you're saying ought to work for 'tchk'-ing and humming.
 
 # Compiling on Windows
 
@@ -113,6 +108,6 @@ source code!) Install MSYS2, and from an MSYS2 terminal run
 Currently only English is available. If you are fluent in another language and
 would like to make Clickitongue more widely available, translations will be
 very gratefully accepted! (The code currently just uses a bunch of hard-coded
-English strings, so don't dive right in. Instead, open an issue to let me know
-you'd like to contribute a translation, and I'll add some sort of framework to
-support multiple languages.)
+English strings, so don't dive right in, or you'll bounce right off! Instead,
+open an issue to let me know you'd like to contribute a translation, and I'll
+add some sort of framework to support multiple languages.)
