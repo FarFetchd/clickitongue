@@ -60,7 +60,7 @@ void collectAnyMissingExamples(
 "that much strength every time. These puffs should be more focused than simply\n"
 "exhaling through an open mouth, but weaker than just about any other blow.\n"
 "Think of trying to move an eyelash by about a hand's width.\n\n"
-"The training will record several 4-second snippets, during each of which you\n"
+"The training will record several 5-second snippets, during each of which you\n"
 "will be asked to do a specific number of blows.\n\n");
 #ifndef CLICKITONGUE_WINDOWS
     PRINTF("Press any key to continue to the training prompt.\n\n");
@@ -75,7 +75,7 @@ void collectAnyMissingExamples(
     promptInfo(
 "We will now train Clickitongue on your 'tchk'-ing - the sound you make when\n"
 "you want to get a cat's attention.\n\n"
-"The training will record several 4-second snippets, during each of which you\n"
+"The training will record several 5-second snippets, during each of which you\n"
 "will be asked to do a specific number of 'tchk's.\n\n"
 "When the training asks you to do multiple, don't do them too quickly:\n"
 "no faster than four per second.\n\n");
@@ -93,7 +93,7 @@ void collectAnyMissingExamples(
 "We will now train Clickitongue on your humming. These hums should be simple,\n"
 "relatively quiet closed-mouth hums, like saying 'hm' in reaction to something\n"
 "just a tiny bit interesting.\n\n"
-"The training will record several 4-second snippets, during each of which you\n"
+"The training will record several 5-second snippets, during each of which you\n"
 "will be asked to do a specific number of hums.\n\n");
 #ifndef CLICKITONGUE_WINDOWS
     PRINTF("Press any key to continue to the training prompt.\n\n");

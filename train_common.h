@@ -121,7 +121,7 @@ AudioRecording recordExampleCommon(int desired_events,
     char msg[1024];
     sprintf(msg,
 "This first recording is just to record your typical background noise.\n\n"
-"Please don't do ANY %s.\n\nHit enter to start recording (for 4 seconds).",
+"Please don't do ANY %s.\n\nHit enter to start recording (for 5 seconds).",
             dont_do_any_of_this.c_str());
     promptInfo(msg);
   }
@@ -129,8 +129,8 @@ AudioRecording recordExampleCommon(int desired_events,
   {
     char msg[1024];
     sprintf(msg,
-"Finally, please %s once, but prolonged to 2 or 3 seconds.\n\n"
-"Hit enter to start recording (for 4 seconds).",
+"Finally, please %s once, but prolonged to 3 or 4 seconds.\n\n"
+"Hit enter to start recording (for 5 seconds).",
             do_this_n_times.c_str());
     promptInfo(msg);
   }
@@ -138,13 +138,13 @@ AudioRecording recordExampleCommon(int desired_events,
   {
     char msg[1024];
     sprintf(msg,
-"Next, please %s %d times.\n\nHit enter to start recording (for 4 seconds).",
+"Next, please %s %d times.\n\nHit enter to start recording (for 5 seconds).",
             do_this_n_times.c_str(), desired_events);
     promptInfo(msg);
   }
 
   showRecordingBanner();
-  AudioRecording recorder(4/*seconds*/);
+  AudioRecording recorder(5/*seconds*/);
   hideRecordingBanner();
 
   return recorder;
