@@ -72,6 +72,8 @@ void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
       best->insert(best->begin()+i, cur);
       inserted = true;
     }
+    else if (cur == best->at(i))
+      return; // already in there; shouldn't do anything!
   }
   if (!inserted && best->size() < max_length)
     best->push_back(cur);
