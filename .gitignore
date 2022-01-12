@@ -34,3 +34,6 @@ clickitongue
 
 # data files
 *.pcm
+
+# log
+clickitongue_training.log
