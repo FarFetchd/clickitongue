@@ -341,22 +341,9 @@ double pickHumScalingFactor(std::vector<std::pair<AudioRecording, int>>
     }
   }
   double median_loud = o1[ind_before_gap+10+(o1.size()-(ind_before_gap+10))/2];
-
-  const std::array<double, 22> kScales = {0.001, 0.002, 0.005, 0.01, 0.02, 0.05,
-    0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000};
   const double kCanonicalHumO1 = 14689;
-  double best_scale = 1;
-  double best_gap = 999999999;
-  for (double scale : kScales)
-  {
-    double gap = fabs(median_loud * scale - kCanonicalHumO1);
-    if (gap < best_gap)
-    {
-      best_gap = gap;
-      best_scale = scale;
-    }
-  }
-  return best_scale;
+  assert(median_loud > 0);
+  return kCanonicalHumO1 / median_loud;
 }
 
 AudioRecording recordExampleHum(int desired_events, bool prolonged)

@@ -278,54 +278,6 @@ TrainParamsFactory::TrainParamsFactory(
 
 } // namespace
 
-double pickCatScalingFactor(std::vector<std::pair<AudioRecording, int>>
-                            const& audio_examples)
-{
-  std::vector<double> o7s;
-  FourierLease lease = g_fourier->borrowWorker();
-  for (int z=0; z<audio_examples.size(); z++)
-  {
-    AudioRecording const& rec = audio_examples[z].first;
-    std::vector<float> const& samples = rec.samples();
-    for (int i = 0;
-         i + kFourierBlocksize*g_num_channels < samples.size();
-         i += kFourierBlocksize * g_num_channels)
-    {
-      for (int j=0; j<kFourierBlocksize; j++)
-      {
-        if (g_num_channels == 2)
-          lease.in[j] = (samples[i + j*g_num_channels] + samples[i + j*g_num_channels + 1]) / 2.0;
-        else
-          lease.in[j] = samples[i + j];
-      }
-      lease.runFFT();
-      for (int x = 0; x < kNumFourierBins; x++)
-        lease.out[x][0]=lease.out[x][0]*lease.out[x][0] + lease.out[x][1]*lease.out[x][1];
-      double s4 = 0; for (int j=0;j<64;j++) s4+=lease.out[64+j][0];
-      o7s.push_back(s4);
-    }
-  }
-  std::sort(o7s.begin(), o7s.end());
-  assert(o7s.size() > 100);
-  double tenth_highest = o7s[o7s.size()-10];
-  const std::array<double, 22> kScales = {0.001, 0.002, 0.005, 0.01, 0.02, 0.05,
-    0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000};
-  const double kCanonicalO7_10th = 9001;
-  double best_scale = 1;
-  double best_squerr = 999999999999;
-  for (double scale : kScales)
-  {
-    double squerr = tenth_highest * scale - kCanonicalO7_10th;
-    squerr *= squerr;
-    if (squerr < best_squerr)
-    {
-      best_squerr = squerr;
-      best_scale = scale;
-    }
-  }
-  return best_scale;
-}
-
 AudioRecording recordExampleCat(int desired_events)
 {
   return recordExampleCommon(desired_events, "cat-attention-getting",
