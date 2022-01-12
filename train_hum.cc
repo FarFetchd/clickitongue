@@ -100,7 +100,7 @@ public:
       ret += std::to_string(x) + ",";
     return ret + "}";
   }
-  std::string paramsToString()
+  std::string paramsToString() const
   {
     return std::string(
         "hum_o1_on_thresh: ") + std::to_string(o1_on_thresh) +

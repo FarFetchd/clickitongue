@@ -104,7 +104,7 @@ public:
       ret += std::to_string(x) + ",";
     return ret + "}";
   }
-  std::string paramsToString()
+  std::string paramsToString() const
   {
     return std::string(
         "blow_o1_on_thresh: ") + std::to_string(o1_on_thresh) +
@@ -343,7 +343,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   // and it's not even that long. We could use it if we had more long blowing
   // time to go on.
   tune(&best, &best.o7_off_thresh, /*tune_up=*/false,
-       kMinO7Off, best.o7_off_thresh, 0.25, "o7_off", factory.examples_sets_);
+       kMinO7Off, best.o7_off_thresh, 0.5, "o7_off", factory.examples_sets_);
 
   BlowConfig ret;
   ret.scale = scale;

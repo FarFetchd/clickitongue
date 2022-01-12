@@ -14,8 +14,8 @@
 
 namespace {
 
-constexpr double kMinO7On = 5;
-constexpr double kMaxO7On = 1000;
+constexpr double kMinO7On = 2;
+constexpr double kMaxO7On = 2000;
 constexpr double kMinO1Limit = 20;
 constexpr double kMaxO1Limit = 3000;
 
@@ -97,7 +97,7 @@ public:
       ret += std::to_string(x) + ",";
     return ret + "}";
   }
-  std::string paramsToString()
+  std::string paramsToString() const
   {
     return std::string(
         "cat_o7_on_thresh: ") + std::to_string(o7_on_thresh) +

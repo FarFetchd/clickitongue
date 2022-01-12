@@ -31,20 +31,20 @@ void TrainParamsFactoryCtorCommon(
   // First, add the base examples, without any noise.
   examples_sets->push_back(base_examples);
 
-  // Next, for each noise sample, our raw examples plus that noise.
-  for (auto const& noise : noises)
-  {
-    std::vector<std::pair<AudioRecording, int>> examples = base_examples;
-    for (auto& x : examples)
-      x.first += noise;
-    examples_sets->push_back(examples);
-  }
   // A loud version of the base examples, to make one type less likely to cause
   // false positives for another.
   {
     std::vector<std::pair<AudioRecording, int>> examples = base_examples;
     for (auto& x : examples)
       x.first.scale(1.25);
+    examples_sets->push_back(examples);
+  }
+  // For each noise sample, our raw examples plus that noise.
+  for (auto const& noise : noises)
+  {
+    std::vector<std::pair<AudioRecording, int>> examples = base_examples;
+    for (auto& x : examples)
+      x.first += noise;
     examples_sets->push_back(examples);
   }
   // Finally, a quiet version, for a challenge/tie breaker.
@@ -60,17 +60,37 @@ void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
                            int max_length)
 {
   if (best->empty())
-    best->push_back(cur);
-  else if (cur < best->front())
   {
-    best->clear();
     best->push_back(cur);
+    return;
   }
-  else if (!(best->front() < cur) && best->size() < max_length)
+  bool inserted = false;
+  for (int i=0; i<max_length && i<best->size(); i++)
+  {
+    if (cur < best->at(i))
+    {
+      best->insert(best->begin()+i, cur);
+      inserted = true;
+    }
+  }
+  if (!inserted && best->size() < max_length)
     best->push_back(cur);
+  while (best->size() > max_length) // resize would need default ctor
+    best->pop_back();
 }
 
 FILE* g_training_log;
+
+std::vector<TrainParams> getInitialBest(TrainParamsFactory& factory)
+{
+  std::vector<TrainParams> candidates;
+  std::vector<TrainParamsCocoon> cocoons = factory.startingSet();
+  for (auto& cocoon : cocoons)
+    addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 8);
+  fprintf(g_training_log, "starting set: kept %d out of %d\n",
+          (int)candidates.size(), (int)cocoons.size());
+  return candidates;
+}
 
 // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
 TrainParams patternSearch(TrainParamsFactory& factory, const char* soundtype)
@@ -78,9 +98,7 @@ TrainParams patternSearch(TrainParamsFactory& factory, const char* soundtype)
   fprintf(g_training_log, "beginning %s optimization computations...\n", soundtype);
   PRINTF("beginning %s optimization computations...", soundtype); fflush(stdout);
 
-  std::vector<TrainParams> candidates;
-  for (auto& cocoon : factory.startingSet())
-    addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 8);
+  std::vector<TrainParams> candidates = getInitialBest(factory);
 
   int shrinks = 0;
   std::vector<TrainParams> old_candidates;
@@ -92,8 +110,15 @@ TrainParams patternSearch(TrainParamsFactory& factory, const char* soundtype)
     // patternAround() kicks off a bunch of parallel computation, and the
     // awaitHatch() calls gather it all up.
     for (auto const& candidate : old_candidates)
-      for (auto& cocoon : factory.patternAround(candidate))
+    {
+      std::vector<TrainParamsCocoon> cocoons = factory.patternAround(candidate);
+      fprintf(g_training_log, "considering %d points around candidate %s %s\n",
+              (int)cocoons.size(),
+              candidate.scoreToString().c_str(),
+              candidate.paramsToString().c_str());
+      for (auto& cocoon : cocoons)
         addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 3);
+    }
 
     for (auto const& old_best : historical_bests)
     {
@@ -105,16 +130,14 @@ TrainParams patternSearch(TrainParamsFactory& factory, const char* soundtype)
       }
     }
 
-    fprintf(g_training_log, "cur #1 params: %s\n",
+    fprintf(g_training_log, "cur #1: scores: %s %s\n",
+            candidates[0].scoreToString().c_str(),
             candidates[0].paramsToString().c_str());
-    fprintf(g_training_log, "cur #1 scores: %s\n",
-            candidates[0].scoreToString().c_str());
     if (candidates.size() > 1)
     {
-      fprintf(g_training_log, "cur #2 params: %s\n",
-              candidates[1].paramsToString().c_str());
-      fprintf(g_training_log, "cur #2 scores: %s\n",
-              candidates[1].scoreToString().c_str());
+      fprintf(g_training_log, "cur #2: scores: %s %s\n",
+            candidates[1].scoreToString().c_str(),
+            candidates[1].paramsToString().c_str());
     }
     PRINTF("\ncurrent best scores: %s\n", candidates.front().scoreToString().c_str());
 
