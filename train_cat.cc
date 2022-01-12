@@ -90,18 +90,19 @@ public:
       score.push_back(violations);
     }
   }
-  // (score)
-  std::string toString() const
+  std::string scoreToString() const
   {
     std::string ret = "{";
     for (int x : score)
       ret += std::to_string(x) + ",";
     return ret + "}";
   }
-  void printParams()
+  std::string paramsToString()
   {
-    PRINTF("cat_o7_on_thresh: %g cat_o1_limit: %g use_limit: %s\n",
-           o7_on_thresh, o1_limit, use_limit ? "true" : "false");
+    return std::string(
+        "cat_o7_on_thresh: ") + std::to_string(o7_on_thresh) +
+        " cat_o1_limit: " + std::to_string(o1_limit) +
+        " use_limit: " + (use_limit ? "true" : "false");
   }
 
   double o7_on_thresh;
@@ -335,6 +336,8 @@ CatConfig trainCat(std::vector<std::pair<AudioRecording, int>> const& audio_exam
                    double scale, bool mic_near_mouth)
 {
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
+  g_training_log = fopen("clickitongue_training.log", "at");
+  fprintf(g_training_log, "using scale %g\n", scale);
   TrainParams best = patternSearch(factory, "cat");
 
   // prefer not to use limit if same scores
@@ -357,6 +360,7 @@ CatConfig trainCat(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   ret.o1_limit = best.o1_limit;
   ret.use_limit = best.use_limit;
 
+  fclose(g_training_log);
   ret.enabled = (best.score[0] <= 1);
   return ret;
 }

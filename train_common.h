@@ -70,10 +70,14 @@ void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
     best->push_back(cur);
 }
 
+FILE* g_training_log;
+
 // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
 TrainParams patternSearch(TrainParamsFactory& factory, const char* soundtype)
 {
+  fprintf(g_training_log, "beginning %s optimization computations...\n", soundtype);
   PRINTF("beginning %s optimization computations...", soundtype); fflush(stdout);
+
   std::vector<TrainParams> candidates;
   for (auto& cocoon : factory.startingSet())
     addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 8);
@@ -101,12 +105,22 @@ TrainParams patternSearch(TrainParamsFactory& factory, const char* soundtype)
       }
     }
 
-    PRINTF("\ncurrent best: ");
-    candidates.front().printParams();
-    PRINTF("best scores: %s\n", candidates.front().toString().c_str());
+    fprintf(g_training_log, "cur #1 params: %s\n",
+            candidates[0].paramsToString().c_str());
+    fprintf(g_training_log, "cur #1 scores: %s\n",
+            candidates[0].scoreToString().c_str());
+    if (candidates.size() > 1)
+    {
+      fprintf(g_training_log, "cur #2 params: %s\n",
+              candidates[1].paramsToString().c_str());
+      fprintf(g_training_log, "cur #2 scores: %s\n",
+              candidates[1].scoreToString().c_str());
+    }
+    PRINTF("\ncurrent best scores: %s\n", candidates.front().scoreToString().c_str());
 
     historical_bests.push_back(candidates.front());
   }
+  fprintf(g_training_log, "converged; %s optimization done.\n", soundtype);
   PRINTF("converged; %s optimization done.\n", soundtype);
   return candidates.front();
 }
@@ -217,13 +231,16 @@ void tune(
   if (start < *obj)
   {
     if (!var_name.empty())
-      PRINTF("%s tuning unsuccessful; leaving it alone\n", var_name.c_str());
+    {
+      fprintf(g_training_log, "%s tuning unsuccessful; leaving it alone\n",
+              var_name.c_str());
+    }
     *obj = start;
     return;
   }
   if (!var_name.empty())
   {
-    PRINTF("tuned %s from %g %s to %g\n", var_name.c_str(),
+    fprintf(g_training_log, "tuned %s from %g %s to %g\n", var_name.c_str(),
            true_orig_start_val, tune_up ? "up" : "down", *member_of_obj);
   }
 }
@@ -241,5 +258,6 @@ void tune(
   obj.VARNAME = (lower.VARNAME + upper.VARNAME) / 2.0;         \
   obj.computeScore(factory.examples_sets_);                    \
                                                                \
-  PRINTF("tuned %s from %g to %g\n", var_string_name, start_val, obj.VARNAME); \
+  fprintf(g_training_log, "tuned %s from %g to %g\n",          \
+          var_string_name, start_val, obj.VARNAME);            \
 } while(false);

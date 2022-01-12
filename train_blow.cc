@@ -97,19 +97,20 @@ public:
       score.push_back(violations);
     }
   }
-  // (score)
-  std::string toString() const
+  std::string scoreToString() const
   {
     std::string ret = "{";
     for (int x : score)
       ret += std::to_string(x) + ",";
     return ret + "}";
   }
-  void printParams()
+  std::string paramsToString()
   {
-    PRINTF("blow_o1_on_thresh: %g blow_o7_on_thresh: %g blow_o7_off_thresh: %g "
-           " lookback_blocks: %d\n",
-           o1_on_thresh, o7_on_thresh, o7_off_thresh, lookback_blocks);
+    return std::string(
+        "blow_o1_on_thresh: ") + std::to_string(o1_on_thresh) +
+        " blow_o7_on_thresh: " + std::to_string(o7_on_thresh) +
+        " blow_o7_off_thresh: " + std::to_string(o7_off_thresh) +
+        " blow_lookback_blocks: " + std::to_string(lookback_blocks);
   }
 
   double o1_on_thresh;
@@ -301,42 +302,6 @@ public:
     return ret;
   }
 
-  TrainParams tuneLookback(TrainParams start)
-  {
-    int start_lb = start.lookback_blocks - 1;
-    int real_start_lb = start.lookback_blocks;
-    int cur_lb = start_lb;
-    int final_lb = 4;
-    TrainParams cur = start;
-    while (cur_lb >= kMinLookbackBlocks)
-    {
-      cur.lookback_blocks = cur_lb;
-      cur.computeScore(examples_sets_);
-      if (start < cur)
-      {
-        final_lb = cur_lb + 2;
-        if (final_lb > start_lb)
-          final_lb = start_lb;
-        break;
-      }
-      else if (cur < start)
-      {
-        start = cur;
-        start_lb = cur_lb;
-      }
-      if (cur_lb == kMinLookbackBlocks)
-      {
-        final_lb = cur_lb + 1 < start_lb ? cur_lb + 1 : start_lb;
-        break;
-      }
-      cur_lb--;
-    }
-    cur.lookback_blocks = final_lb;
-    cur.computeScore(examples_sets_);
-    PRINTF("tuned lookback_blocks from %d down to %d\n", real_start_lb, final_lb);
-    return cur;
-  }
-
   void shrinkSteps() { pattern_divisor_ *= 2.0; }
 
   // A vector of example-sets. Each example-set is a vector of samples of audio,
@@ -450,6 +415,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
                      double scale, bool mic_near_mouth)
 {
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
+  g_training_log = fopen("clickitongue_training.log", "at");
   TrainParams best = patternSearch(factory, "blow");
 
   // Shouldn't use MIDDLETUNE here because we have only one long blow example,
@@ -457,7 +423,6 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   // time to go on.
   tune(&best, &best.o7_off_thresh, /*tune_up=*/false,
        kMinO7Off, best.o7_off_thresh, 0.25, "o7_off", factory.examples_sets_);
-  best = factory.tuneLookback(best);
 
   BlowConfig ret;
   ret.scale = scale;
@@ -468,6 +433,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.o7_off_thresh = best.o7_off_thresh;
   ret.lookback_blocks = best.lookback_blocks;
 
+  fclose(g_training_log);
   ret.enabled = (best.score[0] <= 1);
   return ret;
 }

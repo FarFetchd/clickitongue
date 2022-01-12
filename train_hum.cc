@@ -93,18 +93,19 @@ public:
       score.push_back(violations);
     }
   }
-  // (score)
-  std::string toString() const
+  std::string scoreToString() const
   {
     std::string ret = "{";
     for (int x : score)
       ret += std::to_string(x) + ",";
     return ret + "}";
   }
-  void printParams()
+  std::string paramsToString()
   {
-    PRINTF("hum_o1_on_thresh: %g hum_o1_off_thresh: %g hum_o6_limit: %g\n",
-           o1_on_thresh, o1_off_thresh, o6_limit);
+    return std::string(
+        "hum_o1_on_thresh: ") + std::to_string(o1_on_thresh) +
+        " hum_o1_off_thresh: " + std::to_string(o1_off_thresh) +
+        " hum_o6_limit: " + std::to_string(o6_limit);
   }
 
   double o1_on_thresh;
@@ -367,6 +368,7 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
                    double scale, bool mic_near_mouth)
 {
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
+  g_training_log = fopen("clickitongue_training.log", "at");
   TrainParams best = patternSearch(factory, "hum");
 
   MIDDLETUNE(best, o6_limit, "o6_limit", kMinO6Limit, kMaxO6Limit);
@@ -380,6 +382,7 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   ret.o6_limit = best.o6_limit;
   ret.ewma_alpha = kEwmaAlpha;
 
+  fclose(g_training_log);
   ret.enabled = (best.score[0] <= 1);
   return ret;
 }

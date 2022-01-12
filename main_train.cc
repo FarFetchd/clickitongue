@@ -1,6 +1,7 @@
 #include "main_train.h"
 
 #include <cassert>
+#include <unistd.h>
 
 #include "audio_input.h"
 #include "audio_recording.h"
@@ -145,8 +146,8 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
 
   assert(hum_examples && !hum_examples->empty());
   double scale = pickHumScalingFactor(*hum_examples);
-  PRINTF("using scale %g\n", scale);
 
+  unlink("clickitongue_training.log");
   Config config;
   if (!blow_examples_plus_neg.empty())
     config.blow = trainBlow(blow_examples_plus_neg, scale, mic_near_mouth);
