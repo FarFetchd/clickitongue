@@ -361,6 +361,6 @@ CatConfig trainCat(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   ret.use_limit = best.use_limit;
 
   fclose(g_training_log);
-  ret.enabled = (best.score[0] <= 1);
+  ret.enabled = (best.score[0] <= 2);
   return ret;
 }

@@ -434,6 +434,6 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   ret.lookback_blocks = best.lookback_blocks;
 
   fclose(g_training_log);
-  ret.enabled = (best.score[0] <= 1);
+  ret.enabled = (best.score[0] <= 2);
   return ret;
 }

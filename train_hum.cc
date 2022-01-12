@@ -383,6 +383,6 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
   ret.ewma_alpha = kEwmaAlpha;
 
   fclose(g_training_log);
-  ret.enabled = (best.score[0] <= 1);
+  ret.enabled = (best.score[0] <= 2);
   return ret;
 }
