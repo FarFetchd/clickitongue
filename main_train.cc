@@ -74,10 +74,6 @@ void collectAnyMissingExamples(
   if (cat_examples && cat_examples->empty())
   {
     promptInfo(
-
-
-
-
 "We will now train Clickitongue on the sound you make when you want to get a\n"
 "cat's attention. This can be 'tchk' sucking/clicking noises like a rodent makes,\n"
 "kisses, or short constrained 'ts' sounds. Any of these three can work, so try\n"
