@@ -140,8 +140,8 @@ int askUserChoice(std::vector<std::string> dev_names, int default_dev_ind)
       if (x != kNotInputDev)
         prompt += x + "\n\n";
     prompt += "\n\n(Clickitongue will remember your selection for the future. "
-              "If you ever want to switch to another input device, delete the "
-              "file audio_input_device.config).";
+              "If you ever want to switch to another input device, click the "
+              "'Choose new mic device' button.";
     if (promptYesNo(prompt.c_str()))
       break;
     do
