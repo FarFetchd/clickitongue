@@ -22,8 +22,10 @@ public:
   Detector() = delete;
   virtual ~Detector();
 
+  double scale() const;
+
 protected:
-  Detector(Action action_on, Action action_off,
+  Detector(Action action_on, Action action_off, double scale,
            BlockingQueue<Action>* action_queue,
            std::vector<int>* cur_frame_dest = nullptr);
 
@@ -53,6 +55,9 @@ private:
   const Action action_on_;
   // ...and stopped.
   const Action action_off_;
+
+  // What the FFTResultDistributor should multiply its outputs by for us.
+  const double scale_;
 
   BlockingQueue<Action>* action_queue_ = nullptr;
   int cur_frame_ = 0;

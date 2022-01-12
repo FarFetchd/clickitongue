@@ -15,16 +15,19 @@ class FFTResultDistributor
 {
 public:
   FFTResultDistributor(std::vector<std::unique_ptr<Detector>>&& detectors,
-                       double scale, bool training);
+                       bool training);
 
   void processAudio(const Sample* cur_sample, int num_frames);
 
 private:
   std::vector<std::unique_ptr<Detector>> detectors_;
   FourierLease fft_lease_;
-  const double scale_;
   // Whether these FFTs are being done on pre-recorded data, for training.
   const bool training_;
+
+  std::vector<double> detector_scales_;
+  bool all_same_scale_;
+  double single_scale_ = -123.456;
 };
 
 int fftDistributorCallback(const void* input, void* output,

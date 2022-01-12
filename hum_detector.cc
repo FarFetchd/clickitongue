@@ -3,8 +3,8 @@
 HumDetector::HumDetector(BlockingQueue<Action>* action_queue,
                          double o1_on_thresh, double o1_off_thresh,
                          double o6_limit, double ewma_alpha, bool require_delay,
-                         std::vector<int>* cur_frame_dest)
-  : Detector(Action::RecordCurFrame, Action::NoAction, action_queue, cur_frame_dest),
+                         double scale, std::vector<int>* cur_frame_dest)
+  : Detector(Action::RecordCurFrame, Action::NoAction, scale, action_queue, cur_frame_dest),
     o1_on_thresh_(o1_on_thresh), o1_off_thresh_(o1_off_thresh),
     o6_limit_(o6_limit), ewma_alpha_(ewma_alpha),
     one_minus_ewma_alpha_(1.0-ewma_alpha_), require_delay_(require_delay)
@@ -13,8 +13,9 @@ HumDetector::HumDetector(BlockingQueue<Action>* action_queue,
 HumDetector::HumDetector(BlockingQueue<Action>* action_queue,
                          Action action_on, Action action_off,
                          double o1_on_thresh, double o1_off_thresh,
-                         double o6_limit, double ewma_alpha, bool require_delay)
-  : Detector(action_on, action_off, action_queue),
+                         double o6_limit, double ewma_alpha, bool require_delay,
+                         double scale)
+  : Detector(action_on, action_off, scale, action_queue),
     o1_on_thresh_(o1_on_thresh), o1_off_thresh_(o1_off_thresh),
     o6_limit_(o6_limit), ewma_alpha_(ewma_alpha),
     one_minus_ewma_alpha_(1.0-ewma_alpha_), require_delay_(require_delay)

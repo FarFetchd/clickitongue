@@ -14,14 +14,14 @@ public:
   // cur_frame_dest, and does nothing else.
   BlowDetector(BlockingQueue<Action>* action_queue,
                double o1_on_thresh, double o7_on_thresh, double o7_off_thresh,
-               int lookback_blocks, bool require_delay,
+               int lookback_blocks, bool require_delay, double scale,
                std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   BlowDetector(BlockingQueue<Action>* action_queue,
                Action action_on, Action action_off,
                double o1_on_thresh, double o7_on_thresh, double o7_off_thresh,
-               int lookback_blocks, bool require_delay);
+               int lookback_blocks, bool require_delay, double scale);
 
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for

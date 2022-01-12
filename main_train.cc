@@ -74,10 +74,6 @@ void collectAnyMissingExamples(
   if (cat_examples && cat_examples->empty())
   {
     promptInfo(
-
-
-
-
 "We will now train Clickitongue on the sound you make when you want to get a\n"
 "cat's attention. This can be 'tchk' sucking/clicking noises like a rodent makes,\n"
 "kisses, or short constrained 'ts' sounds. Any of these three can work, so try\n"
@@ -147,17 +143,22 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
   TaggedExamples hum_examples_plus_neg = combinePositiveAndNegative(
       hum_examples, {blow_examples, cat_examples});
 
-  assert(hum_examples && !hum_examples->empty());
-  double scale = pickHumScalingFactor(*hum_examples);
-  PRINTF("using scale %g\n", scale);
-
   Config config;
   if (!blow_examples_plus_neg.empty())
-    config.blow = trainBlow(blow_examples_plus_neg, scale, mic_near_mouth);
+  {
+    config.blow = trainBlow(blow_examples_plus_neg,
+                            pickBlowScalingFactor(*blow_examples), mic_near_mouth);
+  }
   if (!cat_examples_plus_neg.empty())
-    config.cat = trainCat(cat_examples_plus_neg, scale, mic_near_mouth);
+  {
+    config.cat = trainCat(cat_examples_plus_neg,
+                          pickCatScalingFactor(*cat_examples), mic_near_mouth);
+  }
   if (!hum_examples_plus_neg.empty())
-    config.hum = trainHum(hum_examples_plus_neg, scale, mic_near_mouth);
+  {
+    config.hum = trainHum(hum_examples_plus_neg,
+                          pickHumScalingFactor(*hum_examples), mic_near_mouth);
+  }
 
   std::string failure_list;
   if (blow_examples && !config.blow.enabled)

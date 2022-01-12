@@ -18,7 +18,7 @@ constexpr double kMinO1On = 50;
 constexpr double kMaxO1On = 15000;
 constexpr double kMinO7On = 10;
 constexpr double kMaxO7On = 1000;
-constexpr double kMinO7Off = 1;
+constexpr double kMinO7Off = 0.1;
 constexpr double kMaxO7Off = 50;
 constexpr int kMinLookbackBlocks = 1;
 constexpr int kMaxLookbackBlocks = 10;
@@ -66,10 +66,9 @@ public:
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<BlowDetector>(
         nullptr, o1_on_thresh, o7_on_thresh, o7_off_thresh,
-        lookback_blocks, /*require_delay=*/false, &event_frames));
+        lookback_blocks, /*require_delay=*/false, scale, &event_frames));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector), scale,
-                                 /*training=*/true);
+    FFTResultDistributor wrapper(std::move(just_one_detector), /*training=*/true);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * g_num_channels < samples.size();
          sample_ind += kFourierBlocksize * g_num_channels)
@@ -108,8 +107,8 @@ public:
   void printParams()
   {
     PRINTF("blow_o1_on_thresh: %g blow_o7_on_thresh: %g blow_o7_off_thresh: %g "
-           " lookback_blocks: %d\n",
-           o1_on_thresh, o7_on_thresh, o7_off_thresh, lookback_blocks);
+           " lookback_blocks: %d scale: %g\n",
+           o1_on_thresh, o7_on_thresh, o7_off_thresh, lookback_blocks, scale);
   }
 
   double o1_on_thresh;

@@ -1,9 +1,9 @@
 #include "detector.h"
 
-Detector::Detector(Action action_on, Action action_off,
+Detector::Detector(Action action_on, Action action_off, double scale,
                    BlockingQueue<Action>* action_queue,
                    std::vector<int>* cur_frame_dest)
-  : action_on_(action_on), action_off_(action_off),
+  : action_on_(action_on), action_off_(action_off), scale_(scale),
     action_queue_(action_queue), cur_frame_dest_(cur_frame_dest) {}
 
 Detector::~Detector() {}
@@ -61,3 +61,5 @@ void Detector::addInhibitionTarget(Detector* target)
 {
   inhibition_targets_.push_back(target);
 }
+
+double Detector::scale() const { return scale_; }

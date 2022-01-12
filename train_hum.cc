@@ -64,10 +64,9 @@ public:
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<HumDetector>(
         nullptr, o1_on_thresh, o1_off_thresh, o6_limit, kEwmaAlpha,
-        /*require_delay=*/true, &event_frames));
+        /*require_delay=*/true, scale, &event_frames));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector), scale,
-                                 /*training=*/true);
+    FFTResultDistributor wrapper(std::move(just_one_detector), /*training=*/true);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * g_num_channels < samples.size();
          sample_ind += kFourierBlocksize * g_num_channels)
@@ -103,8 +102,8 @@ public:
   }
   void printParams()
   {
-    PRINTF("hum_o1_on_thresh: %g hum_o1_off_thresh: %g hum_o6_limit: %g\n",
-           o1_on_thresh, o1_off_thresh, o6_limit);
+    PRINTF("hum_o1_on_thresh: %g hum_o1_off_thresh: %g hum_o6_limit: %g scale: %g\n",
+           o1_on_thresh, o1_off_thresh, o6_limit, scale);
   }
 
   double o1_on_thresh;

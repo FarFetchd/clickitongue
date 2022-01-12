@@ -2,16 +2,16 @@
 
 CatDetector::CatDetector(BlockingQueue<Action>* action_queue,
                          double o7_on_thresh, double o1_limit, bool use_limit,
-                         std::vector<int>* cur_frame_dest)
-  : Detector(Action::RecordCurFrame, Action::NoAction, action_queue, cur_frame_dest),
+                         double scale, std::vector<int>* cur_frame_dest)
+  : Detector(Action::RecordCurFrame, Action::NoAction, scale, action_queue, cur_frame_dest),
     o7_on_thresh_(o7_on_thresh), o1_limit_(o1_limit), use_limit_(use_limit),
     cur_o7_thresh_(o7_on_thresh_)
 {}
 
 CatDetector::CatDetector(BlockingQueue<Action>* action_queue, Action action_on,
                          Action action_off, double o7_on_thresh, double o1_limit,
-                         bool use_limit)
-  : Detector(action_on, action_off, action_queue),
+                         bool use_limit, double scale)
+  : Detector(action_on, action_off, scale, action_queue),
     o7_on_thresh_(o7_on_thresh), o1_limit_(o1_limit), use_limit_(use_limit),
     cur_o7_thresh_(o7_on_thresh_)
 {}

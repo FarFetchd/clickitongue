@@ -59,10 +59,9 @@ public:
     std::vector<int> event_frames;
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<CatDetector>(nullptr,
-        o7_on_thresh, o1_limit, use_limit, &event_frames));
+        o7_on_thresh, o1_limit, use_limit, scale, &event_frames));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector), scale,
-                                 /*training=*/true);
+    FFTResultDistributor wrapper(std::move(just_one_detector), /*training=*/true);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * g_num_channels < samples.size();
          sample_ind += kFourierBlocksize * g_num_channels)
@@ -100,8 +99,8 @@ public:
   }
   void printParams()
   {
-    PRINTF("cat_o7_on_thresh: %g cat_o1_limit: %g use_limit: %s\n",
-           o7_on_thresh, o1_limit, use_limit ? "true" : "false");
+    PRINTF("cat_o7_on_thresh: %g cat_o1_limit: %g use_limit: %s scale: %g\n",
+           o7_on_thresh, o1_limit, use_limit ? "true" : "false", scale);
   }
 
   double o7_on_thresh;

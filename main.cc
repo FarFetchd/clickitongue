@@ -206,7 +206,8 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
   {
     cat_detector = std::make_unique<CatDetector>(
         action_queue, config.cat.action_on, config.cat.action_off,
-        config.cat.o7_on_thresh, config.cat.o1_limit, config.cat.use_limit);
+        config.cat.o7_on_thresh, config.cat.o1_limit, config.cat.use_limit,
+        config.cat.scale);
   }
 
   std::unique_ptr<Detector> blow_detector;
@@ -216,7 +217,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
         action_queue, config.blow.action_on, config.blow.action_off,
         config.blow.o1_on_thresh, config.blow.o7_on_thresh,
         config.blow.o7_off_thresh, config.blow.lookback_blocks,
-        /*require_warmup=*/config.cat.enabled);
+        /*require_delay=*/config.cat.enabled, config.blow.scale);
     if (cat_detector)
       cat_detector->addInhibitionTarget(blow_detector.get());
   }
@@ -227,7 +228,8 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
     hum_detector = std::make_unique<HumDetector>(
         action_queue, config.hum.action_on, config.hum.action_off,
         config.hum.o1_on_thresh, config.hum.o1_off_thresh, config.hum.o6_limit,
-        config.hum.ewma_alpha, /*require_warmup=*/config.blow.enabled);
+        config.hum.ewma_alpha, /*require_delay=*/config.blow.enabled,
+        config.hum.scale);
     if (blow_detector)
       blow_detector->addInhibitionTarget(hum_detector.get());
     if (cat_detector)
@@ -244,25 +246,6 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
   return detectors;
 }
 
-double loadScaleFromConfig(Config config)
-{
-  double scale = 1;
-  if (config.blow.enabled)
-    scale = config.blow.scale;
-  if (config.cat.enabled)
-    scale = config.cat.scale;
-  if (config.hum.enabled)
-    scale = config.hum.scale;
-
-  if ((config.blow.enabled && scale != config.blow.scale) ||
-      (config.cat.enabled && scale != config.cat.scale) ||
-      (config.hum.enabled && scale != config.hum.scale))
-  {
-    crash("All detectors enabled in a config must have the same scaling factor.");
-  }
-  return scale;
-}
-
 void normalOperation(Config config, bool first_time)
 {
   if (!config.blow.enabled && !config.cat.enabled &&
@@ -276,8 +259,7 @@ void normalOperation(Config config, bool first_time)
   std::thread action_dispatch(actionDispatch, &action_dispatcher);
 
   FFTResultDistributor fft_distributor(
-      makeDetectorsFromConfig(config, &action_queue), loadScaleFromConfig(config),
-      /*training=*/false);
+      makeDetectorsFromConfig(config, &action_queue), /*training=*/false);
   AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
   describeLoadedParams(config, first_time);
 

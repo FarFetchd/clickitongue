@@ -3,9 +3,9 @@
 BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            double o1_on_thresh, double o7_on_thresh,
                            double o7_off_thresh, int lookback_blocks,
-                           bool require_delay,
+                           bool require_delay, double scale,
                            std::vector<int>* cur_frame_dest)
-  : Detector(Action::RecordCurFrame, Action::NoAction, action_queue, cur_frame_dest),
+  : Detector(Action::RecordCurFrame, Action::NoAction, scale, action_queue, cur_frame_dest),
     o1_on_thresh_(o1_on_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
     lookback_blocks_(lookback_blocks), require_delay_(require_delay)
@@ -15,8 +15,8 @@ BlowDetector::BlowDetector(BlockingQueue<Action>* action_queue,
                            Action action_on, Action action_off,
                            double o1_on_thresh, double o7_on_thresh,
                            double o7_off_thresh, int lookback_blocks,
-                           bool require_delay)
-  : Detector(action_on, action_off, action_queue),
+                           bool require_delay, double scale)
+  : Detector(action_on, action_off, scale, action_queue),
     o1_on_thresh_(o1_on_thresh),
     o7_on_thresh_(o7_on_thresh), o7_off_thresh_(o7_off_thresh),
     lookback_blocks_(lookback_blocks), require_delay_(require_delay)

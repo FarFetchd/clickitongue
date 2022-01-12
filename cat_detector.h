@@ -9,13 +9,13 @@ public:
   // For training. Saves the frame indices of all detected events into
   // cur_frame_dest, and does nothing else.
   CatDetector(BlockingQueue<Action>* action_queue,
-              double o7_on_thresh, double o1_limit, bool use_limit,
+              double o7_on_thresh, double o1_limit, bool use_limit, double scale,
               std::vector<int>* cur_frame_dest);
 
   // Kicks off action_on, action_off at each corresponding detected event.
   CatDetector(BlockingQueue<Action>* action_queue,
-              Action action_on, Action action_off,
-              double o7_on_thresh, double o1_limit, bool use_limit);
+              Action action_on, Action action_off, double o7_on_thresh,
+              double o1_limit, bool use_limit, double scale);
 
 protected:
   // IMPORTANT: although the type is fftw_complex, in fact freq_power[i][0] for
