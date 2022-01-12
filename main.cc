@@ -174,7 +174,7 @@ void describeLoadedParams(Config config, bool first_time)
   }
   if (config.cat.enabled && config.cat.action_on != Action::NoAction)
   {
-    msg += std::string("make a sound like getting a cat's attention to ") +
+    msg += std::string("Make a sound like getting a cat's attention to ") +
            (config.cat.action_on == Action::RightDown ? "right" : "left") +
            " click.\n";
   }
