@@ -112,3 +112,21 @@ very gratefully accepted! (The code currently just uses a bunch of hard-coded
 English strings, so don't dive right in, or you'll bounce right off! Instead,
 open an issue to let me know you'd like to contribute a translation, and I'll
 add some sort of framework to support multiple languages.)
+
+# Acknowledgments
+
+Clickitongue uses the PortAudio audio abstraction library (http://portaudio.com/)
+and the Fastest Fourier Transform in the West (https://www.fftw.org/) Fast
+Fourier Transform library. FFTW is quite impressively polished; it radiates an
+aura of "this thing is basically perfect". PortAudio is kind of amazing in how
+easy it makes it to write portable audio code. I would have guessed every
+additional platform would be a grueling effort, but nope, completely effortless.
+(Other than getting it to compile on Windows...) Speaking of compiling on
+Windows, Clickitongue uses MSYS2 (https://www.msys2.org/), which was nicely
+transparent to my UNIX-y code while offering every Windows feature I cared to
+use. Finally, C++ structopt (https://github.com/p-ranav/structopt), a great
+little header-only library that gives you command line arguments in the
+cleanest, simplest way I can imagine.
+
+Many thanks to everyone who worked on these projects! They are all a pleasure to
+use.
