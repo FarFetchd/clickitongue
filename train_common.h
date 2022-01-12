@@ -71,9 +71,9 @@ void addEqualReplaceBetter(std::vector<TrainParams>* best, TrainParams cur,
 }
 
 // https://en.wikipedia.org/wiki/Pattern_search_(optimization)
-TrainParams patternSearch(TrainParamsFactory& factory)
+TrainParams patternSearch(TrainParamsFactory& factory, const char* soundtype)
 {
-  PRINTF("beginning optimization computations..."); fflush(stdout);
+  PRINTF("beginning %s optimization computations...", soundtype); fflush(stdout);
   std::vector<TrainParams> candidates;
   for (auto& cocoon : factory.startingSet())
     addEqualReplaceBetter(&candidates, cocoon.awaitHatch(), 8);
@@ -107,7 +107,7 @@ TrainParams patternSearch(TrainParamsFactory& factory)
 
     historical_bests.push_back(candidates.front());
   }
-  PRINTF("converged; done.\n");
+  PRINTF("converged; %s optimization done.\n", soundtype);
   return candidates.front();
 }
 

@@ -448,7 +448,7 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
                      double scale, bool mic_near_mouth)
 {
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
-  TrainParams best = patternSearch(factory);
+  TrainParams best = patternSearch(factory, "blow");
 
   // Shouldn't use MIDDLETUNE here because we have only one long blow example,
   // and it's not even that long. We could use it if we had more long blowing

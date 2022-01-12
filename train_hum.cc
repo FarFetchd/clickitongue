@@ -365,7 +365,7 @@ HumConfig trainHum(std::vector<std::pair<AudioRecording, int>> const& audio_exam
                    double scale, bool mic_near_mouth)
 {
   TrainParamsFactory factory(audio_examples, scale, mic_near_mouth);
-  TrainParams best = patternSearch(factory);
+  TrainParams best = patternSearch(factory, "hum");
 
   MIDDLETUNE(best, o6_limit, "o6_limit", kMinO6Limit, kMaxO6Limit);
 
