@@ -376,7 +376,9 @@ double pickBlowScalingFactor(std::vector<std::pair<AudioRecording, int>>
   FourierLease lease = g_fourier->borrowWorker();
 
   std::vector<float> const& samples = rec.samples();
-  for (int i = 0; i < samples.size(); i += kFourierBlocksize * g_num_channels)
+  for (int i = 0;
+       i + kFourierBlocksize*g_num_channels < samples.size();
+       i += kFourierBlocksize * g_num_channels)
   {
     for (int j=0; j <kFourierBlocksize; j++)
     {
