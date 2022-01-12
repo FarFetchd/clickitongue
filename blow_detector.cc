@@ -79,7 +79,7 @@ bool BlowDetector::shouldTransitionOff()
   return false;
 }
 
-int BlowDetector::refracPeriodLengthBlocks() const { return 18; }
+int BlowDetector::refracPeriodLengthBlocks() const { return 20; }
 
 void BlowDetector::resetEWMAs()
 {

@@ -59,6 +59,6 @@ bool CatDetector::shouldTransitionOff()
   return o7_cur_ < o7_on_thresh_;
 }
 
-int CatDetector::refracPeriodLengthBlocks() const { return 7; }
+int CatDetector::refracPeriodLengthBlocks() const { return 16; }
 
 void CatDetector::resetEWMAs() {}

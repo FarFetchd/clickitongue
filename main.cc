@@ -218,7 +218,10 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
         config.blow.o7_off_thresh, config.blow.lookback_blocks,
         /*require_warmup=*/config.cat.enabled);
     if (cat_detector)
+    {
+      blow_detector->addInhibitionTarget(cat_detector.get());
       cat_detector->addInhibitionTarget(blow_detector.get());
+    }
   }
 
   std::unique_ptr<Detector> hum_detector;

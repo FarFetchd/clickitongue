@@ -4,7 +4,9 @@ wishlist
 * idea for easy manual tuning: the tuning algorithm in there now might be good for
   "user clicked a button saying make it more/less sensitive". maybe have a standard
   pullback of like 0.8 so they can do it once for a little, or repeatedly for more.
-* have some buttons/input during running that allows users to easily apply what's described in the "Manual Tuning" section of the readme.
+* i have a feeling msys2 might be slow about spawning threads, and that's why
+  windows training feels slow..... probably still worth it though, at least on
+  powerful modern desktops
   the idea is it would look like "make left clicking easier" "make left clicking harder" etc.
 * fun idea: ascending and descending whistles or humming to control scroll wheel.
   need to track frequencies at a finer resolution; try
