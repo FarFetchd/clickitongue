@@ -97,6 +97,8 @@ void collectAnyMissingExamples(
 "We will now train Clickitongue on your humming. These hums should be simple,\n"
 "relatively quiet closed-mouth hums, like saying 'hm' in reaction to something\n"
 "just a tiny bit interesting.\n\n"
+"Please do record good humming examples even if you don't intend to use humming:\n"
+"the training uses these to help calibrate the others.\n\n"
 "The training will record several 5-second snippets, during each of which you\n"
 "will be asked to do a specific number of hums.\n\n");
 #ifndef CLICKITONGUE_WINDOWS
