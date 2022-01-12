@@ -33,10 +33,10 @@ of a second).
 # Usage
 
 The first time you run Clickitongue, it will have you train it to detect your
-particular blowing/'tchk'-ing/humming sounds, in your particular acoustic
-environment. This should take about two to five minutes total. If the training
-does not leave Clickitongue confident in its ability to detect your sounds, it
-will give you a chance to redo part or all of the training.
+particular blowing/cat-attention-getting/humming sounds, in your particular
+acoustic environment. This should take about two to five minutes total. If the
+training does not leave Clickitongue confident in its ability to detect your
+sounds, it will give you a chance to redo part or all of the training.
 
 After that first run, whenever you start Clickitongue it will remember the
 configuration it learned the first time, and begin clicking for you immediately.
@@ -48,24 +48,24 @@ input device: On Linux or OSX run Clickitongue with the --retrain or
 If none of the sound types work, or if just blowing doesn't work despite having
 the mic setup described in the next section, Clickitongue might not have
 selected the right audio input device. (Or your OS might be doing something
-weird; e.g. Kubuntu needs "audio profile" changed to "Analog Stereo Duplex" in
-order to hear the mic of a headset). A good sanity check is to see what sort of
-audio [Audacity](https://github.com/audacity/audacity) is able to record from
+weird; e.g. my Kubuntu needed "audio profile" changed to "Analog Stereo Duplex"
+in order to hear the mic of a headset). A good sanity check is to see what sort
+of audio [Audacity](https://github.com/audacity/audacity) is able to record from
 you, since Audacity uses the same audio abstraction library (PortAudio) as
 Clickitongue.
 
 # Mic Advice
 
 Depending on your mic setup, Clickitongue will use two of three sounds: softly
-blowing on the mic, making 'tchk' sounds like trying to get a cat's attention,
-or humming.
+blowing on the mic, making sounds like trying to get a cat's attention (this can
+be 'tchk' sounds, kisses, or compressed 'ts' sounds), or humming.
 
 Based on users' experiences so far, soft blowing is effortlessly smooth even for
-hours of use at a time, cat 'tchk's work extremely well but are a bit annoying
-for long-term frequent use, and humming is quite annoying indeed for long-term
-frequent use. Therefore, Clickitongue assigns blowing to the left-click and
-'tchk'-ing to the much rarer right-click when possible; 'tchk' to left and
-humming to right otherwise.
+hours of use at a time, cat-attention-getting works extremely well but is
+slightly cumbersome for long-term frequent use, and humming is quite annoying
+indeed for long-term frequent use. Therefore, Clickitongue assigns blowing to
+the left-click and cat-attention-getting sounds to the much rarer right-click
+when possible; cat to left and humming to right otherwise.
 
 So, you ideally want to use blowing. The soft blows can only be picked up if the
 mic is directly in front of your mouth, and very close - about 2cm.
@@ -89,13 +89,14 @@ with Clickitongue, and it works great. It's really comfy, too! (This is just a
 personal recommendation, not a paid ad, and that is not an affiliate link.)
 
 Clickitongue does still work even without its preferred mic-near-mouth setup, if
-you're willing to settle for 'tchk'-ing and humming (which at the very least can
-be a "free trial" to see if it's worth buying a headset for). In fact, if you
-aren't trying to use blowing, Clickitongue actually doesn't require a headset at
-all: for instance, a random decade old Logitech webcam plugged into a desktop,
-and the built-in mics of an X1 Carbon ThinkPad and a recent Macbook, all work.
-In general, any audio setup that allows someone on the other end of a video call
-to hear what you're saying ought to work for 'tchk'-ing and humming.
+you're willing to settle for cat-attention-getting and humming (which at the
+very least can be a "free trial" to see if it's worth buying a headset for).
+In fact, if you aren't trying to use blowing, Clickitongue actually doesn't
+require a headset at all: for instance, a random decade old webcam plugged into
+a desktop, and the built-in mics of an X1 Carbon ThinkPad and a recent Macbook,
+all work. In general, any audio setup that allows someone on the other end of a
+video call to hear what you're saying ought to work for cat-attention-getting
+and humming.
 
 # Compiling on Windows
 

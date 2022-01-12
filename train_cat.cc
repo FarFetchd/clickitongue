@@ -279,8 +279,8 @@ TrainParamsFactory::TrainParamsFactory(
 
 AudioRecording recordExampleCat(int desired_events)
 {
-  return recordExampleCommon(desired_events, "'tchk'-ing",
-                             "'tchk' like calling a cat", /*prolonged=*/false);
+  return recordExampleCommon(desired_events, "cat-attention-getting",
+                             "get a cat's attention", /*prolonged=*/false);
 }
 
 CatConfig trainCat(std::vector<std::pair<AudioRecording, int>> const& audio_examples,

@@ -20,7 +20,8 @@ bool introAndAskIfMicNearMouth()
   bool mic_near_mouth = promptYesNo(
 "It looks like this is your first time running Clickitongue.\n\n"
 "Clickitongue needs to learn your environment's acoustics and background noise.\n\n"
-"First: can you keep your mic positioned 1-2cm from your mouth for long-term usage? ");
+"First: can you keep your mic positioned about 2cm from your mouth for long-term\n"
+"usage? ");
 
   if (mic_near_mouth)
   {
@@ -28,16 +29,16 @@ bool introAndAskIfMicNearMouth()
 "Great! That enables more comfortable input methods. You'll now train\n"
 "Clickitongue to recognize each of the following sounds:\n\n"
 " * Gently blowing directly on the mic\n\n"
-" * 'tchk' sucking/clicking noises, like calling a cat\n\n"
+" * Trying to get a cat's attention\n\n"
 " * Humming\n\n"
-"Ensure your mic is in position 1-2cm from your mouth. If your mic has a foamy or\n"
-"fuzzy windscreen, remove it for best results.\n\n");
+"Ensure your mic is in position about 2cm from your mouth. If your mic has a\n"
+"foamy or fuzzy windscreen, remove it for best results.\n\n");
   }
   else
   {
     promptInfo(
 "That's ok, Clickitongue should still work. You'll now train Clickitongue to\n"
-"recognize humming, and 'tchk' sucking/clicking noises (like calling a cat).\n\n");
+"recognize getting a cat's attention, and humming.\n\n");
   }
 #ifndef CLICKITONGUE_WINDOWS
   PRINTF("Press any key to continue to the training prompt.\n\n");
@@ -73,12 +74,18 @@ void collectAnyMissingExamples(
   if (cat_examples && cat_examples->empty())
   {
     promptInfo(
-"We will now train Clickitongue on your 'tchk'-ing - the sound you make when\n"
-"you want to get a cat's attention.\n\n"
+
+
+
+
+"We will now train Clickitongue on the sound you make when you want to get a\n"
+"cat's attention. This can be 'tchk' sucking/clicking noises like a rodent makes,\n"
+"kisses, or short constrained 'ts' sounds. Any of these three can work, so try\n"
+"whichever you like. Note that 'pss pss' does NOT work.\n\n"
 "The training will record several 5-second snippets, during each of which you\n"
-"will be asked to do a specific number of 'tchk's.\n\n"
-"When the training asks you to do multiple, don't do them too quickly:\n"
-"no faster than four per second.\n\n");
+"will be asked to do a specific number of sounds.\n\n"
+"When the training asks you to do multiple, don't do them super quickly:\n"
+"no faster than four or five per second.\n\n");
 #ifndef CLICKITONGUE_WINDOWS
     PRINTF("Press any key to continue to the training prompt.\n\n");
     make_getchar_like_getch(); getchar(); resetTermios();
@@ -160,7 +167,7 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
   }
   if (cat_examples && !config.cat.enabled)
   {
-    failure_list += "cat 'tchk'-ing, ";
+    failure_list += "cat-attention-getting, ";
     cat_examples->clear();
   }
   if (hum_examples && !config.hum.enabled)
@@ -226,9 +233,13 @@ bool afterTraining(Config* config, int success_count)
   if (success_count == 0)
   {
     promptInfo(
-"Clickitongue was not able to find parameters that distinguish your humming\n"
-"from background noise with acceptable accuracy. Remove sources of\n"
-"background noise, move the mic closer to your mouth, and try again.");
+"Clickitongue was not able to find parameters to distinguish any type of mouth\n"
+"sound from background noise with acceptable accuracy.\n\n"
+"First, make absolutely sure your computer is actually recording from your mic:\n"
+"try recording in the Audacity audio editor (which uses the same audio library\n"
+"as Clickitongue) and seeing if playback sounds as you would expect. If the mic\n"
+"is right, then try moving the mic more directly in front of your mouth, or\n"
+"reducing noise in your environment.");
     return false;
   }
   bool left_done = false;
