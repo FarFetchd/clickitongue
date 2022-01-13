@@ -141,7 +141,6 @@ TrainParams patternSearch(TrainParamsFactory& factory, const char* soundtype)
             candidates[1].scoreToString().c_str(),
             candidates[1].paramsToString().c_str());
     }
-    PRINTF("\ncurrent best scores: %s\n", candidates.front().scoreToString().c_str());
 
     historical_bests.push_back(candidates.front());
   }
