@@ -20,4 +20,4 @@ On Linux or OSX, `git clone https://github.com/FarFetchd/clickitongue`, and foll
 
 ## Contact
 
-You [can open an issue on Github](https://github.com/FarFetchd/clickitongue/issues/new), or send a message to (this tool's name) at gmail.
+You [can open an issue on Github](https://github.com/FarFetchd/clickitongue/issues/new), send a message to (this tool's name) at gmail, or contact [https://twitter.com/clickitongue](https://twitter.com/clickitongue).
