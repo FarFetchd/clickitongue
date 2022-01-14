@@ -58,36 +58,38 @@ public:
     return false;
   }
 
-  int detectEvents(std::vector<Sample> const& samples)
+  int detectEvents(std::vector<Sample> const& samples, FFTResultDistributor& fft)
   {
     std::vector<int> event_frames;
     std::vector<std::unique_ptr<Detector>> just_one_detector;
     just_one_detector.emplace_back(std::make_unique<HumDetector>(
         nullptr, o1_on_thresh, o1_off_thresh, o6_limit, kEwmaAlpha,
         /*require_delay=*/true, &event_frames));
+    fft.replaceDetectors(std::move(just_one_detector));
 
-    FFTResultDistributor wrapper(std::move(just_one_detector), scale,
-                                 /*training=*/true);
     for (int sample_ind = 0;
          sample_ind + kFourierBlocksize * g_num_channels < samples.size();
          sample_ind += kFourierBlocksize * g_num_channels)
     {
-      wrapper.processAudio(samples.data() + sample_ind, kFourierBlocksize);
+      fft.processAudio(samples.data() + sample_ind, kFourierBlocksize);
     }
     return event_frames.size();
   }
 
   // for each example-set, detectEvents on each example, and sum up that sets'
-  // total violations. the score is a vector of those violations, one count per example-set.
-  void computeScore(std::vector<std::vector<std::pair<AudioRecording, int>>> const& example_sets)
+  // total violations. the score is a vector of those violations, one count per
+  // example-set.
+  void computeScore(std::vector<std::vector<std::pair<AudioRecording, int>>>
+                    const& example_sets)
   {
     score.clear();
+    FFTResultDistributor fft({}, scale, /*training=*/true);
     for (auto const& examples : example_sets)
     {
       int violations = 0;
       for (auto const& example_and_expected : examples)
       {
-        int events = detectEvents(example_and_expected.first.samples());
+        int events = detectEvents(example_and_expected.first.samples(), fft);
         violations += abs(events - example_and_expected.second);
       }
       score.push_back(violations);

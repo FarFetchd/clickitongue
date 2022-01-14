@@ -11,6 +11,12 @@ FFTResultDistributor::FFTResultDistributor(
   scale_(scale), training_(training)
 {}
 
+void FFTResultDistributor::
+replaceDetectors(std::vector<std::unique_ptr<Detector>>&& detectors)
+{
+  detectors_ = std::move(detectors);
+}
+
 bool g_show_debug_info = false;
 void FFTResultDistributor::processAudio(const Sample* cur_sample, int num_frames)
 {

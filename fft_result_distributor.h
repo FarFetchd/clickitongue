@@ -19,6 +19,8 @@ public:
 
   void processAudio(const Sample* cur_sample, int num_frames);
 
+  void replaceDetectors(std::vector<std::unique_ptr<Detector>>&& detectors);
+
 private:
   std::vector<std::unique_ptr<Detector>> detectors_;
   FourierLease fft_lease_;
