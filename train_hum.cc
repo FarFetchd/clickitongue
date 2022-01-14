@@ -120,7 +120,7 @@ public:
 
 std::random_device* getRandomDev()
 {
-  std::random_device* dev = new std::random_device;
+  static std::random_device* dev = new std::random_device;
   return dev;
 }
 class RandomStuff
