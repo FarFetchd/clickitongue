@@ -275,7 +275,7 @@ int EasyFourier::pickAndLockWorker()
     for (int i=0; i<workers_.size(); i++)
       if (workers_[i]->mutex.try_lock())
         return i;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 }
 
