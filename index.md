@@ -1,6 +1,6 @@
 ## Clickitongue
 
-Clickitongue is a tool that removes the need to physically click mouse buttons, to help people with severe pain from repetitive-strain-injured wrists. **Its goal is for an experienced mouse user to feel no more encumbered than they would clicking normally with their fingers.** Clickitongue learns to recognize specific sounds, and issues clicks (left and right) in response. It can tolerate noisy environments - people talking, air conditioners running nearby - without issuing spurious clicks.
+Clickitongue is a tool that removes the need to physically click mouse buttons, to help people with repetitive strain injuries. **Its goal is for an experienced mouse user to feel no more encumbered than they would clicking normally with their fingers.** Clickitongue learns to recognize specific sounds, and issues clicks (left and right) in response. It can tolerate noisy environments - people talking, air conditioners running nearby - without issuing spurious clicks.
 
 Clickitongue is available to everyone free of charge under the GPLv3. It runs on Linux (both X and Wayland), Windows, and OSX.
 
