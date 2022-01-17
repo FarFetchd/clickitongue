@@ -6,17 +6,15 @@ Clickitongue is available to everyone free of charge under the GPLv3. It runs on
 
 ## Goals and Motivation
 
-Clickitongue is unlike other assistive technologies, in that it specifically targets repetitive strain injury rather than full disability. Assistive technologies for people without any use of their fingers need to cover the entirety of what is normally done with mouse+keyboard. It is inevitable that they will be slower and/or more annoying than mouse+keyboard, since nothing compares to the dexterity of fingers. This degraded experience makes them all but unusable for all but the worst RSI: if you are an expert mouse+keyboard user using a tool that gives you half your full capacity, and that full capacity (plus some pain) is constantly at your fingertips, sooner or later you'll give in.
+Clickitongue is unlike other assistive technologies, in that it specifically targets repetitive strain injury rather than full disability. Assistive technologies for people without any use of their fingers need to cover the entirety of what is normally done with mouse+keyboard. They are necessarily slower and more annoying to use than mouse+keyboard, since nothing compares to the dexterity of fingers. This degraded experience makes them all but unusable for all but the worst RSI: an expert mouse+keyboard user using a tool that restricts them to working at half capacity, when their full capacity is right at their fingertips, will eventually give in and switch back.
 
-Clickitongue focuses solely on the worst RSI culprit - mouse clicks - allowing users to escape that trap. Clickitongue will not slow you down and will not annoy you. You are simply issuing mouse clicks, and using whisper-quiet puffs of air to do so. Furthermore, you are not investing in learning an entire new ecosystem of input methods: Clickitongue's setup, training, and usage are all extremely simple. Clickitongue prioritizes a smooth experience over all else, in all ways.
+Clickitongue keeps users out of that trap by staying simple and smooth. Mouse clicking is a major contributor to RSI, and yet a very simple action: depressing and releasing one of two buttons. By controlling just these simple actions with the single most comfortable input method - blowing whisper-quiet puffs of air at a mic - Clickitongue makes it possible for people who *could* but really *shouldn't* be clicking to choose to give their wrists a rest, and stick to that choice. Besides the ease of long-term use, getting started is easy; there is nothing for a new user to learn.
 
 ## Usage
 
-On the first run, Clickitongue will have you select your audio input device, and then guide you through its training process. The training is quick; it should take about two to five minutes total. 
+On the first run, Clickitongue will have you select your audio input device, and then guide you through providing samples to its detector optimization process. This process takes about two to five minutes total. Afterwards, and on all future runs of the program, Clickitongue will proceed directly to letting you click.
 
 Just about any microphone, including webcam or built-in laptop mics, should get you basic functionality. However, for really smooth operation the mic needs to be positioned near your mouth. [More details here.](https://github.com/FarFetchd/clickitongue#mic-advice)
-
-For more detailed instructions and usage tips, [read Clickitongue's README](https://github.com/FarFetchd/clickitongue#usage).
 
 ## Installation
 
