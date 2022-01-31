@@ -34,16 +34,54 @@ void updateMemory(double cur, double thresh, int* since)
   }
 }
 
+void BlowDetector::updateElevatedThreshs()
+{
+  blocks_since_event_ = 0;
+
+  o1_elevated_thresh_ = 0;
+  for (int i=0; i<10; i++)
+    if (o1_recents_[i] > o1_elevated_thresh_)
+      o1_elevated_thresh_ = o1_recents_[i];
+  o1_elevated_thresh_ *= 0.9;
+  o7_elevated_thresh_ = 0;
+  for (int i=0; i<10; i++)
+    if (o7_recents_[i] > o7_elevated_thresh_)
+      o7_elevated_thresh_ = o7_recents_[i];
+  o7_elevated_thresh_ *= 0.9;
+}
+
 void BlowDetector::updateState(const fftw_complex* freq_power)
 {
   o1_cur_ = freq_power[1][0];
+  o1_recents_[o1_recent_ind_] = o1_cur_;
+  if (++o1_recent_ind_ >= 10)
+    o1_recent_ind_ = 0;
 
   o7_cur_ = 0;
   for (int i=64; i<128; i++)
     o7_cur_ += freq_power[i][0];
+  o7_recents_[o7_recent_ind_] = o7_cur_;
+  if (++o7_recent_ind_ >= 10)
+    o7_recent_ind_ = 0;
 
-  updateMemory(o1_cur_, o1_on_thresh_, &blocks_since_1above_);
-  updateMemory(o7_cur_, o7_on_thresh_, &blocks_since_7above_);
+  double cur_o1_on_thresh = o1_on_thresh_;
+  double cur_o7_on_thresh = o7_on_thresh_;
+  if (blocks_since_event_ < 30)
+  {
+    double elevated_frac = (30.0 - (double)blocks_since_event_) / 30.0;
+    double standard_frac = 1.0 - elevated_frac;
+    // actually, going to allow these even if they are lower than the configured thresholds.
+    //if (o1_elevated_thresh_ > o1_on_thresh_)
+      cur_o1_on_thresh = standard_frac * o1_on_thresh_ + elevated_frac * o1_elevated_thresh_;
+    //if (o7_elevated_thresh_ > o7_on_thresh_)
+      cur_o7_on_thresh = standard_frac * o7_on_thresh_ + elevated_frac * o7_elevated_thresh_;
+  }
+
+  if (blocks_since_event_ < 30)
+    blocks_since_event_++;
+
+  updateMemory(o1_cur_, cur_o1_on_thresh, &blocks_since_1above_);
+  updateMemory(o7_cur_, cur_o7_on_thresh, &blocks_since_7above_);
 }
 
 bool BlowDetector::shouldTransitionOn()
@@ -57,6 +95,7 @@ bool BlowDetector::shouldTransitionOn()
   if (delay_blocks_left_ > 0 && (!require_delay_ || --delay_blocks_left_ == 0))
   {
     delay_blocks_left_ = -1;
+    updateElevatedThreshs();
     return true;
   }
   return false;
@@ -74,12 +113,13 @@ bool BlowDetector::shouldTransitionOff()
   if (--deactivate_warmup_blocks_left_ <= 0)
   {
     deactivate_warmup_blocks_left_ = kBlowDeactivateWarmupBlocks;
+    updateElevatedThreshs();
     return true;
   }
   return false;
 }
 
-int BlowDetector::refracPeriodLengthBlocks() const { return 20; }
+int BlowDetector::refracPeriodLengthBlocks() const { return 10; }
 
 void BlowDetector::resetEWMAs()
 {
@@ -87,4 +127,5 @@ void BlowDetector::resetEWMAs()
   blocks_since_7above_ = kForeverBlocksAgo;
   delay_blocks_left_ = -1;
   deactivate_warmup_blocks_left_ = -1;
+  updateElevatedThreshs();
 }

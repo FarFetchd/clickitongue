@@ -1,5 +1,7 @@
 #include "detector.h"
 
+constexpr int kInterTransitionBlocks = 3;
+
 Detector::Detector(Action action_on, Action action_off,
                    BlockingQueue<Action>* action_queue,
                    std::vector<int>* cur_frame_dest)
@@ -15,7 +17,7 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
 
   if (on_)
   {
-    if (shouldTransitionOff())
+    if (shouldTransitionOff() && blocks_since_last_transition_ >= kInterTransitionBlocks)
     {
       on_ = false;
       kickoffAction(action_off_);
@@ -26,7 +28,7 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
   {
     if (refrac_blocks_left_ > 0)
       refrac_blocks_left_--;
-    else if (shouldTransitionOn())
+    else if (shouldTransitionOn() && blocks_since_last_transition_ >= kInterTransitionBlocks)
     {
       on_ = true;
       kickoffAction(action_on_);
@@ -42,10 +44,13 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
       target->resetEWMAs();
     }
   }
+  if (blocks_since_last_transition_ < kInterTransitionBlocks)
+    blocks_since_last_transition_++;
 }
 
 void Detector::kickoffAction(Action action)
 {
+  blocks_since_last_transition_ = 0;
   if (action == Action::RecordCurFrame)
     cur_frame_dest_->push_back(cur_frame_);
   else if (action != Action::NoAction)

@@ -18,7 +18,7 @@ constexpr double kMinO1On = 50;
 constexpr double kMaxO1On = 15000;
 constexpr double kMinO7On = 10;
 constexpr double kMaxO7On = 1000;
-constexpr double kMinO7Off = 0.2;
+constexpr double kMinO7Off = 0.05;
 constexpr double kMaxO7Off = 50;
 constexpr int kMinLookbackBlocks = 1;
 constexpr int kMaxLookbackBlocks = 10;
@@ -342,8 +342,8 @@ BlowConfig trainBlow(std::vector<std::pair<AudioRecording, int>> const& audio_ex
   // Shouldn't use MIDDLETUNE here because we have only one long blow example,
   // and it's not even that long. We could use it if we had more long blowing
   // time to go on.
-  tune(&best, &best.o7_off_thresh, /*tune_up=*/false,
-       kMinO7Off, best.o7_off_thresh, 0.5, "o7_off", factory.examples_sets_);
+  //tune(&best, &best.o7_off_thresh, /*tune_up=*/false,
+  //     kMinO7Off, best.o7_off_thresh, 0.5, "o7_off", factory.examples_sets_);
 
   BlowConfig ret;
   ret.scale = scale;

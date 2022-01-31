@@ -60,6 +60,7 @@ private:
   std::vector<Detector*> inhibition_targets_;
 
   int refrac_blocks_left_ = 0;
+  int blocks_since_last_transition_ = 0;
 };
 
 #endif // CLICKITONGUE_DETECTOR_H_

@@ -4,7 +4,7 @@
 #include "detector.h"
 
 constexpr int kBlowDelayBlocks = 3;
-constexpr int kBlowDeactivateWarmupBlocks = 5;
+constexpr int kBlowDeactivateWarmupBlocks = 3;
 constexpr int kForeverBlocksAgo = 999999999;
 
 class BlowDetector : public Detector
@@ -38,6 +38,8 @@ protected:
   void resetEWMAs() override;
 
 private:
+  void updateElevatedThreshs();
+
   // o1,6,7 are octaves. o1 is bin 1, o2 is bins 2+3, o3 is bins 4+5+6+7,...
   // ...o1 is bins 16+17+...+31, o6 is 32+...+63, o7 is 64+...+127.
   const double o1_on_thresh_;
@@ -49,6 +51,15 @@ private:
 
   double o1_cur_ = 0;
   double o7_cur_ = 0;
+
+  // How long since the most recent transition-to-on event.
+  // When this value is smaller, the activation threshold is elevated.
+  int blocks_since_event_ = 30;
+  // Dynamic adjustment of thresholds: when we transition on, we temporarily
+  // set the activation threshold to the largest recently seen value, and then
+  // gradually decay back down to standard configured threshold.
+  double o1_recents_[10]; int o1_recent_ind_ = 0; double o1_elevated_thresh_;
+  double o7_recents_[10]; int o7_recent_ind_ = 0; double o7_elevated_thresh_;
 
   int blocks_since_1above_ = kForeverBlocksAgo;
   int blocks_since_7above_ = kForeverBlocksAgo;
