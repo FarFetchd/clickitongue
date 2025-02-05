@@ -4,7 +4,7 @@
 #include "detector.h"
 
 constexpr int kBlowDelayBlocks = 3;
-constexpr int kBlowDeactivateWarmupBlocks = 3;
+constexpr int kBlowDeactivateWarmupBlocks = 5;
 constexpr int kForeverBlocksAgo = 999999999;
 
 class BlowDetector : public Detector
