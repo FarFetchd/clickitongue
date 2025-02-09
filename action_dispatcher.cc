@@ -1,6 +1,12 @@
 #include "action_dispatcher.h"
 
+#include <thread>
+
+#include "config_io.h"
 #include "interaction.h"
+
+void crash(const char* s);
+std::vector<Detector*> g_HACK_all_detectors;
 
 ActionDispatcher::ActionDispatcher(BlockingQueue<Action>* action_queue)
   : action_queue_(action_queue) {}
@@ -57,7 +63,73 @@ void actionDispatch(ActionDispatcher* me)
   while (me->dispatchNextAction()) {}
 }
 
+// =============== voice to LLM stuff ==================
 
+
+void copyPrevLines(int lines);
+void ctrlC();
+void ctrlV();
+PokeQueue* lazy_wav_ready() { static PokeQueue* ret = new PokeQueue(); return ret; }
+PokeQueue* lazy_voice_rec_finisher() { static PokeQueue* ret = new PokeQueue(); return ret; }
+std::unique_ptr<AudioRecording> g_recorder;
+
+void endRecDescribeCode()
+{
+  lazy_voice_rec_finisher()->poke();
+  // sleep for enough time for the user's global hotkey to be released
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  ctrlC();
+  lazy_wav_ready()->consumePoke();
+  std::string cmd = "python3 ";
+  cmd += getConfigDir() + "clickitongue_voice_to_llm.py describeToWhisperAndBack ";
+  cmd += g_whisper_url;
+  cmd += " ";
+  cmd += g_athene_url;
+  PRINTF("ended recording, now running describe mode\n");
+  system(cmd.c_str());
+  ctrlV();
+  for (auto d : g_HACK_all_detectors)
+    d->enabled_ = true;
+}
+
+void endRecDictate()
+{
+  lazy_voice_rec_finisher()->poke();
+  // sleep for enough time for the user's global hotkey to be released
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  copyPrevLines(9);
+  lazy_wav_ready()->consumePoke();
+  std::string cmd = "python3 ";
+  cmd += getConfigDir() + "clickitongue_voice_to_llm.py dictateAndClipboardToWhisperAndBack ";
+  cmd += g_whisper_url;
+  cmd += " ";
+  cmd += g_athene_url;
+  PRINTF("ended recording, now running dictate mode\n");
+  system(cmd.c_str());
+  ctrlV();
+  for (auto d : g_HACK_all_detectors)
+    d->enabled_ = true;
+}
+
+void endRecNothing()
+{
+  lazy_voice_rec_finisher()->poke();
+  lazy_wav_ready()->consumePoke();
+  PRINTF("oops! ended recording, doing nothing with it\n");
+  for (auto d : g_HACK_all_detectors)
+    d->enabled_ = true;
+}
+
+void startRecording()
+{
+  PRINTF("starting recording for voice-to-LLM\n");
+  for (auto d : g_HACK_all_detectors)
+    d->enabled_ = false;
+  g_recorder.reset(new AudioRecording(lazy_voice_rec_finisher(), "/tmp/scifiscribe_to_whisper.wav",
+                                      lazy_wav_ready()));
+}
 
 
 // ================================Linux======================================
@@ -68,6 +140,55 @@ void actionDispatch(ActionDispatcher* me)
 #include <fcntl.h>
 #include <unistd.h>
 #include <linux/uinput.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+void readFIFO()
+{
+  mkfifo("/tmp/clickitongue_fifo", 0666);
+  int fifo_fd = open("/tmp/clickitongue_fifo", O_RDONLY);
+  if (fifo_fd == -1)
+    crash("couldn't open fifo /tmp/clickitongue_fifo");
+  char buf;
+  bool recording = false;
+  while (true)
+  {
+    int res = read(fifo_fd, &buf, 1);
+    if (res < 0)
+      crash("fifo read failed");
+    else if (res == 0)
+    {
+      close(fifo_fd);
+      fifo_fd = open("/tmp/clickitongue_fifo", O_RDONLY);
+    }
+    else
+    {
+      if (buf == 'r' && !recording)
+      {
+        recording = true;
+        startRecording();
+      }
+      else if (recording)
+      {
+        if (buf == 'i')
+        {
+          recording = false;
+          endRecDictate();
+        }
+        if (buf == 'e')
+        {
+          recording = false;
+          endRecDescribeCode();
+        }
+        if (buf == 'c')
+        {
+          recording = false;
+          endRecNothing();
+        }
+      }
+    }
+  }
+}
 
 void crash(const char* s);
 
@@ -79,8 +200,17 @@ void initLinuxUinput()
     crash("couldn't open /dev/uinput to write mouse clicks");
 
   ioctl(g_linux_uinput_fd, UI_SET_EVBIT, EV_KEY);
+  ioctl(g_linux_uinput_fd, UI_SET_EVBIT, EV_SYN);
   ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, BTN_LEFT);
   ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, BTN_RIGHT);
+
+  ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, KEY_LEFTSHIFT);
+  ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, KEY_UP);
+  ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, KEY_DOWN);
+  ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, KEY_RIGHT);
+  ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, KEY_LEFTCTRL);
+  ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, KEY_C);
+  ioctl(g_linux_uinput_fd, UI_SET_KEYBIT, KEY_V);
 
   struct uinput_setup usetup;
   memset(&usetup, 0, sizeof(usetup));
@@ -121,6 +251,45 @@ void uinputWrite(int code, int val)
     PRINTERR(stderr, "uinput EV_SYN SYN_REPORT write failed\n");
 }
 
+void copyPrevLines(int lines)
+{
+  // Hold down left shift
+  uinputWrite(KEY_LEFTSHIFT, 1);
+  for (int i = 0; i < lines; i++)
+  {
+    uinputWrite(KEY_UP, 1);
+    uinputWrite(KEY_UP, 0);
+  }
+  // Release left shift
+  uinputWrite(KEY_LEFTSHIFT, 0);
+
+  // Press Ctrl+C to copy
+  uinputWrite(KEY_LEFTCTRL, 1);
+  uinputWrite(KEY_C, 1);
+  uinputWrite(KEY_C, 0);
+  uinputWrite(KEY_LEFTCTRL, 0);
+
+  // return to original position
+  uinputWrite(KEY_RIGHT, 1);
+  uinputWrite(KEY_RIGHT, 0);
+}
+
+void ctrlC()
+{
+  uinputWrite(KEY_LEFTCTRL, 1);
+  uinputWrite(KEY_C, 1);
+  uinputWrite(KEY_C, 0);
+  uinputWrite(KEY_LEFTCTRL, 0);
+}
+
+void ctrlV()
+{
+  uinputWrite(KEY_LEFTCTRL, 1);
+  uinputWrite(KEY_V, 1);
+  uinputWrite(KEY_V, 0);
+  uinputWrite(KEY_LEFTCTRL, 0);
+}
+
 void ActionDispatcher::leftDown()
 {
   uinputWrite(BTN_LEFT, 1);
@@ -146,6 +315,11 @@ void ActionDispatcher::rightUp()
 #ifdef CLICKITONGUE_WINDOWS
 
 #include <windows.h>
+
+void readFIFO()
+{
+  // TODO implement some sort of global hotkey reading to support voice-to-LLM on windows
+}
 
 void mouseButtonEvent(DWORD mouse_event_flag)
 {
@@ -273,6 +447,56 @@ void ActionDispatcher::rightUp()
   CGEventSetIntegerValueField(event, kCGMouseEventClickState, g_osx_rclicks);
   CGEventPost(kCGSessionEventTap, event);
   CFRelease(event);
+}
+
+// TODO test that this actually works on OSX
+#include <sys/types.h>
+#include <sys/stat.h>
+void readFIFO()
+{
+  mkfifo("/tmp/clickitongue_fifo", 0666);
+  int fifo_fd = open("/tmp/clickitongue_fifo", O_RDONLY);
+  if (fifo_fd == -1)
+    crash("couldn't open fifo /tmp/clickitongue_fifo");
+  char buf;
+  bool recording = false;
+  while (true)
+  {
+    int res = read(fifo_fd, &buf, 1);
+    if (res < 0)
+      crash("fifo read failed");
+    else if (res == 0)
+    {
+      close(fifo_fd);
+      fifo_fd = open("/tmp/clickitongue_fifo", O_RDONLY);
+    }
+    else
+    {
+      if (buf == 'r' && !recording)
+      {
+        recording = true;
+        startRecording();
+      }
+      else if (recording)
+      {
+        if (buf == 'i')
+        {
+          recording = false;
+          endRecDictate();
+        }
+        if (buf == 'e')
+        {
+          recording = false;
+          endRecDescribeCode();
+        }
+        if (buf == 'c')
+        {
+          recording = false;
+          endRecNothing();
+        }
+      }
+    }
+  }
 }
 
 #endif // CLICKITONGUE_OSX

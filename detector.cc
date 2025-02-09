@@ -15,6 +15,9 @@ void Detector::processFourierOutputBlock(const fftw_complex* freq_power)
   cur_frame_ += kFourierBlocksize;
   updateState(freq_power);
 
+  if (!enabled_)
+    return;
+
   if (on_)
   {
     if (shouldTransitionOff() && blocks_since_last_transition_ >= kInterTransitionBlocks)

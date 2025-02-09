@@ -9,6 +9,9 @@
 
 #include "constants.h"
 
+extern char g_athene_url[];
+extern char g_whisper_url[];
+
 struct BlowConfig
 {
   BlowConfig() : enabled(false) {}
@@ -56,12 +59,14 @@ struct HumConfig
 struct Config
 {
   Config() {}
-  Config(farfetchd::ConfigReader const& cfg) : blow(cfg), cat(cfg), hum(cfg) {}
+  Config(farfetchd::ConfigReader const& cfg);
   std::string toString() const;
 
   BlowConfig blow;
   CatConfig cat;
   HumConfig hum;
+  std::string whisper_url;
+  std::string athene_url;
 };
 
 // Returns nullopt if it fails to read file.
@@ -73,6 +78,7 @@ bool writeConfig(Config config, std::string config_name,
                  std::string* attempted_filepath);
 
 std::string getAndEnsureConfigDir();
+std::string getConfigDir();
 
 std::optional<int> loadDeviceConfig(std::vector<std::string> dev_names);
 int writeDeviceConfig(std::vector<std::string> dev_names, int chosen);

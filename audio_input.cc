@@ -240,22 +240,22 @@ PaDeviceIndex chooseInputDevice()
 AudioInput::AudioInput(int seconds_to_record, int frames_per_cb)
   : stream_(nullptr), data_(seconds_to_record * kFramesPerSec)
 {
-  ctorCommon(recordCallback, &data_, frames_per_cb);
+  ctorCommon(recordCallback, &data_, frames_per_cb, kFramesPerSec, paFloat32, g_num_channels);
 }
 
 AudioInput::AudioInput(int(*custom_record_cb)(const void*, void*, unsigned long,
                        const PaStreamCallbackTimeInfo*,
                        PaStreamCallbackFlags, void*), void* user_opaque,
-                       int frames_per_cb)
+                       int frames_per_cb, int frame_rate, int sample_format, int n_channels)
   : stream_(nullptr), data_(0)
 {
-  ctorCommon(custom_record_cb, user_opaque, frames_per_cb);
+  ctorCommon(custom_record_cb, user_opaque, frames_per_cb, frame_rate, sample_format, n_channels);
 }
 
 void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
                             const PaStreamCallbackTimeInfo*,
                             PaStreamCallbackFlags, void*), void* opaque,
-                            int frames_per_cb)
+                            int frames_per_cb, int frame_rate, int sample_format, int n_channels)
 {
   PaError err = initPulseAudio();
   if (err != paNoError) audioInputCrash(err);
@@ -268,13 +268,13 @@ void AudioInput::ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
     deinitPulseAudio();
     safelyExit(1);
   }
-  input_param.channelCount = g_num_channels;
-  input_param.sampleFormat = paFloat32;
+  input_param.channelCount = n_channels;
+  input_param.sampleFormat = sample_format;
   input_param.suggestedLatency =
     Pa_GetDeviceInfo(input_param.device)->defaultLowInputLatency;
   input_param.hostApiSpecificStreamInfo = NULL;
 
-  err = Pa_OpenStream(&stream_, &input_param, NULL, kFramesPerSec,
+  err = Pa_OpenStream(&stream_, &input_param, NULL, frame_rate,
                       frames_per_cb,//.value_or(paFramesPerBufferUnspecified),
                       paClipOff, record_cb, opaque);
 #ifdef CLICKITONGUE_LINUX

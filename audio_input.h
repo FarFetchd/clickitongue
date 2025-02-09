@@ -41,12 +41,12 @@ public:
   AudioInput(int(*custom_record_cb)(const void*, void*, unsigned long,
                                     const PaStreamCallbackTimeInfo*,
                                     PaStreamCallbackFlags, void*), void* user_opaque,
-                                    int frames_per_cb);
+                                    int frames_per_cb, int frame_rate, int sample_format, int n_channels);
 
   void ctorCommon(int(*record_cb)(const void*, void*, unsigned long,
                                   const PaStreamCallbackTimeInfo*,
                                   PaStreamCallbackFlags, void*), void* opaque,
-                                  int frames_per_cb);
+                                  int frames_per_cb, int frame_rate, int sample_format, int n_channels);
 
   ~AudioInput();
 

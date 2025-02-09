@@ -22,6 +22,8 @@ public:
   Detector() = delete;
   virtual ~Detector();
 
+  bool enabled_ = true; // HACK
+
 protected:
   Detector(Action action_on, Action action_off,
            BlockingQueue<Action>* action_queue,

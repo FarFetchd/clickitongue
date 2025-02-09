@@ -207,6 +207,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
     cat_detector = std::make_unique<CatDetector>(
         action_queue, config.cat.action_on, config.cat.action_off,
         config.cat.o7_on_thresh, config.cat.o1_limit, config.cat.use_limit);
+    g_HACK_all_detectors.push_back(cat_detector.get());
   }
 
   std::unique_ptr<Detector> blow_detector;
@@ -222,6 +223,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
       blow_detector->addInhibitionTarget(cat_detector.get());
       cat_detector->addInhibitionTarget(blow_detector.get());
     }
+    g_HACK_all_detectors.push_back(blow_detector.get());
   }
 
   std::unique_ptr<Detector> hum_detector;
@@ -235,6 +237,7 @@ std::vector<std::unique_ptr<Detector>> makeDetectorsFromConfig(
       blow_detector->addInhibitionTarget(hum_detector.get());
     if (cat_detector)
       cat_detector->addInhibitionTarget(hum_detector.get());
+    g_HACK_all_detectors.push_back(hum_detector.get());
   }
 
   std::vector<std::unique_ptr<Detector>> detectors;
@@ -271,7 +274,7 @@ void normalOperation(Config config, bool first_time)
   if (!config.blow.enabled && !config.cat.enabled &&
       !config.hum.enabled)
   {
-    crash("Need at least one of blow, cat, hum enabled.");
+    PRINTF("no mouse control configured - only voice-to-LLM is active.\n");
   }
 
   BlockingQueue<Action> action_queue;
@@ -281,8 +284,18 @@ void normalOperation(Config config, bool first_time)
   FFTResultDistributor fft_distributor(
       makeDetectorsFromConfig(config, &action_queue), loadScaleFromConfig(config),
       /*training=*/false);
-  AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize);
+  AudioInput audio_input(fftDistributorCallback, &fft_distributor, kFourierBlocksize, kFramesPerSec, paFloat32, g_num_channels);
   describeLoadedParams(config, first_time);
+
+  if (config.whisper_url.size() > 6)
+  {
+    PRINTF("voice-to-LLM coding mode enabled!\n");
+    PRINTF("you'll need to install xsel if you haven't already. this mode won't work on Wayland.\n");
+    PRINTF("whisper URL: %s\n", config.whisper_url.c_str());
+    PRINTF("athene URL: %s\n", config.athene_url.c_str());
+    std::thread read_fifo_thread(readFIFO);
+    read_fifo_thread.detach();
+  }
 
   while (audio_input.active())
     Pa_Sleep(500);
@@ -366,25 +379,25 @@ int main(int argc, char** argv)
     }
     else if (opts.mode.value() == "equalizer")
     {
-      AudioInput audio_input(equalizerCallback, nullptr, kFourierBlocksize);
+      AudioInput audio_input(equalizerCallback, nullptr, kFourierBlocksize, kFramesPerSec, paFloat32, g_num_channels);
       while (audio_input.active())
         Pa_Sleep(500);
     }
     else if (opts.mode.value() == "spikes")
     {
-      AudioInput audio_input(spikesCallback, nullptr, kFourierBlocksize);
+      AudioInput audio_input(spikesCallback, nullptr, kFourierBlocksize, kFramesPerSec, paFloat32, g_num_channels);
       while (audio_input.active())
         Pa_Sleep(500);
     }
     else if (opts.mode.value() == "octaves")
     {
-      AudioInput audio_input(octavesCallback, nullptr, kFourierBlocksize);
+      AudioInput audio_input(octavesCallback, nullptr, kFourierBlocksize, kFramesPerSec, paFloat32, g_num_channels);
       while (audio_input.active())
         Pa_Sleep(500);
     }
     else if (opts.mode.value() == "overtones")
     {
-      AudioInput audio_input(overtonesCallback, nullptr, kFourierBlocksize);
+      AudioInput audio_input(overtonesCallback, nullptr, kFourierBlocksize, kFramesPerSec, paFloat32, g_num_channels);
       while (audio_input.active())
         Pa_Sleep(500);
     }

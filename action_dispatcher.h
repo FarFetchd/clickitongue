@@ -1,8 +1,10 @@
 #ifndef CLICKITONGUE_ACTION_EFFECTOR_H_
 #define CLICKITONGUE_ACTION_EFFECTOR_H_
 
+#include "audio_recording.h"
 #include "blocking_queue.h"
 #include "constants.h"
+#include "detector.h"
 
 #ifdef CLICKITONGUE_LINUX
 extern int g_linux_uinput_fd;
@@ -30,7 +32,10 @@ private:
   BlockingQueue<Action>* const action_queue_;
 };
 
+extern std::vector<Detector*> g_HACK_all_detectors;
+
 // run me in my own thread
 void actionDispatch(ActionDispatcher* me);
+void readFIFO();
 
 #endif // CLICKITONGUE_ACTION_EFFECTOR_H_

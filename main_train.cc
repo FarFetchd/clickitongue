@@ -1,6 +1,7 @@
 #include "main_train.h"
 
 #include <cassert>
+#include <iostream>
 #include <unistd.h>
 
 #include "audio_input.h"
@@ -16,8 +17,6 @@ using TaggedExamples = std::vector<std::pair<AudioRecording, int>>;
 
 bool introAndAskIfMicNearMouth()
 {
-  chooseInputDevice();
-
   bool mic_near_mouth = promptYesNo(
 "It looks like this is your first time running Clickitongue.\n\n"
 "Clickitongue needs to learn your environment's acoustics and background noise.\n\n"
@@ -127,12 +126,14 @@ TaggedExamples combinePositiveAndNegative(TaggedExamples* positive,
   return ret;
 }
 
-bool afterTraining(Config* config, int success_count);
+bool afterTraining(Config* config, int success_count,
+                   bool want_voice_llm, bool want_normal_clickitongue);
 void normalOperation(Config config, bool first_time);
 
 // pass null to skip trying to train a type
 void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
-                  TaggedExamples* hum_examples, bool mic_near_mouth)
+                  TaggedExamples* hum_examples, bool mic_near_mouth,
+                  bool want_voice_llm, bool want_normal_clickitongue)
 {
   collectAnyMissingExamples(blow_examples, cat_examples, hum_examples);
 
@@ -146,17 +147,21 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
   TaggedExamples hum_examples_plus_neg = combinePositiveAndNegative(
       hum_examples, {blow_examples, cat_examples});
 
-  assert(hum_examples && !hum_examples->empty());
-  double scale = pickHumScalingFactor(*hum_examples);
-
-  unlink("clickitongue_training.log");
   Config config;
-  if (!blow_examples_plus_neg.empty())
-    config.blow = trainBlow(blow_examples_plus_neg, scale, mic_near_mouth);
-  if (!cat_examples_plus_neg.empty())
-    config.cat = trainCat(cat_examples_plus_neg, scale, mic_near_mouth);
-  if (!hum_examples_plus_neg.empty())
-    config.hum = trainHum(hum_examples_plus_neg, scale, mic_near_mouth);
+
+  if (want_normal_clickitongue)
+  {
+    assert(hum_examples && !hum_examples->empty());
+    double scale = pickHumScalingFactor(*hum_examples);
+
+    unlink("clickitongue_training.log");
+    if (!blow_examples_plus_neg.empty())
+      config.blow = trainBlow(blow_examples_plus_neg, scale, mic_near_mouth);
+    if (!cat_examples_plus_neg.empty())
+      config.cat = trainCat(cat_examples_plus_neg, scale, mic_near_mouth);
+    if (!hum_examples_plus_neg.empty())
+      config.hum = trainHum(hum_examples_plus_neg, scale, mic_near_mouth);
+  }
 
   std::string failure_list;
   if (blow_examples && !config.blow.enabled)
@@ -197,25 +202,51 @@ void trainingBody(TaggedExamples* blow_examples, TaggedExamples* cat_examples,
     }
     if (promptYesNo(msg.c_str()))
     {
-      trainingBody(blow_examples, cat_examples, hum_examples, mic_near_mouth);
+      trainingBody(blow_examples, cat_examples, hum_examples, mic_near_mouth,
+                   want_voice_llm, want_normal_clickitongue);
       return;
     }
   }
 
-  if (afterTraining(&config, success_count))
+  if (afterTraining(&config, success_count, want_voice_llm, want_normal_clickitongue))
     normalOperation(config, /*first_time=*/true);
 }
 
 void firstTimeTrain()
 {
+  chooseInputDevice();
+
   TaggedExamples blow_examples;
   TaggedExamples cat_examples;
   TaggedExamples hum_examples;
-  bool mic_near_mouth = introAndAskIfMicNearMouth();
-  if (mic_near_mouth)
-    trainingBody(&blow_examples, &cat_examples, &hum_examples, mic_near_mouth);
+  TaggedExamples* blow_ptr = &blow_examples;
+  TaggedExamples* cat_ptr = &cat_examples;
+  TaggedExamples* hum_ptr = &hum_examples;
+
+
+  bool want_normal_clickitongue = true;
+  // TODO support OSX and windows
+#ifdef CLICKITONGUE_LINUX
+  bool want_voice_llm = promptYesNo(
+"Do you want to use Clickitongue's voice-to-LLM coding assistant? ");
+  if (want_voice_llm)
+  {
+    want_normal_clickitongue = promptYesNo(
+"Do you also want to use Clickitongue's original blow-on-mic-to-click functionality? ");
+  }
+#else
+  bool want_voice_llm = false;
+#endif
+
+  bool mic_near_mouth = false;
+  if (want_normal_clickitongue)
+    mic_near_mouth = introAndAskIfMicNearMouth();
   else
-    trainingBody(nullptr, &cat_examples, &hum_examples, mic_near_mouth);
+    blow_ptr = cat_ptr = hum_ptr = nullptr;
+
+  if (!mic_near_mouth)
+    blow_ptr = nullptr;
+  trainingBody(blow_ptr, cat_ptr, hum_ptr, mic_near_mouth, want_voice_llm, want_normal_clickitongue);
 }
 
 #define ASSIGN_LEFT_OR_RIGHT_CLICK(x) if (config->x.enabled && remaining_to_assign > 0) \
@@ -227,9 +258,10 @@ void firstTimeTrain()
 }
 
 // returns true if we can proceed to normalOperation().
-bool afterTraining(Config* config, int success_count)
+bool afterTraining(Config* config, int success_count,
+                   bool want_voice_llm, bool want_normal_clickitongue)
 {
-  if (success_count == 0)
+  if (want_normal_clickitongue && success_count == 0)
   {
     promptInfo(
 "Clickitongue was not able to find parameters to distinguish any type of mouth\n"
@@ -248,6 +280,20 @@ bool afterTraining(Config* config, int success_count)
   ASSIGN_LEFT_OR_RIGHT_CLICK(cat);
   ASSIGN_LEFT_OR_RIGHT_CLICK(hum);
   assert(success_count <= 3);
+
+  config->whisper_url = config->athene_url = "none";
+  // TODO support OSX and windows
+#ifdef CLICKITONGUE_LINUX
+  if (want_voice_llm)
+  {
+    printf("enter whisper URL (e.g. http://127.0.0.1:12345/inference): "); fflush(stdout);
+    std::getline(std::cin, config->whisper_url);
+    printf("enter athene URL (e.g. http://127.0.0.1:12345/completion): "); fflush(stdout);
+    std::getline(std::cin, config->athene_url);
+  }
+#else
+  assert(!want_voice_llm);
+#endif
 
   std::string attempted_filepath;
   if (!writeConfig(*config, kDefaultConfig, &attempted_filepath))

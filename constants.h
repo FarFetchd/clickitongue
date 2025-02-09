@@ -29,6 +29,7 @@ const uint64_t kOSXDoubleClickMs = 333;
 // with the audio terms, and call sample rate "frames per second" (we are
 // recording 88200 samples per second).
 constexpr int kFramesPerSec = 44100; // aka "sample rate".
+constexpr int kWhisperFrameRate = 16000;
 
 // The end frequency of the n/2 + 1 Fourier transform output frequency bins.
 constexpr double kNyquist = 22050.0f;

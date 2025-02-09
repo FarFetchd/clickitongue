@@ -12,12 +12,8 @@ OUTPUTFILENAME=`grep "OutputBinaryFilename=" $BUILDFILENAME | sed 's/OutputBinar
 COMPILECOMMANDPREFIX=`grep "CompileCommandPrefix=" $BUILDFILENAME | sed 's/CompileCommandPrefix=//'`
 LIBRARIESTOLINK=`grep "LibrariesToLink=" $BUILDFILENAME | sed 's/LibrariesToLink=//'`
 
-echo "
-*******************************************************************************
-Doing a full rebuild of $OUTPUTFILENAME. If you expect to compile more than this
-one time, consider installing https://github.com/FarFetchd/ccsimplebuild.
-It will recompile only what is necessary.
-*******************************************************************************"
+# If you expect to compile more than this one time, consider installing
+# https://github.com/FarFetchd/ccsimplebuild. It will recompile only what is necessary.
 
 mkdir obj >/dev/null 2>/dev/null
 for cur_fname in `ls *.cc | sed 's/\.cc//'` ; do

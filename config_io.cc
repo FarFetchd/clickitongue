@@ -5,6 +5,8 @@
 #include <cstring>
 #include <sstream>
 
+#include "interaction.h"
+
 Action parseAction(std::string str)
 {
   if (str.find("LeftDown") != std::string::npos) return Action::LeftDown;
@@ -32,6 +34,21 @@ std::string actionString(Action action)
     case Action::NoAction: return "NoAction";
     default: return "!!!!!actionString() was given an unknown action!!!!!";
   }
+}
+
+void crash(const char* s);
+char g_athene_url[512];
+char g_whisper_url[512];
+Config::Config(farfetchd::ConfigReader const& cfg) : blow(cfg), cat(cfg), hum(cfg)
+{
+  athene_url = cfg.getString("athene_url").value_or("none");
+  if (athene_url.size() > 511)
+    crash("athene_url longer than 511 chars");
+  strcpy(g_athene_url, athene_url.c_str());
+  whisper_url = cfg.getString("whisper_url").value_or("none");
+  if (whisper_url.size() > 511)
+    crash("whisper_url longer than 511 chars");
+  strcpy(g_whisper_url, whisper_url.c_str());
 }
 
 std::string Config::toString() const
@@ -66,6 +83,8 @@ std::string Config::toString() const
         << "hum_ewma_alpha: " << hum.ewma_alpha << "\n"
         << "hum_scale: " << hum.scale << "\n";
   }
+  sts << "whisper_url: " << whisper_url << "\n";
+  sts << "athene_url: " << athene_url << "\n";
   return sts.str();
 }
 
@@ -107,7 +126,7 @@ HumConfig::HumConfig(farfetchd::ConfigReader const& cfg)
   ewma_alpha = cfg.getDouble("hum_ewma_alpha").value_or(-1);
   scale = cfg.getDouble("hum_scale").value_or(-1);
 
-  enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
+  enabled = (action_on != Action::NoAction &&
              o1_on_thresh >= 0 && o1_off_thresh >= 0 && o6_limit >= 0 &&
              ewma_alpha >= 0 && scale >= 0);
 }
@@ -133,11 +152,140 @@ std::string getAndEnsureConfigDir()
 #endif
 }
 
+std::string getConfigDir()
+{
+#ifdef CLICKITONGUE_WINDOWS
+  return "";
+#else
+  std::string config_dir = getHomeDir() + "/.config";
+  std::string clicki_config_dir = config_dir + "/clickitongue";
+  return clicki_config_dir + "/";
+#endif
+}
+
+void writePythonToConfigDir()
+{
+const char kOurPython[] =
+R"(
+import os
+import sys
+import time
+import requests
+import subprocess
+
+def remove_markdown_backticks(s):
+    lines = s.splitlines()
+    if lines and lines[0].strip().startswith('```'):
+        lines = lines[1:]
+    if lines and lines[-1].strip().endswith('```'):
+        lines = lines[:-1]
+    return '\n'.join(lines)
+
+def clean_output_from_response(resp):
+    the_out = resp.json()['content']
+    if '```' in the_out:
+        the_out = remove_markdown_backticks(the_out)
+    return the_out.strip()
+
+
+
+def atheneDictate(whisper_url, athene_url):
+    result = subprocess.run(['pgrep', '-x', 'Xorg'], check=False, stdout=subprocess.PIPE)
+    is_x11 = (result.returncode == 0)
+
+    if is_x11:
+        whisper_cmd = 'xsel --clipboard -o >/tmp/scifiscribe_whisper_prompt.txt 2>/dev/null'
+    else:
+        whisper_cmd = 'wl-paste >/tmp/scifiscribe_whisper_prompt.txt'
+    whisper_cmd += f' ; curl {whisper_url} -H "Content-Type: multipart/form-data" -F file=@/tmp/scifiscribe_to_whisper.wav -F temperature="0.0" -F temperature_inc="0.2" -F response_format="text" >/tmp/scifiscribe_whisper_out.txt 2>/dev/null'
+    os.system(whisper_cmd)
+
+    with open('/tmp/scifiscribe_whisper_prompt.txt', 'r', encoding='utf-8') as file:
+        context = file.read().strip()
+    with open('/tmp/scifiscribe_whisper_out.txt', 'r', encoding='utf-8') as file:
+        whisper_out = file.read().strip()
+
+    print(f'preceding context:\n{context}\n\n')
+    print(f'whisper output:\n{whisper_out}\n\n')
+
+    our_request_to_llm = f'You are formatting the output of a speech recognition system. I will give you the raw speech recognition output, plus the text immediately preceding where the user wants the output inserted. Print a version of the raw output formatted to naturally follow after the given preceding text. It is likely (but not guaranteed) that the text being worked on is source code. If the preceding text is empty, assume not code. I will be directly pasting your output into the text editor. Now, here is the preceding context (demarcated by end_of_context):\n{context}\n\nend_of_context\nAnd here is the speech recognition raw output:\n{whisper_out}'
+    full_prompt = f'<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\n{our_request_to_llm}<|im_end|>\n<|im_start|>assistant\n'
+    req_json = {
+        'prompt': full_prompt,
+        'n_predict': -1,
+        'temperature': 0
+    }
+    response = requests.post(athene_url, json=req_json)
+    final_output = clean_output_from_response(response)
+    print(f'about to paste LLM output:\n{final_output}\n\n')
+    if is_x11:
+        subprocess.run(['xsel', '--clipboard', '-i'], input=final_output.encode('utf-8'))
+    else:
+        subprocess.run(['wl-copy'], input=final_output.encode('utf-8'))
+
+
+def describeToWhisperAndBack(whisper_url, athene_url):
+    result = subprocess.run(['pgrep', '-x', 'Xorg'], check=False, stdout=subprocess.PIPE)
+    is_x11 = (result.returncode == 0)
+
+    if is_x11:
+        whisper_cmd = 'xsel --clipboard -o >/tmp/scifiscribe_whisper_prompt.txt 2>/dev/null'
+    else:
+        whisper_cmd = 'wl-paste >/tmp/scifiscribe_whisper_prompt.txt'
+    whisper_cmd += f' ; curl {whisper_url} -H "Content-Type: multipart/form-data" -F file=@/tmp/scifiscribe_to_whisper.wav -F temperature="0.0" -F temperature_inc="0.2" -F response_format="text" >/tmp/scifiscribe_whisper_out.txt 2>/dev/null'
+    os.system(whisper_cmd)
+
+    with open('/tmp/scifiscribe_whisper_prompt.txt', 'r', encoding='utf-8') as file:
+        context = file.read().strip()
+    with open('/tmp/scifiscribe_whisper_out.txt', 'r', encoding='utf-8') as file:
+        whisper_out = file.read().strip()
+
+    print(f'whisper output:\n{whisper_out}\n\n')
+
+    if context:
+        our_request_to_llm = f'You are modifying some existing code, as specified by a description coming from speech recognition. Keep in mind that if the user referred to a variable or function name, the speech recognition is likely to have presented it as multiple English words, like "some function" rather than some_function(). Now, here is the existing code:\n```\n{context}\n```\n...and here is the user\'s description:\n{whisper_out}\n(end of description)\nYour output will be directly pasted into the editor, so please write the code and nothing else: no descriptions or explanations.'
+    else:
+        our_request_to_llm = f'Please write code according to the following description. Your output will be directly pasted into the editor, so please write the code and nothing else: no descriptions or explanations. Here is the description: {whisper_out}'
+    full_prompt = f'<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\n{our_request_to_llm}<|im_end|>\n<|im_start|>assistant\n'
+    req_json = {
+        'prompt': full_prompt,
+        'n_predict': -1,
+        'temperature': 0
+    }
+    response = requests.post(athene_url, json=req_json)
+    final_output = clean_output_from_response(response)
+    print(f'about to paste LLM output:\n{final_output}\n\n')
+    if is_x11:
+        subprocess.run(['xsel', '--clipboard', '-i'], input=final_output.encode('utf-8'))
+    else:
+        subprocess.run(['wl-copy'], input=final_output.encode('utf-8'))
+
+
+
+if sys.argv[1] == 'dictateAndClipboardToWhisperAndBack':
+    atheneDictate(sys.argv[2], sys.argv[3])
+else:
+    describeToWhisperAndBack(sys.argv[2], sys.argv[3])
+)";
+  std::string full_path = getAndEnsureConfigDir() + "clickitongue_voice_to_llm.py";
+  try
+  {
+    std::ofstream out(full_path);
+    out << kOurPython;
+  }
+  catch (std::exception const& e)
+  {
+    crash("failed to write python script to config dir");
+  }
+}
+
 std::optional<Config> readConfig(std::string config_name)
 {
   farfetchd::ConfigReader reader;
-  if (!reader.parseFile(getAndEnsureConfigDir() + config_name + ".clickitongue"))
+  std::string config_full_path = getAndEnsureConfigDir() + config_name + ".clickitongue";
+  if (!reader.parseFile(config_full_path))
     return std::nullopt;
+  PRINTF("loaded config from: %s\n", config_full_path.c_str());
 
   return Config(reader);
 }
@@ -156,6 +304,8 @@ bool writeConfig(Config config, std::string config_name,
   {
     successful = false;
   }
+
+  writePythonToConfigDir();
 
   std::optional<Config> test_read = readConfig(config_name);
   if (!test_read.has_value())

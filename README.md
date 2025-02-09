@@ -1,5 +1,6 @@
 Clickitongue carries out mouse clicks when triggered by mouth sounds picked
-up by your computer's microphone, to give sore wrists a rest.
+up by your computer's microphone, to give sore wrists a rest. Optionally, it
+can also use AI to write code for you based on your spoken description.
 
 Clickitongue runs on Linux (both X and Wayland), Windows, and OSX.
 
@@ -29,6 +30,43 @@ run `./build.sh osx.ccbuildfile`. After that, `./clickitongue` to run.
 If you want a stricter/looser double-click timing, change the value of
 kOSXDoubleClickMs at the top of constants.h before compiling. (Defaults to 1/3rd
 of a second).
+
+# Voice-to-LLM Code-focused Typing
+
+I bolted on (currently for Linux only) the ability to describe code into your
+mic, and have a speech-to-text + LLM pipeline determine what exactly should be
+typed out. It works with any standard GUI text editor (e.g. Kate, Sublime).
+There are currently two modes: "dictation" and "description".
+
+In "dictation" you speak the actual code you want to write, and the previous
+several lines are fed as context to help the STT and LLM output `if (foo_bar)`
+rather than "if foo bar". (Or if you are writing plain English,
+it will notice and give you English). For this mode, have the cursor where you
+want to start "typing", with no text selected.
+
+In "description" you first select with your cursor a block of code to operate
+on, then speak a plain English description of what you want to happen. The block
+is passed as context to the LLM, and your selection is replaced with the LLM's
+output. This feels like science fiction.
+
+To operate, write characters to the named pipe /tmp/clickitongue_fifo. Assign
+global keyboard shortcuts (e.g. I use F11, F10, F9, F8) to do the following:
+* start recording: `echo -n "r" | sudo tee /tmp/clickitongue_fifo > /dev/null`
+* end recording and do dictation: `echo -n "i" | sudo tee /tmp/clickitongue_fifo > /dev/null`
+* end recording and do description: `echo -n "e" | sudo tee /tmp/clickitongue_fifo > /dev/null`
+* cancel recording: `echo -n "c" | sudo tee /tmp/clickitongue_fifo > /dev/null`
+
+You'll be asked at first-time setup for 2 URLs: a `/inference` for whisper,
+and a `/completion` URL for the LLM. I have the system set up to use
+Athene-V2-Chat: the system prompts and chat templates are hard-coded to Athene.
+I run these like:
+* `~/llama.cpp/bin/llama-server -m ~/llms/Athene-V2-Chat-Q5_K_M-00001-of-00002.gguf -md ~/llms/Qwen2.5-3B-Instruct-Q6_K_L.gguf -c 16384 --split-mode row --main-gpu 0 --flash-attn -t 8 -ngl 99 -ngld 99 --draft-max 16 --draft-min 2 --draft-p-min 0.5 --mlock --host 0.0.0.0  --device-draft CUDA1`
+* `~/whisper.cpp/build/bin/whisper-server -t 8 --flash-attn --host 0.0.0.0 --port 26150 -m ~/whisper.cpp/models/ggml-large-v3-turbo.bin`
+
+You'll need python3 and its requests package installed. Finally, if you're on
+X11 you'll need xsel installed, and if you're on Wayland you'll need to be on
+X11. I have the plumbing all set up to use wl-copy and wl-paste if Wayland is
+detected, but it doesn't work and I was fine falling back to X. Fixes welcome!
 
 # Usage
 
