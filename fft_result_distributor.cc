@@ -1,12 +1,13 @@
 #include "fft_result_distributor.h"
 
 #include <cstdio>
-#include <unistd.h>
-#include <sys/wait.h>
 
 void safelyExit(int exit_code);
 
-char g_program_path[1024];
+#ifdef CLICKITONGUE_LINUX
+#include <unistd.h>
+#include <sys/wait.h>
+extern char* g_program_path;
 void restartProgram()
 {
   pid_t pid = fork();
@@ -40,6 +41,7 @@ void watchdog(FFTResultDistributor* distrib)
       restartProgram();
   }
 }
+#endif
 
 FFTResultDistributor::FFTResultDistributor(
     std::vector<std::unique_ptr<Detector>>&& detectors,
@@ -47,7 +49,9 @@ FFTResultDistributor::FFTResultDistributor(
 : detectors_(std::move(detectors)), fft_lease_(g_fourier->borrowWorker()),
   scale_(scale), training_(training)
 {
+#ifdef CLICKITONGUE_LINUX
   std::thread(watchdog, this).detach();
+#endif
 }
 
 void FFTResultDistributor::
@@ -94,7 +98,9 @@ int fftDistributorCallback(const void* input, void* output,
   const Sample* cur_samples = static_cast<const Sample*>(input);
   if (cur_samples)
     distrib->processAudio(cur_samples, num_frames);
+#ifdef CLICKITONGUE_LINUX
   distrib->watchdog_time_ = std::chrono::duration_cast<std::chrono::seconds>(
     std::chrono::system_clock::now().time_since_epoch()).count();
+#endif
   return paContinue;
 }
