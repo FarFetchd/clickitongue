@@ -21,6 +21,7 @@ public:
 
   void replaceDetectors(std::vector<std::unique_ptr<Detector>>&& detectors);
 
+  std::atomic<uint64_t> watchdog_time_{0};
 private:
   std::vector<std::unique_ptr<Detector>> detectors_;
   FourierLease fft_lease_;

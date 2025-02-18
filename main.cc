@@ -339,6 +339,8 @@ void signalWatcher()
 }
 #endif
 
+extern char g_program_path[1024];
+
 #ifdef CLICKITONGUE_WINDOWS
 #include "windows_gui.h"
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -364,6 +366,7 @@ int main(int argc, char** argv)
   g_show_debug_info = opts.debug.value();
   g_forget_input_dev = opts.forget_input_dev.value();
   g_fourier = new EasyFourier();
+  realpath(argv[0], g_program_path);
 
   if (opts.mode.has_value())
   {
