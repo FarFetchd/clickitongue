@@ -117,8 +117,7 @@ CatConfig::CatConfig(farfetchd::ConfigReader const& cfg)
   use_limit = (cfg.getString("cat_use_limit").value_or("false") == "true");
   scale = cfg.getDouble("cat_scale").value_or(-1);
 
-  enabled = (action_on != Action::NoAction && action_off != Action::NoAction &&
-             o7_on_thresh >= 0 && o1_limit >= 0 && scale >= 0);
+  enabled = (action_on != Action::NoAction && o7_on_thresh >= 0 && o1_limit >= 0 && scale >= 0);
 }
 
 HumConfig::HumConfig(farfetchd::ConfigReader const& cfg)
