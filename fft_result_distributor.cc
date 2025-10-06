@@ -9,18 +9,21 @@ void safelyExit(int exit_code);
 char g_program_path[1024];
 void restartProgram()
 {
-  pid_t pid = fork();
-  if (pid < 0) // failed
-    safelyExit(1);
-  if (pid > 0) // we are the parent
-  {
-    waitpid(pid, nullptr, 0);
-    safelyExit(0);
-  }
-  // we must be the child
-  execl(g_program_path, g_program_path, (char*)nullptr);
-  // If execl returns, it means an error occurred
-  safelyExit(1);
+  // actually it looks like the below causes multiple duplicate copies to run, +1 per sleep, soooo....
+  safelyExit(0); // just exit for now :(
+
+  // pid_t pid = fork();
+  // if (pid < 0) // failed
+  //   safelyExit(1);
+  // if (pid > 0) // we are the parent
+  // {
+  //   waitpid(pid, nullptr, 0);
+  //   safelyExit(0);
+  // }
+  // // we must be the child
+  // execl(g_program_path, g_program_path, (char*)nullptr);
+  // // If execl returns, it means an error occurred
+  // safelyExit(1);
 }
 
 extern volatile sig_atomic_t g_shutdown_flag;
