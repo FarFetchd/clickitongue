@@ -94,6 +94,10 @@ Clickitongue.
 
 # Mic Advice
 
+NOTE: some USB audio inputs run at a sample rate of 48KHz rather than 44.1! If you have a USB
+headset and Clickitongue isn't working, try settings kFramesPerSec in constants.h to 48000 and
+recompiling.
+
 Depending on your mic setup, Clickitongue will use two of three sounds: softly
 blowing on the mic, making sounds like trying to get a cat's attention (this can
 be 'tchk' sounds, kisses, or compressed 'ts' sounds), or humming.
