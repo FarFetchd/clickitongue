@@ -51,6 +51,7 @@ using Sample = float;
 enum class Action
 {
   LeftDown, LeftUp, RightDown, RightUp, ScrollDown, ScrollUp,
+  CopyPaste, JustCopy, JustPaste,
   RecordCurFrame, // for training only; requires having called setCurFrameDest() and setCurFrameSource().
   NoAction
 };

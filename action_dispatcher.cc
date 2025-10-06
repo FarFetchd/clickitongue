@@ -45,6 +45,21 @@ bool ActionDispatcher::dispatchNextAction()
   case Action::ScrollDown:
     PRINTF("ScrollDown not implemented\n");//scrollDown();
     break;
+  case Action::CopyPaste:
+    if (g_show_debug_info)
+      PRINTF("CopyPaste\n"); // (write CopyPaste and NoAction into default.clickitongue to use. must have xdotool installed.)
+    copyPaste();
+    break;
+  case Action::JustCopy:
+    if (g_show_debug_info)
+      PRINTF("JustCopy\n");
+    justCopy();
+    break;
+  case Action::JustPaste:
+    if (g_show_debug_info)
+      PRINTF("JustPaste\n");
+    justPaste();
+    break;
   case Action::NoAction:
     break;
   default:
@@ -306,6 +321,22 @@ void ActionDispatcher::rightUp()
 {
   uinputWrite(BTN_RIGHT, 0);
 }
+void ActionDispatcher::copyPaste()
+{
+  if (currently_pasting_)
+    justPaste();
+  else
+    justCopy();
+  currently_pasting_ = !currently_pasting_;
+}
+void ActionDispatcher::justCopy()
+{
+  system("xdotool key control+c");
+}
+void ActionDispatcher::justPaste()
+{
+  system("xdotool key control+v");
+}
 
 #endif // CLICKITONGUE_LINUX
 // ==============================End Linux====================================
@@ -348,6 +379,15 @@ void ActionDispatcher::rightDown()
 void ActionDispatcher::rightUp()
 {
   mouseButtonEvent(MOUSEEVENTF_RIGHTUP);
+}
+void ActionDispatcher::copyPaste()
+{ // TODO
+}
+void ActionDispatcher::justCopy()
+{
+}
+void ActionDispatcher::justPaste()
+{
 }
 
 #endif // CLICKITONGUE_WINDOWS

@@ -28,8 +28,12 @@ private:
   void rightUp();
 //   void scrollUp();
 //   void scrollDown();
+  void copyPaste();
+  void justCopy();
+  void justPaste();
 
   BlockingQueue<Action>* const action_queue_;
+  bool currently_pasting_ = false;
 };
 
 extern std::vector<Detector*> g_HACK_all_detectors;

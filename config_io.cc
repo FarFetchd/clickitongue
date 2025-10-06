@@ -16,7 +16,9 @@ Action parseAction(std::string str)
   if (str.find("ScrollDown") != std::string::npos) return Action::ScrollDown;
   if (str.find("ScrollUp") != std::string::npos) return Action::ScrollUp;
   if (str.find("RecordCurFrame") != std::string::npos) return Action::RecordCurFrame;
-
+  if (str.find("CopyPaste") != std::string::npos) return Action::CopyPaste;
+  if (str.find("JustCopy") != std::string::npos) return Action::JustCopy;
+  if (str.find("JustPaste") != std::string::npos) return Action::JustPaste;
   return Action::NoAction;
 }
 
@@ -31,6 +33,9 @@ std::string actionString(Action action)
     case Action::ScrollDown: return "ScrollDown";
     case Action::ScrollUp: return "ScrollUp";
     case Action::RecordCurFrame: return "RecordCurFrame";
+    case Action::CopyPaste: return "CopyPaste";
+    case Action::JustCopy: return "JustCopy";
+    case Action::JustPaste: return "JustPaste";
     case Action::NoAction: return "NoAction";
     default: return "!!!!!actionString() was given an unknown action!!!!!";
   }
